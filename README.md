@@ -21,7 +21,7 @@ Esta versión tiene el recorrido de la maestra, la sala de clase y las cuatro ac
    npm run dev
    ```
 
-   La Terminal muestra una dirección como `http://localhost:5173`. Abrila en el navegador.
+   La Terminal muestra una dirección como `http://localhost:3000`. Abrila en el navegador.
    Mientras esté abierta, cada cambio que guardes en el código se ve al instante.
 
 5. Para cortar, volvé a la Terminal y apretá `Ctrl + C`.
@@ -56,7 +56,9 @@ src/
       etapas.js           etapas, preguntas, guía docente, opciones de la maestra
   components/             piezas comunes: Moli, FondoVivo (organismos flotando),
                           Aviso (errores y aciertos), MarcoActividad, Microvista...
-  pages/                  pantallas generales: inicio, rol, maestra/, nino/
+  app/                    Next.js (App Router): layout.tsx (fuentes, estilos, metadatos) y las rutas
+  pantallas/              pantallas generales: inicio, rol, maestra/, nino/
+                          (no se llama pages/: Next.js reserva ese nombre)
   styles/
     tokens.css            colores, tipografías, espacios: el sistema visual
     base.css              botones, etiquetas y animaciones comunes
@@ -81,8 +83,8 @@ docs/GUIA-ACTIVIDADES.md  reglas para crear o cambiar una actividad
 
 ## Tecnologías
 
-- **React 18**: arma la interfaz en componentes (cada pantalla y cada pieza es un archivo).
-- **React Router**: maneja las direcciones de la web (`#/maestra`, `#/clase`...).
-- **Vite**: el programa que la levanta en tu computadora y la prepara para publicar (`npm run build` crea la carpeta `dist/`, que es lo que se sube a internet).
-- **three.js**: solo para la molécula 3D de Simulaciones Biomoleculares, y se carga únicamente al entrar a esa actividad.
+- **Next.js 16 (App Router) + TypeScript**: el marco de la web. `npm run dev` la levanta en tu computadora, `npm run build` la prepara y `npm start` la sirve como en producción (Vercel).
+- **React 19**: arma la interfaz en componentes (cada pantalla y cada pieza es un archivo).
+- **React Router**: todavía maneja las direcciones con # (`#/maestra`, `#/clase`...). Se reemplaza por el App Router en la etapa 3 de la migración.
+- La versión anterior con Vite quedó guardada en la rama `version-vite` (y el tag `vite-v1`).
 - Las animaciones son CSS y Canvas, pensadas para que anden en las Ceibal.

@@ -1,18 +1,18 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 
-import Inicio from './pages/Inicio';
-import Rol from './pages/Rol';
-import PanelMaestra from './pages/maestra/Panel';
-import Preparar from './pages/maestra/Preparar';
-import SalaEspera from './pages/maestra/SalaEspera';
-import Tablero from './pages/maestra/Tablero';
-import Puesta from './pages/maestra/Puesta';
-import Entrar from './pages/nino/Entrar';
-import Apodo from './pages/nino/Apodo';
-import Espera from './pages/nino/Espera';
-import EnClase from './pages/nino/EnClase';
-import Explorar from './pages/nino/Explorar';
-import Solo from './pages/nino/Solo';
+import Inicio from './pantallas/Inicio';
+import Rol from './pantallas/Rol';
+import PanelMaestra from './pantallas/maestra/Panel';
+import Preparar from './pantallas/maestra/Preparar';
+import SalaEspera from './pantallas/maestra/SalaEspera';
+import Tablero from './pantallas/maestra/Tablero';
+import Puesta from './pantallas/maestra/Puesta';
+import Entrar from './pantallas/nino/Entrar';
+import Apodo from './pantallas/nino/Apodo';
+import Espera from './pantallas/nino/Espera';
+import EnClase from './pantallas/nino/EnClase';
+import Explorar from './pantallas/nino/Explorar';
+import Solo from './pantallas/nino/Solo';
 
 /*
   Mapa de la web (igual al mapa del flujo). :act es a1, a2, a3 o a4.
