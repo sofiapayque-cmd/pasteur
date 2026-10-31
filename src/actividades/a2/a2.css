@@ -1,0 +1,1004 @@
+/* A2 · Simulaciones Biomoleculares — todo con prefijo a2- para no chocar con otras actividades */
+
+.a2-etapa {
+  position: relative;
+  max-width: 1240px;
+  margin: 0 auto;
+}
+
+.a2-titulo {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 760px;
+  margin-bottom: 24px;
+}
+.a2-titulo h1 {
+  font-size: 46px;
+  color: var(--nucleo);
+}
+.a2-titulo p {
+  font-size: 19px;
+  color: var(--tinta);
+  max-width: 640px;
+}
+.a2-h {
+  font-size: 38px;
+  color: var(--nucleo);
+}
+.a2-instruccion {
+  font-size: 19px;
+}
+
+/* Dos columnas: visor a la izquierda, panel a la derecha (Moli queda abajo a la derecha) */
+.a2-dos {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 400px;
+  gap: 36px;
+  align-items: start;
+}
+.a2-columna {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+.a2-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  padding-top: 8px;
+}
+.a2-panel .aviso-moli {
+  max-width: 100%;
+}
+
+/* ---------- Visor 3D ---------- */
+.a2-visor {
+  position: relative;
+  height: clamp(320px, calc(100vh - 290px), 540px);
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(circle at 50% 46%, rgba(255, 255, 255, 0.95) 0, rgba(255, 255, 255, 0.6) 38%, rgba(255, 255, 255, 0) 72%),
+    linear-gradient(rgba(47, 74, 133, 0.06) 1px, transparent 1px) 0 0 / 32px 32px,
+    linear-gradient(90deg, rgba(47, 74, 133, 0.06) 1px, transparent 1px) 0 0 / 32px 32px,
+    #dcefe7;
+  box-shadow: var(--halo), inset 0 0 0 1.5px rgba(142, 213, 195, 0.9);
+  overflow: hidden;
+  isolation: isolate;
+}
+.a2-visor::after {
+  /* sombra suave debajo de la molécula */
+  content: '';
+  position: absolute;
+  left: 22%;
+  right: 22%;
+  bottom: 9%;
+  height: 26px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(47, 74, 133, 0.16), rgba(47, 74, 133, 0));
+  z-index: -1;
+  animation: a2-respirar-sombra 5s ease-in-out infinite;
+}
+.a2-visor__lienzo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+.a2-visor--interactivo .a2-visor__lienzo {
+  cursor: grab;
+}
+.a2-visor--interactivo .a2-visor__lienzo:active {
+  cursor: grabbing;
+}
+.a2-visor__lienzo:focus-visible {
+  outline: 3px solid var(--nucleo);
+  outline-offset: -6px;
+  border-radius: var(--radius-lg);
+}
+.a2-visor__marca {
+  position: absolute;
+  top: 18px;
+  left: 26px;
+  color: var(--tinta);
+  pointer-events: none;
+}
+.a2-visor__controles {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 6px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: var(--halo-cerca);
+}
+.a2-visor__sep {
+  width: 28px;
+  height: 1.5px;
+  background: var(--vidrio);
+  margin: 2px 0;
+}
+.a2-ctrl {
+  display: inline-grid;
+  place-items: center;
+  min-width: 48px;
+  height: 48px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--a2-fondo);
+  color: var(--nucleo);
+  cursor: pointer;
+  transition: transform 0.3s var(--ease-organico), background 0.2s;
+}
+.a2-ctrl:hover {
+  background: var(--cilio);
+  transform: scale(1.08);
+}
+.a2-ctrl--texto {
+  padding: 0 16px;
+  font-size: 15px;
+  font-weight: 600;
+}
+.a2-visor--mini {
+  height: 170px;
+  border-radius: var(--radius-md);
+  box-shadow: none;
+}
+.a2-visor--mini::after {
+  display: none;
+}
+.a2-visor--sim {
+  height: clamp(300px, calc(100vh - 360px), 480px);
+}
+.a2-visor--comp {
+  height: clamp(200px, calc(100vh - 500px), 320px);
+  border-radius: var(--radius-md);
+}
+.a2-visor--informe {
+  height: 220px;
+  border-radius: var(--radius-md);
+  box-shadow: none;
+}
+
+@keyframes a2-respirar-sombra {
+  50% {
+    transform: scaleX(1.08);
+    opacity: 0.8;
+  }
+}
+
+/* ---------- 1. Elegir ---------- */
+.a2-modelos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 262px));
+  gap: 24px;
+}
+.a2-modelo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+  height: 100%;
+  padding: 12px 12px 20px;
+  border: 2px solid transparent;
+  border-radius: var(--radius-md);
+  background: #fff;
+  box-shadow: var(--halo-cerca);
+  text-align: left;
+  font: inherit;
+  color: var(--tinta);
+  cursor: pointer;
+  transition: transform 0.4s var(--ease-organico), box-shadow 0.2s, border-color 0.2s;
+}
+.a2-modelo:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: var(--halo);
+  border-color: var(--cilio);
+}
+.a2-modelo .a2-visor {
+  width: 100%;
+  margin-bottom: 6px;
+  animation: respirar 6s ease-in-out infinite;
+}
+.a2-modelo > .etiqueta {
+  padding: 0 8px;
+}
+.a2-modelo__nombre {
+  padding: 0 8px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-variation-settings: 'SOFT' 100;
+  font-size: 25px;
+  line-height: 1.1;
+  color: var(--nucleo);
+}
+.a2-modelo__detalle {
+  padding: 0 8px;
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+/* ---------- 2. Explorar ---------- */
+.a2-partes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+.a2-parte {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 56px;
+  padding: 8px 18px 8px 10px;
+  border: 2px solid transparent;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.75);
+  font: inherit;
+  font-size: 17px;
+  color: var(--tinta-suave);
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.35s var(--ease-organico), background 0.2s, border-color 0.2s;
+}
+.a2-parte:hover {
+  transform: translateX(4px);
+}
+.a2-parte--vista {
+  background: #fff;
+  color: var(--tinta);
+  font-weight: 600;
+}
+.a2-parte--sel {
+  border-color: var(--nucleo);
+}
+.a2-parte .a2-tilde {
+  margin-left: auto;
+  color: var(--nucleo);
+}
+.a2-punto {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  box-shadow: inset -4px -5px 8px rgba(47, 74, 133, 0.25), inset 4px 4px 8px rgba(255, 255, 255, 0.6);
+}
+.a2-ficha {
+  position: absolute;
+  left: 20px;
+  bottom: 20px;
+  max-width: min(420px, calc(100% - 110px));
+  padding: 16px 20px;
+  border-radius: var(--radius-md);
+  background: #fff;
+  border: 2px dashed var(--cilio);
+}
+.a2-ficha__nombre {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-variation-settings: 'SOFT' 100;
+  font-size: 24px;
+  line-height: 1.1;
+  color: var(--nucleo);
+  margin-top: 2px;
+}
+.a2-ficha p {
+  font-size: 17px;
+  line-height: 1.4;
+  margin-top: 4px;
+}
+
+/* ---------- 3. Hipótesis ---------- */
+.a2-hipo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 18px;
+}
+.a2-hipo .a2-titulo {
+  margin-bottom: 0;
+}
+.a2-frase {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+.a2-frase__conector {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-variation-settings: 'SOFT' 100;
+  font-size: 32px;
+  color: var(--nucleo);
+  min-width: 40px;
+}
+.a2-frase--pred .a2-frase__conector {
+  width: 100%;
+}
+.a2-opcion {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  border: 2.5px solid transparent;
+  background: #fff;
+  color: var(--tinta);
+  font: inherit;
+  font-size: 19px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--halo-cerca);
+  transition: transform 0.4s var(--ease-organico), border-color 0.2s, background 0.2s;
+}
+.a2-opcion:hover {
+  transform: scale(1.04);
+}
+.a2-opcion--fila {
+  min-height: 64px;
+  padding: 8px 26px 8px 16px;
+  border-radius: var(--radius-pill);
+}
+.a2-opcion--carta {
+  flex-direction: column;
+  justify-content: center;
+  width: 190px;
+  padding: 14px 12px 18px;
+  border-radius: var(--radius-md);
+}
+.a2-opcion--sel {
+  border-color: var(--nucleo);
+  background: var(--clorofila);
+}
+.a2-icono-forma {
+  display: block;
+}
+.a2-opcion--sel .a2-icono-forma {
+  animation: respirar 2.4s ease-in-out infinite;
+}
+
+/* ---------- 4. Condiciones ---------- */
+.a2-dos--cond {
+  grid-template-columns: minmax(0, 1fr) 380px;
+}
+.a2-instrumentos {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.a2-instrumento {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  padding: 16px 28px 16px 20px;
+  border-radius: var(--radius-lg);
+  background: #fff;
+  box-shadow: var(--halo-cerca);
+}
+.a2-instrumento__cuerpo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.a2-instrumento__lectura {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+}
+.a2-instrumento__lectura .etiqueta {
+  width: 100%;
+}
+.a2-valor {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-variation-settings: 'SOFT' 100;
+  font-size: 40px;
+  line-height: 1;
+  color: var(--nucleo);
+  font-variant-numeric: tabular-nums;
+}
+.a2-zona {
+  padding: 4px 14px;
+  border-radius: var(--radius-pill);
+  background: var(--a2-fondo);
+  font-size: 16px;
+  font-weight: 600;
+}
+.a2-termometro,
+.a2-tira {
+  flex: none;
+}
+
+.a2-rango {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 44px;
+  background: transparent;
+  cursor: pointer;
+  margin: 0;
+}
+.a2-rango::-webkit-slider-runnable-track {
+  height: 16px;
+  border-radius: 999px;
+  background: var(--pista, var(--vidrio));
+  box-shadow: inset 0 0 0 1.5px rgba(47, 74, 133, 0.2);
+}
+.a2-rango::-moz-range-track {
+  height: 16px;
+  border-radius: 999px;
+  background: var(--pista, var(--vidrio));
+}
+.a2-rango::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 40px;
+  height: 40px;
+  margin-top: -12px;
+  border-radius: 50%;
+  background: #fff;
+  border: 4px solid var(--nucleo);
+  box-shadow: var(--halo-cerca);
+  transition: transform 0.3s var(--ease-organico);
+}
+.a2-rango::-moz-range-thumb {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #fff;
+  border: 4px solid var(--nucleo);
+}
+.a2-rango:active::-webkit-slider-thumb {
+  transform: scale(1.15);
+}
+.a2-rango:focus-visible {
+  outline: none;
+}
+.a2-rango:focus-visible::-webkit-slider-thumb {
+  outline: 3px solid var(--nucleo);
+  outline-offset: 3px;
+}
+.a2-rango--temp {
+  --pista: linear-gradient(90deg, #93aeeb 0%, #8ed5c3 30%, #e3eea0 42%, #f2b13b 55%, #ef6f5e 100%);
+}
+.a2-rango--ph {
+  --pista: linear-gradient(90deg, #e9604f 0%, #f2b13b 25%, #e3eea0 42%, #8ed5c3 55%, #93aeeb 72%, #6658c9 100%);
+}
+.a2-rango--tiempo {
+  --pista: linear-gradient(90deg, var(--cilio) var(--avance, 0%), #fff var(--avance, 0%));
+}
+
+.a2-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.a2-preset {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 2px solid transparent;
+  border-radius: var(--radius-pill);
+  background: var(--a2-fondo);
+  font: inherit;
+  font-size: 15px;
+  color: var(--tinta);
+  cursor: pointer;
+  transition: transform 0.3s var(--ease-organico), border-color 0.2s;
+}
+.a2-preset b {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 14px;
+  margin-left: 4px;
+}
+.a2-preset:hover {
+  transform: scale(1.05);
+}
+.a2-preset--sel {
+  border-color: var(--nucleo);
+  background: #fff;
+}
+
+.a2-recuerdo {
+  width: 100%;
+  padding: 16px 20px;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.85);
+  border: 2px dashed var(--filamento);
+}
+.a2-recuerdo p {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-variation-settings: 'SOFT' 100;
+  font-size: 24px;
+  line-height: 1.2;
+  margin-top: 4px;
+}
+.a2-simular {
+  min-height: 72px;
+  padding: 0 48px;
+  font-size: 22px;
+  animation: respirar 3.5s ease-in-out infinite;
+}
+
+/* ---------- 5. Simulación ---------- */
+.a2-calcula {
+  display: grid;
+  place-items: center;
+  min-height: 460px;
+}
+.a2-compu {
+  width: min(640px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 32px 36px;
+  border-radius: var(--radius-lg);
+  background: #1f2b3f;
+  color: #e6f4ef;
+  box-shadow: var(--halo);
+}
+.a2-compu .etiqueta {
+  color: #bfe9dd;
+}
+.a2-compu__nucleos {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 8px;
+}
+.a2-compu__nucleos span {
+  aspect-ratio: 1;
+  border-radius: 6px;
+  background: var(--cilio);
+  opacity: 0.25;
+  animation: a2-nucleo 0.9s ease-in-out infinite alternate;
+}
+@keyframes a2-nucleo {
+  to {
+    opacity: 1;
+  }
+}
+.a2-barra {
+  height: 14px;
+  border-radius: 999px;
+  background: rgba(230, 244, 239, 0.15);
+  overflow: hidden;
+}
+.a2-barra span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--cilio), var(--clorofila));
+  transform-origin: left;
+  transition: transform 0.1s linear;
+}
+.a2-compu__log {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.7;
+  color: #e6f4ef;
+}
+.a2-compu__log li::before {
+  content: '> ';
+  color: var(--cilio);
+}
+.a2-compu__nota {
+  font-size: 16px;
+  color: #e6f4ef;
+}
+
+.a2-linea {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 6px 20px 6px 6px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: var(--halo-cerca);
+}
+.a2-play {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--nucleo);
+  color: var(--sobre-nucleo);
+  cursor: pointer;
+  transition: transform 0.3s var(--ease-organico);
+}
+.a2-play:hover {
+  transform: scale(1.08);
+}
+.a2-linea__fin {
+  flex: none;
+}
+
+.a2-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.a2-chip {
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  background: var(--nucleo);
+  color: var(--sobre-nucleo);
+  font-size: 16px;
+  font-weight: 600;
+}
+.a2-chip--claro {
+  background: #fff;
+  color: var(--tinta);
+}
+
+.a2-grafico {
+  margin: 0;
+  width: 100%;
+  padding: 16px 18px 10px;
+  border-radius: var(--radius-md);
+  background: #fff;
+  box-shadow: var(--halo-cerca);
+}
+.a2-grafico figcaption {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 6px;
+}
+.a2-grafico__titulo {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-variation-settings: 'SOFT' 100;
+  font-size: 24px;
+  color: var(--nucleo);
+}
+.a2-grafico svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.a2-grafico__eje {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  fill: var(--tinta-suave);
+}
+
+/* ---------- 6. Comparar ---------- */
+.a2-dos--comparar {
+  grid-template-columns: minmax(0, 1fr) 360px;
+}
+.a2-comparar {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.a2-comparar--3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.a2-comparar__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.a2-comparar__pie {
+  display: flex;
+  flex-direction: column;
+  padding: 0 8px;
+}
+.a2-comparar__pie b {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-variation-settings: 'SOFT' 100;
+  font-size: 22px;
+  color: var(--nucleo);
+}
+.a2-comparar__pie span {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  color: var(--tinta);
+}
+.a2-columna > .aviso-moli {
+  max-width: 100%;
+}
+.a2-marcas {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: 100%;
+}
+.a2-marca {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 60px;
+  padding: 6px 12px 6px 8px;
+  line-height: 1.2;
+  border: 2px solid transparent;
+  border-radius: var(--radius-pill);
+  background: #fff;
+  font: inherit;
+  font-size: 16px;
+  color: var(--tinta);
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.3s var(--ease-organico), border-color 0.2s, background 0.2s;
+}
+.a2-marca:hover:not(:disabled) {
+  transform: translateX(4px);
+}
+.a2-marca:disabled {
+  cursor: default;
+  opacity: 0.75;
+}
+.a2-marca--sel {
+  border-color: var(--nucleo);
+  background: var(--clorofila);
+  font-weight: 600;
+}
+.a2-marca__caja {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--a2-fondo);
+  color: var(--nucleo);
+}
+.a2-marca--sel .a2-marca__caja {
+  background: #fff;
+}
+.a2-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.a2-veredicto {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 24px 22px 18px 58px;
+  border-radius: 6px 6px 10px 6px;
+  background-color: #fffef8;
+  background-image:
+    linear-gradient(90deg, transparent 40px, rgba(239, 111, 94, 0.45) 40px 42px, transparent 42px),
+    repeating-linear-gradient(transparent 0 33px, rgba(147, 174, 235, 0.42) 33px 34px);
+  background-position: 0 0, 0 10px;
+  box-shadow: 0 2px 0 rgba(34, 35, 42, 0.05), 0 18px 40px rgba(47, 74, 133, 0.18);
+  transform: rotate(-0.4deg);
+}
+.a2-veredicto::before {
+  content: '';
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  width: 120px;
+  height: 26px;
+  transform: translateX(-50%) rotate(-2deg);
+  background: rgba(214, 228, 120, 0.85);
+  border-radius: 2px;
+  box-shadow: 0 1px 2px rgba(34, 35, 42, 0.12);
+}
+.a2-veredicto__bien {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-cuaderno);
+  font-size: 28px;
+  line-height: 34px;
+  color: var(--nucleo);
+}
+.a2-veredicto__fila {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 18px;
+  align-items: center;
+}
+.a2-veredicto__fila p {
+  font-family: var(--font-cuaderno);
+  font-size: 21px;
+  line-height: 30px;
+  color: #2b2f45;
+  margin-top: 2px;
+}
+
+/* Sello del informe */
+.a2-sello {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: 160px;
+  height: 160px;
+  padding: 12px;
+  border-radius: 50%;
+  border: 3px dashed currentColor;
+  text-align: center;
+  transform: rotate(-10deg);
+  animation: a2-sellar 0.6s var(--ease-organico) both 0.3s;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.a2-sello b {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-variation-settings: 'SOFT' 100;
+  font-size: 20px;
+  max-width: 110px;
+  letter-spacing: 0;
+  text-transform: none;
+  line-height: 1.05;
+}
+.a2-sello--si {
+  color: #4f6a17;
+  background: rgba(227, 238, 160, 0.55);
+}
+.a2-sello--no {
+  color: var(--nucleo);
+  background: rgba(212, 220, 247, 0.6);
+}
+.a2-sello--chico {
+  width: 112px;
+  height: 112px;
+}
+.a2-sello--chico b {
+  font-size: 17px;
+}
+@keyframes a2-sellar {
+  from {
+    opacity: 0;
+    transform: rotate(-30deg) scale(1.6);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(-10deg) scale(1);
+  }
+}
+
+/* ---------- 7. Informe ---------- */
+.a2-informe-etapa {
+  display: flex;
+  justify-content: flex-start;
+  padding-right: 280px;
+}
+.a2-informe {
+  width: 100%;
+  max-width: 900px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 28px 34px 30px;
+  border-radius: var(--radius-lg);
+  background: #fff;
+  box-shadow: var(--halo);
+  background-image: linear-gradient(rgba(142, 213, 195, 0.18) 1px, transparent 1px);
+  background-size: 100% 32px;
+}
+.a2-informe__cabeza {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--cilio);
+}
+.a2-informe__cabeza h1 {
+  font-size: 40px;
+  color: var(--nucleo);
+}
+.a2-informe__cuerpo {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr) auto;
+  gap: 24px;
+  align-items: center;
+}
+.a2-informe__datos {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.a2-informe__datos dd {
+  margin: 2px 0 0;
+  font-size: 19px;
+  line-height: 1.35;
+}
+.a2-informe__cierre {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-variation-settings: 'SOFT' 100;
+  font-size: 22px;
+  line-height: 1.3;
+  color: var(--tinta);
+  max-width: 760px;
+}
+
+/* ---------- Pantallas más angostas (tablets) ---------- */
+@media (max-width: 1100px) {
+  .a2-dos,
+  .a2-dos--cond,
+  .a2-dos--comparar {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .a2-modelos {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
+  .a2-hipo,
+  .a2-informe-etapa {
+    padding-right: 0;
+  }
+  .a2-informe__cuerpo {
+    grid-template-columns: 1fr;
+  }
+  .a2-comparar--3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .a2-visor::after,
+  .a2-modelo .a2-visor,
+  .a2-simular,
+  .a2-compu__nucleos span {
+    animation: none;
+  }
+}
+
+@media print {
+  .a2-informe .a2-acciones {
+    display: none;
+  }
+  .a2-informe {
+    box-shadow: none;
+  }
+}
+
+/* Ajustes */
+.a2-panel .aviso-moli--pista .btn--secundario {
+  background: #fff;
+}
+.a2-hipo-dos {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 32px;
+  align-items: start;
+  padding-right: 0;
+}
+.a2-hipo-dos .a2-visor {
+  height: 300px;
+  margin-top: 36px;
+}
+.a2-veredicto .a2-acciones {
+  margin-top: 4px;
+}
+.a2-veredicto__fila {
+  grid-template-columns: 1fr 1fr auto;
+}

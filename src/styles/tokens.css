@@ -1,0 +1,58 @@
+/*
+  Tokens del sistema visual "La ciencia sin límites".
+  Son los mismos valores del design system: si cambia un color acá,
+  cambia en toda la web.
+*/
+:root {
+  /* Base */
+  --agar: #FBF9F1;          /* fondo predominante */
+  --vidrio: #E4E7EC;        /* fondo neutro de escenas */
+  --membrana: #D4DCF7;      /* secundario claro: tarjetas, botones secundarios */
+  --plasma: #93AEEB;        /* principal de marca (nunca texto blanco encima) */
+  --nucleo: #2F4A85;        /* azul profundo: titulares, botón primario, foco */
+  --tinta: #22232A;         /* texto */
+  --tinta-suave: #5E6070;   /* texto secundario */
+  --sobre-nucleo: #FBF9F1;  /* texto sobre nucleo */
+  --clorofila: #E3EEA0;     /* acento: experimentar, acierto */
+
+  /* Colores vida (solo formas, no texto) */
+  --coral: #EF6F5E;
+  --tincion: #F4A6BD;
+  --cultivo: #F2B13B;
+  --cilio: #8ED5C3;
+  --filamento: #7272EE;
+
+  /* Tintes de actividad */
+  --a1-fondo: #FBF3E4;
+  --a2-fondo: #E6F4EF;
+  --a3-fondo: #EEEEFD;
+  --a4-fondo: #FBEAF0;
+
+  /* Tipografía */
+  --font-display: 'Bricolage Grotesque Variable', 'Lexend', system-ui, sans-serif; /* titulares gordos con carácter (v1.2) */
+  --font-sans: 'Lexend', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+  --font-cuaderno: 'The Girl Next Door', 'Segoe Print', 'Comic Neue', cursive; /* notas del cuaderno de laboratorio */
+
+  /* Espaciado (retícula de 8) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 16px;
+  --space-4: 24px;
+  --space-5: 40px;
+  --space-6: 64px;
+
+  /* Radios */
+  --radius-sm: 12px;
+  --radius-md: 24px;
+  --radius-lg: 40px;
+  --radius-pill: 999px;
+
+  /* Sombras */
+  --halo: 0 24px 60px rgba(47, 74, 133, 0.14);
+  --halo-cerca: 0 8px 20px rgba(47, 74, 133, 0.16);
+
+  /* Movimiento */
+  --ease-organico: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-pantalla: cubic-bezier(0.65, 0, 0.35, 1);
+}

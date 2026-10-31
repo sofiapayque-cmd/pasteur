@@ -1,0 +1,248 @@
+/*
+  Aviso como nota de cuaderno de laboratorio:
+  hoja rayada con margen rojo, un pedazo de cinta arriba y letra a mano.
+*/
+.aviso-moli {
+  --tinta-lapiz: #2b2f45;
+  --cinta: rgba(212, 220, 247, 0.85);
+  --resaltado: var(--filamento);
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  max-width: 640px;
+  padding: 26px 22px 22px 58px;
+  border-radius: 6px 6px 10px 6px;
+  background-color: #fffef8;
+  background-image:
+    linear-gradient(90deg, transparent 40px, rgba(239, 111, 94, 0.45) 40px 42px, transparent 42px),
+    repeating-linear-gradient(transparent 0 33px, rgba(147, 174, 235, 0.42) 33px 34px);
+  background-position: 0 0, 0 10px;
+  box-shadow: 0 2px 0 rgba(34, 35, 42, 0.05), 0 18px 40px rgba(47, 74, 133, 0.18);
+  color: var(--tinta-lapiz);
+  text-align: left;
+  transform: rotate(-0.6deg);
+  animation: cuaderno-aparece 0.45s var(--ease-organico) both;
+}
+.aviso-moli--error {
+  --cinta: rgba(239, 111, 94, 0.55);
+  --resaltado: var(--coral);
+}
+.aviso-moli--acierto {
+  --cinta: rgba(214, 228, 120, 0.85);
+  --resaltado: #8fa63a;
+}
+.aviso-moli--pista {
+  --cinta: rgba(212, 220, 247, 0.95);
+  --resaltado: var(--nucleo);
+}
+.aviso-moli--dato {
+  --cinta: rgba(242, 177, 59, 0.55);
+  --resaltado: var(--filamento);
+}
+
+/* Cinta que pega la nota */
+.cuaderno__cinta {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  width: 120px;
+  height: 26px;
+  transform: translateX(-50%) rotate(-2deg);
+  background: var(--cinta);
+  box-shadow: 0 1px 2px rgba(34, 35, 42, 0.12);
+  border-radius: 2px;
+}
+
+.aviso-moli__texto {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-cuaderno);
+  line-height: 34px;
+}
+.aviso-moli__encabezado {
+  display: inline-block;
+  font-family: var(--font-cuaderno);
+  font-size: 19px;
+  line-height: 34px;
+  color: var(--resaltado);
+  text-decoration: underline wavy;
+  text-underline-offset: 6px;
+  text-decoration-thickness: 1.5px;
+}
+.aviso-moli--acierto .aviso-moli__encabezado {
+  color: #5f7322;
+}
+.aviso-moli__titulo {
+  font-family: var(--font-cuaderno);
+  font-size: 30px;
+  line-height: 34px;
+  font-weight: 400;
+  color: var(--nucleo);
+  margin: 0;
+}
+.aviso-moli__cuerpo {
+  font-family: var(--font-cuaderno);
+  font-size: 23px;
+  line-height: 34px;
+  color: var(--tinta-lapiz);
+  white-space: pre-line;
+}
+.aviso-moli__cuerpo b {
+  font-weight: 400;
+  color: var(--nucleo);
+  background: linear-gradient(transparent 62%, rgba(227, 238, 160, 0.9) 62%);
+}
+
+/* El papel ya tiene su tamaño final: el texto se escribe encima de su lugar reservado */
+.cuaderno__fijo {
+  display: grid;
+}
+.cuaderno__fijo > * {
+  grid-area: 1 / 1;
+}
+.cuaderno__fantasma {
+  visibility: hidden;
+}
+
+/* El lápiz que va escribiendo */
+.cuaderno__lapiz {
+  display: inline-block;
+  width: 3px;
+  height: 0.9em;
+  margin-left: 2px;
+  vertical-align: -0.1em;
+  border-radius: 2px;
+  background: var(--tinta-lapiz);
+  animation: cuaderno-lapiz 0.5s steps(2) infinite;
+}
+.cuaderno__aparece {
+  font-family: var(--font-cuaderno);
+  animation: cuaderno-tinta 0.9s ease-out both;
+}
+
+/* Los botones son de la interfaz (no a mano) y aparecen cuando termina de escribir */
+.aviso-moli__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+  font-family: var(--font-sans);
+  line-height: 1;
+  opacity: 0.35;
+  transition: opacity 0.3s;
+}
+.aviso-moli__acciones--listas {
+  opacity: 1;
+}
+
+.aviso-moli__cara {
+  flex: none;
+  align-self: flex-end;
+  margin: 0 -10px -14px 0;
+}
+
+/* En los avisos de pista el botón secundario va en blanco para que se distinga */
+.aviso-moli .btn--secundario {
+  background: #fff;
+  box-shadow: inset 0 0 0 2px var(--membrana);
+}
+
+@keyframes cuaderno-aparece {
+  from {
+    opacity: 0;
+    transform: rotate(-3deg) translateY(16px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(-0.6deg);
+  }
+}
+@keyframes cuaderno-lapiz {
+  50% {
+    opacity: 0;
+  }
+}
+@keyframes cuaderno-tinta {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .aviso-moli,
+  .cuaderno__aparece,
+  .cuaderno__lapiz {
+    animation: none;
+  }
+  .aviso-moli {
+    transform: none;
+  }
+}
+
+/* =========================================================
+   Cuaderno de campo: hoja fija donde se van anotando los descubrimientos
+   ========================================================= */
+.cuaderno-campo {
+  --tinta-lapiz: #2b2f45;
+  --cinta: rgba(242, 177, 59, 0.55);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 300px;
+  padding: 22px 20px 12px 58px;
+  border-radius: 6px 6px 10px 6px;
+  background-color: #fffef8;
+  background-image:
+    linear-gradient(90deg, transparent 40px, rgba(239, 111, 94, 0.45) 40px 42px, transparent 42px),
+    linear-gradient(transparent 55px, rgba(147, 174, 235, 0.42) 55px 56px, transparent 56px);
+  box-shadow: 0 2px 0 rgba(34, 35, 42, 0.05), 0 18px 40px rgba(47, 74, 133, 0.18);
+  color: var(--tinta-lapiz);
+  transform: rotate(-0.5deg);
+}
+.cuaderno-campo__titulo {
+  font-family: var(--font-cuaderno) !important;
+  font-weight: 400 !important;
+  font-size: 22px;
+  line-height: 34px;
+  letter-spacing: 0 !important;
+  color: var(--coral);
+  text-decoration: underline wavy;
+  text-underline-offset: 6px;
+  text-decoration-thickness: 1.5px;
+}
+.cuaderno-campo__hoja {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  /* los renglones se mueven con el texto al deslizarse */
+  background-image: repeating-linear-gradient(transparent 0 33px, rgba(147, 174, 235, 0.42) 33px 34px);
+  background-attachment: local;
+  font-family: var(--font-cuaderno);
+  font-size: 21px;
+  line-height: 34px;
+}
+.cuaderno-campo__lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.cuaderno-campo__entrada {
+  padding-bottom: 0;
+}
+.cuaderno-campo__nombre {
+  font-weight: 400;
+  color: var(--nucleo);
+  background: linear-gradient(transparent 62%, rgba(227, 238, 160, 0.9) 62%);
+}
+.cuaderno-campo__vacio {
+  color: rgba(43, 47, 69, 0.45);
+}
+@media (prefers-reduced-motion: reduce) {
+  .cuaderno-campo {
+    transform: none;
+  }
+}

@@ -1,0 +1,182 @@
+/* Estilos base y piezas reutilizables (botones, etiquetas, tarjetas). */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+}
+
+html {
+  /* la letra del cuaderno tiene un solo grosor: nunca inventar negritas */
+  font-synthesis-weight: none;
+}
+
+body {
+  background: var(--agar);
+  color: var(--tinta);
+  font-family: var(--font-sans);
+  font-size: 18px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.04;
+  margin: 0;
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: var(--nucleo);
+}
+
+button,
+input {
+  font-family: inherit;
+}
+
+:focus-visible {
+  outline: 3px solid var(--nucleo);
+  outline-offset: 3px;
+}
+
+/* Etiqueta de laboratorio */
+.etiqueta {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tinta-suave);
+}
+
+/* Botones: cápsulas que se inflan */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 56px;
+  padding: 0 28px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 0.4s var(--ease-organico), box-shadow 0.2s;
+}
+.btn:hover {
+  transform: scale(1.04);
+}
+.btn:active {
+  transform: scale(0.97);
+  box-shadow: var(--halo-cerca);
+}
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none;
+}
+.btn--primario {
+  background: var(--nucleo);
+  color: var(--sobre-nucleo);
+}
+.btn--secundario {
+  background: var(--membrana);
+  color: var(--tinta);
+}
+.btn--experimentar {
+  background: var(--clorofila);
+  color: var(--tinta);
+}
+.btn--claro {
+  background: #ffffff;
+  color: var(--tinta);
+}
+.btn--grande {
+  min-height: 64px;
+  padding: 0 40px;
+  font-size: 20px;
+}
+
+.tarjeta {
+  background: #ffffff;
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+/* Pantalla a tamaño completo */
+.pantalla {
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+/* Animaciones del sistema: respirar, crecer, aparecer */
+@keyframes respirar {
+  50% {
+    transform: scale(1.03);
+  }
+}
+@keyframes crecer {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes entrar {
+  from {
+    opacity: 0;
+    transform: scale(1.08);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.anim-crecer {
+  animation: crecer 0.7s var(--ease-organico) both;
+}
+.anim-entrar {
+  animation: entrar 0.75s var(--ease-pantalla) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Texto solo para lectores de pantalla */
+.solo-lector {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

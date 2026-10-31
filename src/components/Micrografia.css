@@ -1,0 +1,88 @@
+/* Micrografía: vista realista de microscopio (ver Micrografia.jsx) */
+.micrografia {
+  position: relative;
+  display: block;
+  flex: none;
+  border-radius: 50%;
+}
+.micrografia .mg-capa {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+.micrografia .mg-vivo {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+}
+.micrografia .mg-deriva {
+  animation: mg-deriva 9s ease-in-out infinite alternate;
+}
+.micrografia .mg-nada {
+  animation: mg-nada 6s ease-in-out infinite alternate;
+}
+.micrografia .mg-respira {
+  animation: mg-respira 6s ease-in-out infinite;
+}
+.micrografia .mg-gira {
+  animation: mg-gira 15s ease-in-out infinite alternate;
+}
+.micrografia .mg-cilios {
+  animation: mg-batir 0.9s ease-in-out infinite alternate;
+}
+.micrografia .mg-cilios--b {
+  animation-direction: alternate-reverse;
+}
+.micrografia .mg-brown {
+  transform-box: fill-box;
+  animation: mg-brown 2.6s steps(1) infinite;
+}
+@keyframes mg-deriva {
+  to {
+    transform: translate(4px, -2px) rotate(9deg);
+  }
+}
+@keyframes mg-nada {
+  to {
+    transform: translate(8px, 2px) rotate(-7deg);
+  }
+}
+@keyframes mg-respira {
+  50% {
+    transform: scale(1.035);
+  }
+}
+@keyframes mg-gira {
+  to {
+    transform: rotate(26deg) translate(7px, -3px);
+  }
+}
+@keyframes mg-batir {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.15;
+  }
+}
+@keyframes mg-brown {
+  0% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(0.7px, -0.5px);
+  }
+  50% {
+    transform: translate(-0.4px, 0.6px);
+  }
+  75% {
+    transform: translate(0.5px, 0.4px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .micrografia * {
+    animation: none !important;
+  }
+}

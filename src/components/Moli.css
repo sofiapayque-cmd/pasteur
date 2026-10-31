@@ -1,0 +1,40 @@
+.moli {
+  display: block;
+  overflow: visible;
+}
+.moli__cuerpo {
+  transform-box: view-box;
+  transform-origin: 100px 205px;
+}
+.moli--respira { animation: moli-respira 5s ease-in-out infinite; }
+.moli--inclina { animation: moli-inclina 3.2s ease-in-out infinite; }
+.moli--salta { animation: moli-salta 2.2s var(--ease-organico) infinite; }
+.moli--duda { animation: moli-duda 3.4s ease-in-out infinite; }
+.moli--rebota { animation: moli-rebota 1.3s var(--ease-organico) infinite; }
+.moli--tiembla { animation: moli-tiembla 0.18s linear infinite; }
+.moli--flota { animation: moli-flota 4s ease-in-out infinite; }
+
+@keyframes moli-respira { 50% { transform: scale(1.03, 0.98); } }
+@keyframes moli-inclina { 50% { transform: rotate(5deg); } }
+@keyframes moli-salta {
+  0%, 60%, 100% { transform: scale(1); }
+  20% { transform: scale(1.1, 0.9); }
+  38% { transform: translateY(-8px) scale(0.96, 1.06); }
+}
+@keyframes moli-duda {
+  0%, 100% { transform: rotate(-4deg); }
+  50% { transform: rotate(-10deg) scale(1.04, 0.95); }
+}
+@keyframes moli-rebota {
+  0%, 100% { transform: scale(1.06, 0.94); }
+  45% { transform: translateY(-22px) scale(0.95, 1.05); }
+}
+@keyframes moli-tiembla {
+  25% { transform: translateX(-1.5px); }
+  75% { transform: translateX(1.5px); }
+}
+@keyframes moli-flota { 50% { transform: translateY(-12px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .moli__cuerpo { animation: none !important; }
+}
