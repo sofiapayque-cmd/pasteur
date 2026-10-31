@@ -8,9 +8,9 @@ import '@fontsource/the-girl-next-door/400.css'; // notas del cuaderno
 import '@fontsource-variable/bricolage-grotesque'; // titulares
 
 // Estilos globales del sistema visual (mismo orden que tenía main.jsx)
-import '../styles/tokens.css';
-import '../styles/base.css';
-import '../styles/pantallas.css';
+import '@/styles/tokens.css';
+import '@/styles/base.css';
+import '@/styles/pantallas.css';
 
 export const metadata: Metadata = {
   title: 'La ciencia sin límites · Institut Pasteur de Montevideo',
