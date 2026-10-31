@@ -55,7 +55,7 @@ src/
       index.jsx           la experiencia del niño
       etapas.js           etapas, preguntas, guía docente, opciones de la maestra
   components/             piezas comunes: Moli, FondoVivo (organismos flotando),
-                          Aviso (errores y aciertos), MarcoActividad, Microvista...
+                          Aviso (errores y aciertos), MarcoActividad, Micrografia...
   app/                    Next.js (App Router): layout.tsx (fuentes, estilos, metadatos) y las rutas
   pantallas/              pantallas generales: inicio, rol, maestra/, nino/
                           (no se llama pages/: Next.js reserva ese nombre)

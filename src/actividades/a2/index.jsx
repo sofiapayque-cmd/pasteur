@@ -5,7 +5,6 @@ import Visor, { ROT_INICIAL } from './Visor';
 import { construir, curvaCambio } from './modelo';
 import {
   ESTRUCTURAS,
-  estructura as buscarEstructura,
   INICIAL,
   PRESETS_T,
   PRESETS_PH,

@@ -3,7 +3,7 @@ import GloboMoli from '../../../components/GloboMoli';
 import Aviso from '../../../components/Aviso';
 import Micrografia from '../../../components/Micrografia';
 import { ambientePorId } from '../datos';
-import { TEMPERATURAS, temperaturaPorId, resultadoPlaca, simplificarTrazo, trazoZigzag, esZigzag } from '../laboratorio';
+import { temperaturaPorId, resultadoPlaca, simplificarTrazo, trazoZigzag, esZigzag } from '../laboratorio';
 import { Cabeza, AvisoCapa, Pasos, sumarError, useTiempos, ChipAmbiente, sinMovimiento } from '../piezas/comunes';
 import Arrastrable from '../piezas/Arrastrable';
 import Placa, { PlacaVidrio } from '../piezas/Placa';

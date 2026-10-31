@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useParams } from 'react-router-dom';
 
 import Inicio from './pantallas/Inicio';
 import Rol from './pantallas/Rol';
@@ -32,13 +32,24 @@ import Solo from './pantallas/nino/Solo';
   /explorar                Modo individual: elegir actividad
   /explorar/:act           Modo individual: hacer una actividad
 */
+/*
+  Monta la pantalla de nuevo cada vez que cambia la actividad (:act).
+  Sin esto, al pasar directo de /maestra/a2/preparar a /maestra/a3/preparar
+  (atrás del navegador o cambiando la URL) quedaban las opciones de la
+  actividad anterior y la pantalla se rompía.
+*/
+function PorActividad({ Pantalla }) {
+  const { act } = useParams();
+  return <Pantalla key={act} />;
+}
+
 export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Inicio />} />
       <Route path="/rol" element={<Rol />} />
       <Route path="/maestra" element={<PanelMaestra />} />
-      <Route path="/maestra/:act/preparar" element={<Preparar />} />
+      <Route path="/maestra/:act/preparar" element={<PorActividad Pantalla={Preparar} />} />
       <Route path="/maestra/:act/sala" element={<SalaEspera />} />
       <Route path="/maestra/:act/tablero" element={<Tablero />} />
       <Route path="/maestra/:act/puesta" element={<Puesta />} />
@@ -48,7 +59,7 @@ export default function App() {
       <Route path="/clase/actividad" element={<EnClase />} />
       <Route path="/clase/:codigo" element={<Entrar />} />
       <Route path="/explorar" element={<Explorar />} />
-      <Route path="/explorar/:act" element={<Solo />} />
+      <Route path="/explorar/:act" element={<PorActividad Pantalla={Solo} />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
