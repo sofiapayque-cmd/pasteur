@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import SoloNavegador from '@/navegacion/SoloNavegador';
 
 // Fuentes incluidas en la web (no dependen de internet: sirven en las Ceibal sin conexión)
 import '@fontsource-variable/lexend'; // interfaz
@@ -26,7 +27,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es">
       <body>
-        <div id="root">{children}</div>
+        <div id="root">
+          {/* Etapa 3: las pantallas se dibujan solo en el navegador (ver SoloNavegador). */}
+          <SoloNavegador>{children}</SoloNavegador>
+        </div>
       </body>
     </html>
   );

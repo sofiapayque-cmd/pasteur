@@ -1,4 +1,6 @@
-import { Navigate, useNavigate } from 'react-router-dom';
+'use client';
+
+import { Navigate, useNavigate } from '@/navegacion';
 import GloboMoli from '../../components/GloboMoli';
 import FondoVivo from '../../components/FondoVivo';
 import { ACTIVIDADES } from '../../data/contenido';
@@ -12,7 +14,7 @@ export default function SalaEspera() {
   if (sala.estado === 'cerrada') return <Navigate to="/maestra" replace />;
 
   const act = ACTIVIDADES.find((a) => a.id === sala.actividad);
-  const link = `${window.location.origin}${window.location.pathname}#/clase/${sala.codigo}`;
+  const link = `${window.location.origin}/clase/${sala.codigo}`; // sin # desde la etapa 3
 
   function arrancar() {
     empezar();

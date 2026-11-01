@@ -2,7 +2,7 @@
 
 Proyecto: **La ciencia sin límites**, plataforma educativa del Institut Pasteur de Montevideo para niñas y niños de 7 a 11 años. Se usa en clase: cada niño en su **Ceibal** (computadoras escolares modestas, pantalla típica 1366×768, a veces tablets) y la maestra guía desde su computadora proyectada. También hay un modo individual (sin sala).
 
-Stack: Next.js 16 (App Router, en migración) + React 19 + React Router 6 (HashRouter, se reemplaza en la etapa 3). CSS puro con tokens. `three@0.169.0` está instalado (solo usarlo si una actividad lo necesita de verdad, y siempre con alternativa liviana). **No instales otros paquetes.**
+Stack: Next.js 16 (App Router) + React 19. Para navegar usá `@/navegacion` (no `next/router`). CSS puro con tokens. `three@0.169.0` está instalado (solo usarlo si una actividad lo necesita de verdad, y siempre con alternativa liviana). **No instales otros paquetes.**
 
 ## Qué archivos son tuyos
 
@@ -72,7 +72,7 @@ Titulares de pantalla en Fraunces (32–56px), instrucciones en Lexend 18–20px
 
 ## Cómo probar tu actividad
 
-En modo individual se abre en `#/explorar/aN`. Para compilar sin pisar a otros:
+En modo individual se abre en `/explorar/aN`. Para compilar sin pisar a otros:
 
 ```
 cd /home/claude/ciencia-sin-limites

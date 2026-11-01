@@ -1,0 +1,13 @@
+import Tablero from '@/pantallas/maestra/Tablero';
+import { IDS_ACTIVIDAD } from '@/tipos/actividad';
+
+/* /maestra/[act]/tablero · Tablero en vivo */
+
+// Las cuatro actividades se generan al compilar (a1…a4); otra dirección la resuelve la pantalla.
+export function generateStaticParams() {
+  return IDS_ACTIVIDAD.map((act) => ({ act }));
+}
+
+export default function Page() {
+  return <Tablero />;
+}

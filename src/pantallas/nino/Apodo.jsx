@@ -1,5 +1,7 @@
+'use client';
+
 import { useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from '@/navegacion';
 import { COLORES_ALUMNO } from '../../data/contenido';
 import FondoVivo from '../../components/FondoVivo';
 import { useSala, apodosLibres, unirme } from '../../sala/sala';

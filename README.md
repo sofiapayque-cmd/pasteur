@@ -28,7 +28,7 @@ Esta versión tiene el recorrido de la maestra, la sala de clase y las cuatro ac
 
 ## Cómo probar
 
-**Cada actividad sola:** Inicio › Soy niña o niño › "No tengo código: explorar sin sala" (o directo en `#/explorar`). La maestra también puede probarlas desde su panel con "Probarla yo".
+**Cada actividad sola:** Inicio › Soy niña o niño › "No tengo código: explorar sin sala" (o directo en `/explorar`). La maestra también puede probarlas desde su panel con "Probarla yo".
 
 **La clase completa** (todavía funciona dentro de un mismo navegador; más adelante se conecta a un servicio en tiempo real para que funcione entre la computadora de la maestra y las Ceibal):
 
@@ -44,7 +44,6 @@ Cada pestaña nueva es un niño distinto. El botón punteado "Simular un alumno"
 
 ```
 src/
-  App.jsx                 el mapa de la web: qué pantalla va en cada dirección
   data/contenido.js       actividades, apodos, colores y textos generales
   sala/sala.js            la sala de clase: todo lo que conecta maestra y niños
   sala/progreso.js        useProgreso: cómo cada actividad guarda el avance del niño
@@ -56,7 +55,10 @@ src/
       etapas.js           etapas, preguntas, guía docente, opciones de la maestra
   components/             piezas comunes: Moli, FondoVivo (organismos flotando),
                           Aviso (errores y aciertos), MarcoActividad, Micrografia...
-  app/                    Next.js (App Router): layout.tsx (fuentes, estilos, metadatos) y las rutas
+  app/                    Next.js (App Router): el mapa de la web, una carpeta por dirección
+                          (publico) · (docente) maestra/ · (alumno) clase/ y explorar/
+                          layout.tsx: fuentes, estilos y metadatos
+  navegacion/             navegar entre pantallas (useNavigate, useParams, Navigate)
   pantallas/              pantallas generales: inicio, rol, maestra/, nino/
                           (no se llama pages/: Next.js reserva ese nombre)
   styles/
@@ -85,6 +87,6 @@ docs/GUIA-ACTIVIDADES.md  reglas para crear o cambiar una actividad
 
 - **Next.js 16 (App Router) + TypeScript**: el marco de la web. `npm run dev` la levanta en tu computadora, `npm run build` la prepara y `npm start` la sirve como en producción (Vercel).
 - **React 19**: arma la interfaz en componentes (cada pantalla y cada pieza es un archivo).
-- **React Router**: todavía maneja las direcciones con # (`#/maestra`, `#/clase`...). Se reemplaza por el App Router en la etapa 3 de la migración.
+- **Direcciones**: sin # (`/maestra`, `/clase/K7RM`...), con el App Router de Next.js. Los links viejos con # siguen andando. Mapa completo en `docs/MIGRACION.md`.
 - La versión anterior con Vite quedó guardada en la rama `version-vite` (y el tag `vite-v1`).
 - Las animaciones son CSS y Canvas, pensadas para que anden en las Ceibal.

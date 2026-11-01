@@ -1,5 +1,7 @@
+'use client';
+
 import { Suspense } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from '@/navegacion';
 import FondoVivo from '../../components/FondoVivo';
 import Cargando from '../../components/Cargando';
 import { ACTIVIDADES } from '../../data/contenido';

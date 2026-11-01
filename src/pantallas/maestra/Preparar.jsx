@@ -1,5 +1,7 @@
+'use client';
+
 import { useState } from 'react';
-import { Navigate, useNavigate, useParams } from 'react-router-dom';
+import { Navigate, useNavigate, useParams, conDesde } from '@/navegacion';
 import Cabecera from '../../components/Cabecera';
 import FondoVivo from '../../components/FondoVivo';
 import { ACTIVIDADES } from '../../data/contenido';
@@ -56,7 +58,7 @@ export default function Preparar() {
               <li>Duración sugerida: [00] minutos</li>
             </ul>
             <div className="preparar__guia-botones">
-              <button className="btn btn--claro" onClick={() => navegar(`/explorar/${act}`, { state: { desde: `/maestra/${act}/preparar` } })}>
+              <button className="btn btn--claro" onClick={() => navegar(conDesde(`/explorar/${act}`, `/maestra/${act}/preparar`))}>
                 Probar la actividad
               </button>
               <button className="btn btn--claro" disabled title="La guía se suma cuando esté validada">

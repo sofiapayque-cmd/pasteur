@@ -1,5 +1,7 @@
+'use client';
+
 import { useEffect, useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from '@/navegacion';
 import { ACTIVIDADES } from '../../data/contenido';
 import { INFO_ACTIVIDADES } from '../../actividades/info';
 import { AMBIENTES } from '../../actividades/a1/datos';

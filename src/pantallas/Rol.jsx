@@ -1,4 +1,6 @@
-import { useNavigate } from 'react-router-dom';
+'use client';
+
+import { useNavigate } from '@/navegacion';
 import Cabecera from '../components/Cabecera';
 
 /* 02 · ¿QUIÉN EXPLORA? — fondo de textura celular (después va la imagen del Frame 2). */

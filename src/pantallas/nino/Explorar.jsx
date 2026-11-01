@@ -1,4 +1,6 @@
-import { useNavigate } from 'react-router-dom';
+'use client';
+
+import { useNavigate } from '@/navegacion';
 import Cabecera from '../../components/Cabecera';
 import FondoVivo from '../../components/FondoVivo';
 import Moli from '../../components/Moli';

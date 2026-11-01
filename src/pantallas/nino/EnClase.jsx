@@ -1,5 +1,7 @@
+'use client';
+
 import { Suspense } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate } from '@/navegacion';
 import MarcoActividad from '../../components/MarcoActividad';
 import Cargando from '../../components/Cargando';
 import { EXPERIENCIAS } from '../../actividades/componentes';

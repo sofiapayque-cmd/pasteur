@@ -1,4 +1,6 @@
-import { useLocation, useNavigate } from 'react-router-dom';
+'use client';
+
+import { useDesde, useNavigate } from '@/navegacion';
 import VolverMaestra from './VolverMaestra';
 import Moli from './Moli';
 import FondoVivo from './FondoVivo';
@@ -12,8 +14,7 @@ import { INFO_ACTIVIDADES } from '../actividades/info';
 */
 export default function MarcoActividad({ actividadId, progreso, children }) {
   const navegar = useNavigate();
-  const { state } = useLocation();
-  const desde = state?.desde; // ej. la maestra probando la actividad desde "Preparar la clase"
+  const desde = useDesde(); // ej. la maestra probando la actividad desde "Preparar la clase" (?desde=…)
   const act = ACTIVIDADES.find((a) => a.id === actividadId);
   const etapas = INFO_ACTIVIDADES[actividadId]?.ETAPAS || [];
   const i = Math.max(0, etapas.findIndex((e) => e.id === progreso.etapa));

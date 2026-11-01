@@ -1,5 +1,7 @@
+'use client';
+
 import { useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from '@/navegacion';
 import Moli from '../../components/Moli';
 import FondoVivo from '../../components/FondoVivo';
 import { codigoValido } from '../../sala/sala';

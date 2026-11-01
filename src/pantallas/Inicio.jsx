@@ -1,5 +1,7 @@
+'use client';
+
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@/navegacion';
 import { TEXTO_INICIO } from '../data/contenido';
 import FondoVivo from '../components/FondoVivo';
 
