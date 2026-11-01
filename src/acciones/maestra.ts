@@ -60,7 +60,11 @@ export async function recuperarClave(_previo: EstadoFormulario, datos: FormData)
   // Solo acepta direcciones de su lista "Redirect URLs".
   await pedirLinkDeClave(email, `${origen}/maestra/entrar`);
   // Mismo mensaje exista o no la cuenta
-  return { ok: true, mensaje: 'Si ese mail tiene una cuenta de maestra, te llega un mensaje con un link para elegir una contraseña nueva.' };
+  return {
+    ok: true,
+    mensaje:
+      'Si ese mail tiene una cuenta de maestra, te llega un mensaje con un link para elegir una contraseña nueva. Si no llega en unos minutos (mirá también en spam), probá de nuevo más tarde.',
+  };
 }
 
 /**

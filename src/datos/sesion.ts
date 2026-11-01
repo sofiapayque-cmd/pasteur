@@ -65,5 +65,7 @@ export async function pedirLinkDeClave(email: string, volverA: string): Promise<
     createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
       auth: { flowType: 'implicit', persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
     });
-  await cliente.auth.resetPasswordForEmail(email, { redirectTo: volverA });
+  const { error } = await cliente.auth.resetPasswordForEmail(email, { redirectTo: volverA });
+  // A la maestra no se le dice (no revela si el mail tiene cuenta); queda en el registro del servidor.
+  if (error) console.error('[maestra] no se pudo pedir el link de clave:', error.code ?? error.status);
 }
