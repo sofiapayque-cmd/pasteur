@@ -135,6 +135,41 @@ select set_config('request.jwt.claim.sub', :C3, false);
 select t.ok('alumno de otra aula no ve la asignación', t.filas('select 1 from asignaciones') = 0);
 select t.ok('alumno de otra aula no guarda en ella', t.falla($$insert into progreso (asignacion_id, aula_id, actividad, etapa) values ((select asig_a1 from ids), (select aula_a from ids), 'a1', 'x')$$));
 
+-- ---------- Etapa 3: año lectivo, entre aulas, entre alumnos, cerrar sesiones ----------
+select set_config('request.jwt.claim.sub', 'aaaaaaaa-0000-0000-0000-000000000001', false);
+select t.ok('aula: año lectivo por defecto es el año actual', (select anio_lectivo from aulas where id = (select aula_a from ids)) = extract(year from now() at time zone 'America/Montevideo'));
+select t.ok('maestra cambia el año lectivo de su aula', t.afecta($$update aulas set anio_lectivo = 2027 where id = (select aula_a from ids)$$) = 1);
+select t.ok('año lectivo fuera de rango se rechaza', t.falla($$update aulas set anio_lectivo = 1999 where id = (select aula_a from ids)$$));
+select t.ok('maestra no pasa su aula a otra docente', t.falla($$update aulas set docente_id = 'bbbbbbbb-0000-0000-0000-000000000001'$$));
+select t.ok('maestra no cambia de aula a un alumno', t.falla($$update alumnos set aula_id = (select aula_b from ids)$$));
+select t.ok('maestra no cambia usuario ni número de un alumno', t.falla($$update alumnos set usuario = 'ZZZZ-02'$$) and t.falla('update alumnos set numero = 9'));
+select set_config('request.jwt.claim.sub', 'bbbbbbbb-0000-0000-0000-000000000001', false);
+select t.ok('maestra B no cambia el año lectivo del aula de A', t.afecta($$update aulas set anio_lectivo = 2030 where id = (select aula_a from ids)$$) = 0);
+select t.ok('maestra B no ve los alumnos del aula de A', t.filas($$select 1 from alumnos where aula_id = (select aula_a from ids)$$) = 0);
+select t.ok('maestra B no desactiva alumnos del aula de A', t.afecta($$update alumnos set activo = false where aula_id = (select aula_a from ids)$$) = 0);
+select set_config('request.jwt.claim.sub', 'cccccccc-0000-0000-0000-000000000001', false);
+select t.ok('alumno no ve otra aula', t.filas($$select 1 from aulas where id = (select aula_b from ids)$$) = 0);
+select t.ok('alumno no cambia el apodo de un compañero', t.afecta($$update alumnos set apodo = 'x' where id = 'cccccccc-0000-0000-0000-000000000002'$$) = 0);
+select t.ok('alumno no cambia el nombre de su aula', t.afecta($$update aulas set nombre = 'x'$$) = 0);
+select set_config('request.jwt.claim.sub', 'cccccccc-0000-0000-0000-000000000003', false);
+select t.ok('alumno de otra aula no ve los alumnos del aula', t.filas($$select 1 from alumnos where aula_id = (select aula_a from ids)$$) = 0);
+select t.ok('alumno de otra aula no ve el progreso del aula', t.filas('select 1 from progreso') = 0);
+select t.ok('alumno de otra aula no ve el aula', t.filas($$select 1 from aulas where id = (select aula_a from ids)$$) = 0);
+reset role;
+insert into auth.sessions (id, user_id) values (gen_random_uuid(), 'cccccccc-0000-0000-0000-000000000002'), (gen_random_uuid(), 'aaaaaaaa-0000-0000-0000-000000000001');
+set role authenticated; select set_config('request.jwt.claim.sub', 'aaaaaaaa-0000-0000-0000-000000000001', false);
+select t.ok('maestra no cierra sesiones directo (solo el servidor)', t.falla($$select public.cerrar_sesiones_alumno('cccccccc-0000-0000-0000-000000000002')$$));
+select set_config('request.jwt.claim.sub', 'cccccccc-0000-0000-0000-000000000001', false);
+select t.ok('alumno no cierra sesiones de otro', t.falla($$select public.cerrar_sesiones_alumno('cccccccc-0000-0000-0000-000000000002')$$));
+reset role;
+set role service_role; 
+select t.ok('servidor cierra las sesiones de un alumno', public.cerrar_sesiones_alumno('cccccccc-0000-0000-0000-000000000002') = 1);
+select t.ok('servidor no cierra sesiones de una maestra con esa función', public.cerrar_sesiones_alumno('aaaaaaaa-0000-0000-0000-000000000001') = 0);
+reset role;
+select t.ok('la sesión de la maestra sigue abierta', (select count(*) from auth.sessions where user_id = 'aaaaaaaa-0000-0000-0000-000000000001') = 1);
+select t.ok('ninguna tabla de la web guarda contraseñas', not exists (select 1 from information_schema.columns where table_schema = 'public' and column_name ~* '(clave|password|contrasen|secret)'));
+set role authenticated;
+
 -- ---------- Sesión en vivo ----------
 select set_config('request.jwt.claim.sub', :A, false);
 insert into sesiones (asignacion_id, aula_id) values ((select asig_a1 from ids), (select aula_a from ids));
