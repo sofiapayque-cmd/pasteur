@@ -12,7 +12,7 @@ Plan completo y diagnóstico: documento "Migración de Vite a Next.js" del proye
 | 2 | ESLint de Next, tipos base, alias `@/`, arreglo de errores previos | Hecha |
 | 3 | App Router: una carpeta por pantalla, se quita react-router | Hecha |
 | 4 | Navegador y Canvas: solo en cliente, sin errores de hidratación | Hecha |
-| 5 | Supabase SSR preparado (sin base completa) | Pendiente |
+| 5 | Supabase SSR preparado (sin base completa) | Hecha |
 | 6 | Verificación final y Vercel | Pendiente |
 
 ## Comandos
@@ -70,6 +70,29 @@ Una carpeta por pantalla en `src/app`. Los paréntesis agrupan sin cambiar la di
 - `FondoVivo` redondea a milésimas las coordenadas calculadas con `Math.cos`/`Math.sin`: el servidor (Node) y el navegador difieren en el último decimal y eso daba error de hidratación en todas las pantallas con fondo. No se ve ninguna diferencia.
 - `Date.now()` en el Tablero y `sessionStorage` al iniciar el avance quedan como están: esas pantallas se dibujan solo en el navegador.
 - Verificación: `hidratacion.py` recorre las 19 direcciones con tres situaciones (sin sala, con sala abierta y niño unido, con avance guardado) en desarrollo y producción: 0 errores y 0 avisos.
+
+## Supabase (etapa 5)
+
+Preparado, **sin cambiar cómo funciona la web hoy**: la sala sigue siendo la de prueba en el navegador.
+
+| Archivo | Qué hace |
+| --- | --- |
+| `.env.example` | Las dos variables (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`). Copiar como `.env.local` para probar en la computadora; en Vercel van en Settings → Environment Variables. |
+| `src/lib/supabase/config.ts` | Lee las variables. `supabaseConfigurado` es false si faltan: todo lo de Supabase se saltea. |
+| `src/lib/supabase/cliente.ts` | Cliente para el navegador. |
+| `src/lib/supabase/servidor.ts` | Cliente para el servidor (cookies) y `obtenerDocente()` con `getClaims()`. |
+| `src/lib/supabase/proxy.ts` + `src/proxy.ts` | Renuevan la sesión en cada pedido, **solo en `/maestra` y `/auth`** (los niños no inician sesión: sus pantallas siguen estáticas). `EXIGIR_SESION_DOCENTE` en false hasta que exista la pantalla de inicio de sesión. |
+| `src/app/auth/confirmar/route.ts` | Adonde llega la maestra desde el mail de Supabase (link mágico). Solo redirige a rutas internas. |
+| `src/sala/repositorio.ts` | El contrato de la sala (`RepositorioSala`). Hoy lo cumple `sala.js`; typecheck avisa si deja de cumplirlo. Explica cómo sumar la versión Supabase. |
+| `supabase/borrador/` | Borrador del esquema SQL (sin aplicar), sus reglas RLS probadas en un Postgres local y los pasos para activarlo. |
+
+Basado en el ejemplo oficial `with-supabase` de Next.js y en la guía de Supabase para SSR
+(`@supabase/ssr` 0.12.7, `@supabase/supabase-js` 2.118.0). Proyecto de Supabase creado (región São Paulo,
+tablas no expuestas por defecto, RLS automático); el esquema todavía no está aplicado.
+
+Verificado: build, lint y typecheck; todas las pruebas sin variables y con variables cargadas sin sesión
+(el proxy no cambia nada ni demora: `/maestra` responde en ~30 ms); `/auth/confirmar` con token falso o sin
+token vuelve a `/rol`.
 
 ## Errores previos a la migración (estado)
 

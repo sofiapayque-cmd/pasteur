@@ -80,7 +80,7 @@ docs/GUIA-ACTIVIDADES.md  reglas para crear o cambiar una actividad
 | Navegación, inicio con zoom, organismos flotando | Funciona |
 | Las 4 actividades en modo individual | Funcionan |
 | Sala: código, apodos, empezar, pausa, desbloqueos, tablero, puesta en común | Funciona en un mismo navegador |
-| Sala entre computadoras distintas (maestra ↔ Ceibal) | Próximo paso: Supabase o Firebase |
+| Sala entre computadoras distintas (maestra ↔ Ceibal) | Supabase preparado; falta aprobar y aplicar la base (`supabase/borrador/`) |
 | Logo del instituto, QR, guías docentes en PDF | Lugares marcados, faltan los archivos |
 | Textos entre corchetes [ ] y comentarios `// VALIDAR:` | A revisar con el Institut Pasteur |
 
@@ -89,5 +89,6 @@ docs/GUIA-ACTIVIDADES.md  reglas para crear o cambiar una actividad
 - **Next.js 16 (App Router) + TypeScript**: el marco de la web. `npm run dev` la levanta en tu computadora, `npm run build` la prepara y `npm start` la sirve como en producción (Vercel).
 - **React 19**: arma la interfaz en componentes (cada pantalla y cada pieza es un archivo).
 - **Direcciones**: sin # (`/maestra`, `/clase/K7RM`...), con el App Router de Next.js. Los links viejos con # siguen andando. Mapa completo en `docs/MIGRACION.md`.
+- **Supabase** (preparado, sin activar): inicio de sesión de la maestra y la base para que la sala funcione entre computadoras. Para probar con Supabase, copiá `.env.example` como `.env.local` y completalo. Borrador de la base en `supabase/borrador/`.
 - La versión anterior con Vite quedó guardada en la rama `version-vite` (y el tag `vite-v1`).
 - Las animaciones son CSS y Canvas, pensadas para que anden en las Ceibal.
