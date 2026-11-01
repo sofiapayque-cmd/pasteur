@@ -8,8 +8,9 @@ import { crearClienteServidor } from '@/lib/supabase/servidor';
   (link mágico o confirmación de cuenta). Verifica el código y la manda a
   `siguiente` (por defecto, su panel).
   Basado en el ejemplo oficial with-supabase de Next.js.
-  En Supabase → Authentication → Email Templates, el link tiene que apuntar a:
-  {{ .SiteURL }}/auth/confirmar?token_hash={{ .TokenHash }}&type=email&siguiente=/maestra
+  En Supabase → Authentication → Email Templates, los links apuntan a:
+  · Invite user:     {{ .SiteURL }}/auth/confirmar?token_hash={{ .TokenHash }}&type=invite&siguiente=/maestra/clave
+  · Reset password:  {{ .SiteURL }}/auth/confirmar?token_hash={{ .TokenHash }}&type=recovery&siguiente=/maestra/clave
 */
 const destinoSeguro = (valor: string | null) => (valor && valor.startsWith('/') && !valor.startsWith('//') ? valor : '/maestra');
 
@@ -24,6 +25,6 @@ export async function GET(request: NextRequest) {
     const { error } = await supabase.auth.verifyOtp({ type: tipo, token_hash: tokenHash });
     if (!error) redirect(siguiente);
   }
-  // Link vencido, ya usado o Supabase sin configurar: vuelve al inicio de la maestra.
-  redirect('/rol');
+  // Link vencido, ya usado o Supabase sin configurar
+  redirect('/maestra/entrar?error=link');
 }

@@ -14,3 +14,11 @@ export const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
 export const SUPABASE_PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? '';
 
 export const supabaseConfigurado = Boolean(SUPABASE_URL && SUPABASE_PUBLISHABLE_KEY);
+
+/*
+  Interruptor del sistema real de aulas (maestras con cuenta, aulas, alumnos
+  con tarjeta). Se prende con NEXT_PUBLIC_AULAS_REALES=1 SOLO en desarrollo y
+  en los links de prueba de Vercel hasta que esté aprobado. Apagado, la web
+  funciona igual que el prototipo (sala de prueba en el navegador).
+*/
+export const aulasReales = supabaseConfigurado && process.env.NEXT_PUBLIC_AULAS_REALES === '1';

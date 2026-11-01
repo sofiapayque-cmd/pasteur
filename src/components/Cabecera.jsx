@@ -3,6 +3,7 @@
 import { useNavigate } from '@/navegacion';
 
 /* Barra de arriba: botón Volver, miga de pan y lugar para el logo del instituto. */
+/** @param {{ volverA?: string, miga?: string, derecha?: import('react').ReactNode }} props */
 export default function Cabecera({ volverA, miga, derecha }) {
   const navegar = useNavigate();
   return (

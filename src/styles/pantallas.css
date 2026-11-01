@@ -1227,3 +1227,85 @@
   right: 32px;
   z-index: 3;
 }
+
+/* ---------- Maestra: acceso (ingresar, recuperar, elegir contraseña) ---------- */
+.acceso {
+  display: flex;
+  flex-direction: column;
+}
+.acceso__cuerpo {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-5);
+  padding: var(--space-5);
+}
+.acceso__tarjeta {
+  width: min(480px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  background: #fff;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--halo);
+}
+.acceso__tarjeta h1 {
+  font-size: clamp(32px, 3.6vw, 44px);
+  color: var(--nucleo);
+}
+.acceso__bajada {
+  color: var(--tinta-suave);
+}
+.acceso__form {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+.acceso__mensaje {
+  min-height: 24px;
+  font-weight: 600;
+}
+.acceso__listo {
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--clorofila);
+  font-weight: 600;
+}
+.campo {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.campo__nombre {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--tinta-suave);
+}
+.campo__entrada {
+  height: 56px;
+  padding: 0 var(--space-3);
+  border: 2px solid var(--plasma);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  font-size: 18px;
+  color: var(--tinta);
+}
+.campo__entrada:focus {
+  border-color: var(--nucleo);
+}
+.cuenta-docente {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+@media (max-width: 760px) {
+  .acceso__moli {
+    display: none;
+  }
+}

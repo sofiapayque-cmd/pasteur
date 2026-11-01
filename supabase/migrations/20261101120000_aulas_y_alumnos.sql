@@ -35,12 +35,23 @@ $$;
 -- ---------------------------------------------------------------------
 -- Docentes: una fila por maestra (misma id que su usuario de Supabase Auth).
 -- Se crea sola con un trigger cuando se crea un usuario que no es alumno.
+--
+-- estado:
+--   · activa     → puede crear aulas y ver las suyas.
+--   · pendiente  → (futuro "Solicitar acceso") se registró sola y espera que
+--                  el equipo del Pasteur la apruebe. No puede hacer nada.
+--   · suspendida → el equipo le quitó el acceso. No ve ni cambia nada.
+-- Hoy el registro abierto está apagado y TODAS las maestras entran por
+-- invitación, así que nacen 'activa'. Solo el servidor o el panel de
+-- administración (futuro) cambian el estado; la maestra no puede.
 -- ---------------------------------------------------------------------
 create table public.docentes (
-  id         uuid primary key references auth.users (id) on delete cascade,
-  nombre     text not null default '' check (char_length(nombre) <= 120),
-  escuela    text not null default '' check (char_length(escuela) <= 160),
-  creado_en  timestamptz not null default now()
+  id           uuid primary key references auth.users (id) on delete cascade,
+  nombre       text not null default '' check (char_length(nombre) <= 120),
+  escuela      text not null default '' check (char_length(escuela) <= 160),
+  estado       text not null default 'activa' check (estado in ('pendiente', 'activa', 'suspendida')),
+  creado_en    timestamptz not null default now(),
+  estado_desde timestamptz not null default now()
 );
 
 -- ---------------------------------------------------------------------

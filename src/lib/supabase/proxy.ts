@@ -1,17 +1,17 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
-import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL, supabaseConfigurado } from './config';
+import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL, aulasReales, supabaseConfigurado } from './config';
 
 /*
   Renueva la sesión de Supabase en cada pedido (lo llama src/proxy.ts).
   Basado en el ejemplo oficial with-supabase de Next.js.
 
-  EXIGIR_SESION_DOCENTE: hoy en false, porque todavía no existe la pantalla de
-  inicio de sesión de la maestra. Cuando exista, se pasa a true y las rutas de
-  /maestra mandan a iniciar sesión a quien no la tenga.
+  Con el sistema de aulas prendido (aulasReales), las rutas de /maestra mandan
+  a /maestra/entrar a quien no tenga sesión. Es comodidad: la seguridad real
+  está en (docente)/layout.tsx, en cada Server Action y en las reglas RLS.
 */
-const EXIGIR_SESION_DOCENTE = false;
-const RUTA_INICIAR_SESION = '/maestra/entrar'; // todavía no existe
+const RUTA_INICIAR_SESION = '/maestra/entrar';
+const SIN_SESION = ['/maestra/entrar', '/maestra/recuperar'];
 
 export async function actualizarSesion(request: NextRequest) {
   let respuesta = NextResponse.next({ request });
@@ -37,7 +37,7 @@ export async function actualizarSesion(request: NextRequest) {
   const docente = data?.claims;
 
   const ruta = request.nextUrl.pathname;
-  if (EXIGIR_SESION_DOCENTE && !docente && ruta.startsWith('/maestra') && ruta !== RUTA_INICIAR_SESION) {
+  if (aulasReales && !docente && ruta.startsWith('/maestra') && !SIN_SESION.includes(ruta)) {
     const url = request.nextUrl.clone();
     url.pathname = RUTA_INICIAR_SESION;
     const redireccion = NextResponse.redirect(url);

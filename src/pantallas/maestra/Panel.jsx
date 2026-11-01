@@ -5,14 +5,17 @@ import Cabecera from '../../components/Cabecera';
 import Moli from '../../components/Moli';
 import FondoVivo from '../../components/FondoVivo';
 import { ACTIVIDADES } from '../../data/contenido';
+import CuentaDocente from '../../components/CuentaDocente';
 
-/* 03 · PANEL DE LA MAESTRA — las cuatro actividades aparecen como colonias que crecen. */
-export default function Panel() {
+/* 03 · PANEL DE LA MAESTRA — las cuatro actividades aparecen como colonias que crecen.
+   cuenta: nombre de la maestra con sesión (sistema de aulas), o null en el prototipo. */
+/** @param {{ cuenta?: string | null }} props */
+export default function Panel({ cuenta = null }) {
   const navegar = useNavigate();
   return (
     <main className="pantalla panel">
       <FondoVivo semilla={9} />
-      <Cabecera volverA="/rol" miga="Inicio › Maestras" />
+      <Cabecera volverA="/rol" miga="Inicio › Maestras" derecha={cuenta ? <CuentaDocente nombre={cuenta} /> : undefined} />
       <div className="panel__cabeza">
         <div className="panel__intro">
           <span className="etiqueta">Recorrido docente</span>

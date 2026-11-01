@@ -62,8 +62,9 @@ Migraciones: `supabase/migrations/` (1. tablas, 2. seguridad, 3. tiempo real).
 
 ### Maestras
 - Supabase Auth con **mail y contraseña** (no link mágico: los mails son limitados y la maestra puede entrar desde la escuela sin abrir su correo).
-- **Propuesta: alta por invitación** (registro abierto desactivado). El Instituto invita a cada maestra desde Supabase; así nadie de afuera crea cuentas de alumnos. *(Decisión pendiente.)*
-- Al crearse su usuario, un trigger crea su fila en `docentes`.
+- **Alta por invitación** (decidido): registro abierto desactivado; el equipo invita a cada maestra desde Supabase. Al aceptar elige su contraseña en `/maestra/clave`.
+- Al crearse su usuario, un trigger crea su fila en `docentes` con `estado = 'activa'`.
+- **Preparado para el futuro, sin implementar:** `docentes.estado` admite `pendiente` y `suspendida`. Un "Solicitar acceso" crearía maestras `pendiente` (registro abierto + trigger que ponga `pendiente`), y un panel del equipo del Pasteur (usuarios con `app_metadata.rol = 'admin'`, puesto solo desde el servidor) las aprobaría o suspendería. Las reglas ya dejan sin acceso a toda maestra que no esté `activa`, y la maestra no puede cambiar su propio estado.
 
 ### Alumnos (sin nombre ni mail)
 1. La maestra crea un aula e indica cuántos niños tiene (ej. 28).
@@ -73,7 +74,7 @@ Migraciones: `supabase/migrations/` (1. tablas, 2. seguridad, 3. tiempo real).
    - `app_metadata.rol = 'alumno'`, que el usuario no puede cambiar;
    - una clave al azar, que **solo existe con hash dentro de Supabase Auth**.
 3. La maestra ve las claves **una sola vez**, para imprimir las tarjetas (usuario + clave; opcional: el QR del link de ingreso). No se guardan en ningún otro lado. Si un niño pierde la suya, la maestra genera una nueva.
-4. **Formato de clave (propuesta):** dos palabras fáciles + dos números (`sapo-luna-42`). Unas 6 millones de combinaciones, que con el bloqueo por intentos alcanzan para datos de este tipo. Alternativa más fuerte: 6 caracteres al azar (`k7m2qp`), más difícil de tipear a los 7 años. *(Decisión pendiente.)*
+4. **Formato de clave (decidido):** dos palabras fáciles + dos números (`sapo-luna-42`). Unas 6 millones de combinaciones, que con el bloqueo por intentos alcanzan para datos de este tipo.
 
 ### Ingreso del alumno, del lado del servidor
 `/clase` → el niño escribe usuario y clave → **Server Action**:
@@ -143,14 +144,21 @@ Más adelante, `progreso.registrar(tipo, valor)` para que cada actividad sume re
 
 ## 9. Pruebas de esta etapa
 
-- `supabase/pruebas/correr.sh`: crea un Postgres 16 desde cero, imita lo que Supabase trae (roles, `auth.users`, `auth.uid()`), aplica las 3 migraciones y corre **64 pruebas de seguridad** (maestra, otra maestra, alumno, compañero, alumno de otra aula, desactivado, sin sesión, servidor). Resultado: **64 OK · 0 fallas**.
+- `supabase/pruebas/correr.sh`: crea un Postgres 16 desde cero, imita lo que Supabase trae (roles, `auth.users`, `auth.uid()`), aplica las 3 migraciones y corre **71 pruebas de seguridad** (maestra, otra maestra, maestra suspendida o pendiente, alumno, compañero, alumno de otra aula, desactivado, sin sesión, servidor). Resultado: **71 OK · 0 fallas**.
 - Prueba de que las pruebas detectan errores: con 3 reglas debilitadas a propósito, fallan 5 pruebas.
 - Lo que la imitación **no** cubre (se prueba en la etapa 2, en el proyecto de desarrollo): el Auth real, Realtime con RLS y el asesor de seguridad de Supabase.
 
-## 10. Decisiones pendientes
+## 10. Decisiones
 
-1. Alta de maestras: por invitación (propuesta) o registro abierto.
-2. Formato de la clave de los niños.
-3. Cuánto tiempo se guardan los datos de los niños y qué se hace al terminar el año (a validar con el Institut Pasteur; Ley 18.331 de protección de datos personales).
-4. Cómo aplicar las migraciones: conectar Supabase a Claude (conector oficial, solo al proyecto de desarrollo) o pegarlas vos en el SQL Editor.
+Tomadas (1/11/2026):
+1. Maestras **solo por invitación**, con la estructura lista para "Solicitar acceso" y un panel del equipo más adelante.
+2. Claves de los niños: **palabras + número**.
+3. Migraciones: **conector oficial de Supabase, solo en el proyecto de desarrollo**. Revisar antes de aplicar, nada que borre datos, pruebas de seguridad después, y parar a preguntar ante cualquier operación destructiva o irreversible.
+
+Pendientes:
+4. Cuánto tiempo se guardan los datos de los niños y qué se hace al terminar el año (validar con el Institut Pasteur; Ley 18.331 de protección de datos personales).
 5. Plan de Supabase para el piloto con escuelas (gratis se pausa a la semana sin uso).
+
+## 11. Interruptor del sistema real
+
+`NEXT_PUBLIC_AULAS_REALES=1` prende el sistema de aulas (ingreso de maestras y, en las etapas siguientes, aulas y alumnos). Va **solo** en `.env.local` de desarrollo y en las variables *Preview* de Vercel (apuntando al proyecto dev). Sin esa variable, la web es el prototipo de siempre: así producción no cambia hasta aprobarlo.

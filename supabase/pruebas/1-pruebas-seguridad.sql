@@ -167,6 +167,24 @@ select t.ok('la maestra tampoco borra aulas', t.falla('delete from aulas'));
 select t.ok('la maestra no borra alumnos', t.falla('delete from alumnos'));
 select t.ok('la maestra no borra resultados', t.falla('delete from resultados'));
 
+-- ---------- Maestra suspendida / pendiente ----------
+reset role;
+update docentes set estado = 'suspendida' where id = :B;
+set role authenticated; select set_config('request.jwt.claim.sub', :B, false);
+select t.ok('suspendida: no ve sus aulas', t.filas('select 1 from aulas') = 0);
+select t.ok('suspendida: no crea aulas', t.falla($$insert into aulas (nombre) values ('otra')$$));
+select t.ok('suspendida: no ve sus alumnos', t.filas('select 1 from alumnos') = 0);
+select t.ok('suspendida: ve su propio estado', (select estado from docentes) = 'suspendida');
+select t.ok('la maestra no cambia su estado', t.falla($$update docentes set estado = 'activa'$$));
+reset role;
+update docentes set estado = 'pendiente' where id = :B;
+set role authenticated; select set_config('request.jwt.claim.sub', :B, false);
+select t.ok('pendiente: no crea aulas', t.falla($$insert into aulas (nombre) values ('otra')$$));
+reset role;
+update docentes set estado = 'activa' where id = :B;
+set role authenticated; select set_config('request.jwt.claim.sub', :B, false);
+select t.ok('reactivada: vuelve a ver su aula', t.filas('select 1 from aulas') = 1);
+
 -- ---------- Sin sesión ----------
 reset role; set role anon; select set_config('request.jwt.claim.sub', '', false);
 select t.ok('sin sesión: no lee aulas', t.filas('select 1 from aulas') = -1);

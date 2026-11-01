@@ -17,16 +17,17 @@
 -- Funciones de ayuda (security definer: leen las tablas sin pasar por las
 -- reglas, así las reglas no se llaman entre sí en bucle)
 -- ---------------------------------------------------------------------
+-- Maestra habilitada (estado 'activa'). Pendientes y suspendidas no pasan.
 create function public.es_docente() returns boolean
 language sql stable security definer set search_path = '' as $$
-  select exists (select 1 from public.docentes d where d.id = auth.uid());
+  select exists (select 1 from public.docentes d where d.id = auth.uid() and d.estado = 'activa');
 $$;
 
 create function public.es_docente_de_aula(p_aula uuid) returns boolean
 language sql stable security definer set search_path = '' as $$
   select exists (
-    select 1 from public.aulas a
-    where a.id = p_aula and a.docente_id = auth.uid()
+    select 1 from public.aulas a join public.docentes d on d.id = a.docente_id
+    where a.id = p_aula and a.docente_id = auth.uid() and d.estado = 'activa'
   );
 $$;
 
@@ -82,11 +83,12 @@ grant update (nombre, escuela) on public.docentes to authenticated;
 -- Aulas: la maestra dueña crea, ve y edita (archiva); el alumno ve la suya
 -- ---------------------------------------------------------------------
 create policy "aulas: la maestra ve las suyas" on public.aulas
-  for select to authenticated using (docente_id = (select auth.uid()));
+  for select to authenticated using ((select public.es_docente_de_aula(id)));
 create policy "aulas: la maestra crea" on public.aulas
   for insert to authenticated with check (docente_id = (select auth.uid()) and (select public.es_docente()));
 create policy "aulas: la maestra edita las suyas" on public.aulas
-  for update to authenticated using (docente_id = (select auth.uid())) with check (docente_id = (select auth.uid()));
+  for update to authenticated using ((select public.es_docente_de_aula(id)))
+  with check (docente_id = (select auth.uid()));
 create policy "aulas: el alumno ve la suya" on public.aulas
   for select to authenticated using (id = (select public.mi_aula()));
 grant select on public.aulas to authenticated;
@@ -190,6 +192,7 @@ grant insert (asignacion_id, aula_id, actividad, sesion_id, tipo, valor) on publ
 -- service_role (clave secreta, solo servidor): lo que necesita y nada más
 -- (en Supabase ya salta las reglas RLS; acá se le dan los permisos de tabla)
 -- ---------------------------------------------------------------------
-grant select on public.aulas, public.docentes to service_role;
+grant select on public.aulas to service_role;
+grant select, update (estado, estado_desde) on public.docentes to service_role;  -- aprobar / suspender (futuro panel)
 grant select, insert, update on public.alumnos to service_role;
 grant select, insert, update, delete on public.intentos_ingreso to service_role;
