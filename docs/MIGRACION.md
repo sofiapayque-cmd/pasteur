@@ -13,7 +13,7 @@ Plan completo y diagnóstico: documento "Migración de Vite a Next.js" del proye
 | 3 | App Router: una carpeta por pantalla, se quita react-router | Hecha |
 | 4 | Navegador y Canvas: solo en cliente, sin errores de hidratación | Hecha |
 | 5 | Supabase SSR preparado (sin base completa) | Hecha |
-| 6 | Verificación final y Vercel | Pendiente |
+| 6 | Verificación final y Vercel | Hecha |
 
 ## Comandos
 
@@ -93,6 +93,30 @@ tablas no expuestas por defecto, RLS automático); el esquema todavía no está 
 Verificado: build, lint y typecheck; todas las pruebas sin variables y con variables cargadas sin sesión
 (el proxy no cambia nada ni demora: `/maestra` responde en ~30 ms); `/auth/confirmar` con token falso o sin
 token vuelve a `/rol`.
+
+## Verificación final (etapa 6)
+
+| Criterio de aceptación | Cómo se comprobó | Resultado |
+| --- | --- | --- |
+| Inicia en desarrollo | `npm run dev` + recorrido de todas las direcciones | Sí |
+| `npm run build` sin errores | En la carpeta de trabajo y en una copia limpia del repo con `npm ci` (como Vercel) | Sí |
+| La navegación funciona | 40 chequeos: direcciones directas, links viejos con `#`, inválidas, atrás, `?desde=`, link de clase | 40/40 |
+| Todas las pantallas accesibles | Las 19 direcciones (14 pantallas) | Sí |
+| Las actividades mantienen sus interacciones | Clase completa A1–A3 (maestra + niño), zoom y cultivo de A1, A2 (molécula y conclusiones), A3 (microscopio) | Todas pasan |
+| Los recursos visuales cargan | Fuentes locales, SVG, estilos; 12 pantallas comparadas píxel a píxel con vite-v1 | 0,00 % de diferencia |
+| Sin errores críticos de hidratación | 19 direcciones × 3 situaciones de almacenamiento, en desarrollo y producción | 0 errores, 0 avisos |
+| No se pierden funcionalidades | Todas las pruebas de la versión Vite pasan sin cambios | Sí |
+
+También: lint 0 errores (21 avisos del React Compiler, documentados abajo), typecheck sin errores,
+`npm audit --omit=dev` 0 vulnerabilidades, Node ≥ 20.9 declarado en `package.json`.
+
+## Publicar en Vercel
+
+1. Proyecto importado desde GitHub (`sofiapayque-cmd/pasteur`), preset **Next.js**, sin cambiar comandos.
+2. Variables (Production y Preview): `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
+3. Cada push a una rama crea un link de prueba (*Preview*). La rama `main` es la publicada (*Production*).
+4. Para publicar la versión Next.js: unir `migracion/nextjs` en `main` (pull request). La versión Vite queda en `version-vite`.
+5. Después de publicar: en Supabase → Authentication → URL Configuration, poner la dirección de Vercel como *Site URL*.
 
 ## Errores previos a la migración (estado)
 
