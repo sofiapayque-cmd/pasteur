@@ -78,9 +78,11 @@ select t.ok('trigger: un usuario anónimo no se vuelve docente',
 set local role authenticated; select t.como('aaaaaaaa-0000-0000-0000-000000000001');
 insert into public.aulas (nombre, grado) values ('4° B', 4);
 select t.ok('maestra crea aula con código de 4', (select codigo ~ '^[A-HJ-NP-Z2-9]{4}$' from public.aulas limit 1));
+select t.ok('maestra crea aula y recibe la fila (insert … returning, como supabase-js)', t.afecta($$insert into public.aulas (nombre, grado) values ('3° A', 3) returning codigo$$) = 1);
+select t.ok('maestra edita su aula y recibe la fila (update … returning)', t.afecta($$update public.aulas set nombre = '3° A bis' where nombre = '3° A' returning id$$) = 1);
 select t.ok('maestra no elige docente_id ajeno', t.falla($$insert into public.aulas (nombre, docente_id) values ('x', 'bbbbbbbb-0000-0000-0000-000000000001')$$));
 reset role;
-insert into t.ids (aula_a) select id from public.aulas where docente_id = 'aaaaaaaa-0000-0000-0000-000000000001';
+insert into t.ids (aula_a) select id from public.aulas where docente_id = 'aaaaaaaa-0000-0000-0000-000000000001' and nombre = '4° B';
 
 -- Maestra B
 set local role authenticated; select t.como('bbbbbbbb-0000-0000-0000-000000000001');

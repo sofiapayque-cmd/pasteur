@@ -48,9 +48,11 @@ select t.ok('trigger: un usuario anónimo no se vuelve docente', (select count(*
 set role authenticated; select set_config('request.jwt.claim.sub', :A, false);
 insert into aulas (nombre, grado) values ('4° B', 4);
 select t.ok('maestra crea aula con código de 4', (select codigo ~ '^[A-HJ-NP-Z2-9]{4}$' from aulas limit 1));
+select t.ok('maestra crea aula y recibe la fila (insert … returning, como supabase-js)', t.afecta($$insert into aulas (nombre, grado) values ('3° A', 3) returning codigo$$) = 1);
+select t.ok('maestra edita su aula y recibe la fila (update … returning)', t.afecta($$update aulas set nombre = '3° A bis' where nombre = '3° A' returning id$$) = 1);
 select t.ok('maestra no elige docente_id ajeno', t.falla($$insert into aulas (nombre, docente_id) values ('x', 'bbbbbbbb-0000-0000-0000-000000000001')$$));
 reset role;
-create temp table ids as select (select id from aulas where docente_id = :A) as aula_a;
+create temp table ids as select (select id from aulas where docente_id = :A and nombre = '4° B') as aula_a;
 grant select on ids to authenticated, service_role, anon;
 
 -- Maestra B
