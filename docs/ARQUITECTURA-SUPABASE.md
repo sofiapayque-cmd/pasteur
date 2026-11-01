@@ -1,6 +1,6 @@
 # Aulas persistentes con Supabase — auditoría, esquema y modelo de seguridad
 
-Etapa 1 (propuesta). Rama `supabase/aulas`. **Nada de esto está aplicado en Supabase todavía.**
+Etapa 2 (en curso). Rama `supabase/aulas`. **Las 4 migraciones están aplicadas solo en el proyecto de desarrollo** (`ciencia-sin-limites-dev`). Producción sigue vacía y sin tocar.
 
 ## 1. Auditoría (1/11/2026)
 
@@ -8,7 +8,8 @@ Etapa 1 (propuesta). Rama `supabase/aulas`. **Nada de esto está aplicado en Sup
 | --- | --- |
 | Migración a Next.js | Completa en `migracion/nextjs`. PR #1 abierto: `main` sigue con la versión Vite y por eso el deploy de producción en Vercel falla. El preview de `migracion/nextjs` compila y funciona. |
 | Git | Ramas `main` (Vite), `version-vite` (respaldo), `migracion/nextjs`, `supabase/aulas` (esta). Árbol limpio. |
-| Supabase (proyecto `ciencia-sin-limites`, São Paulo) | Sin tablas (el borrador nunca se aplicó). Auth: solo email, registro abierto con confirmación por mail, inicio anónimo desactivado. Tablas no expuestas por defecto, RLS automático. |
+| Supabase producción (`ciencia-sin-limites`, ref `wjaunybecxirzwebembp`) | Sin tablas (el borrador nunca se aplicó). Auth: solo email, registro abierto con confirmación por mail, inicio anónimo desactivado. Tablas no expuestas por defecto, RLS automático. **Ojo: la región real es us-east-2 (Ohio), no São Paulo** (verificado con el conector el 31/10). |
+| Supabase desarrollo (`ciencia-sin-limites-dev`, ref `zicotbjzbnofydxqmkba`, São Paulo) | Creado el 31/10 con el conector (plan gratuito, sin costo). **Expone las tablas nuevas por defecto** (les da todo a anon, authenticated y service_role): las migraciones ya no dependen de eso. Las 4 migraciones aplicadas. |
 | Vercel | Proyecto `pasteur` (Hobby) con `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` en Production y Preview, ambas apuntando al mismo proyecto de Supabase. |
 | Código | `src/lib/supabase` (clientes navegador/servidor, proxy), `src/sala/repositorio.ts` (contrato de la sala), sala de prueba en localStorage. |
 
@@ -56,7 +57,9 @@ auth.users ──┬── docentes ── aulas ──┬── alumnos (cuenta
 
 Reglas de integridad: claves foráneas compuestas impiden mezclar aulas o actividades (un progreso de A1 no puede colgarse de una asignación de A3 ni de otra aula); `datos` hasta 64 KB y `resultados` hasta 16 KB; códigos y usuarios con formato fijo. **Nada se borra desde la web**: las aulas se archivan, los alumnos se desactivan, las asignaciones se cierran.
 
-Migraciones: `supabase/migrations/` (1. tablas, 2. seguridad, 3. tiempo real).
+Migraciones: `supabase/migrations/` (1. tablas, 2. seguridad, 3. tiempo real, 4. funciones de ayuda en el esquema `privado`).
+
+Las funciones `security definer` que usan las reglas (`es_docente`, `es_docente_de_aula`, `mi_aula`, `asignacion_abierta`, `generar_codigo_aula`) viven en el esquema **`privado`**, que la API de Supabase no publica: las reglas las usan, pero nadie las puede llamar como `/rest/v1/rpc/…` (recomendación del asesor de seguridad, lint 0029).
 
 ## 4. Identidad y autenticación
 
@@ -113,7 +116,7 @@ Las reglas comprueban pertenencia con **tablas** (`docentes`, `alumnos.activo`),
 
 | Entorno | Supabase | Vercel | Datos |
 | --- | --- | --- | --- |
-| Desarrollo | **nuevo** proyecto `ciencia-sin-limites-dev` | variables de *Preview* + `.env.local` | de prueba |
+| Desarrollo | `ciencia-sin-limites-dev` (`zicotbjzbnofydxqmkba`, São Paulo) | variables de *Preview* de la rama `supabase/aulas` + `.env.local` | de prueba |
 | Producción | `ciencia-sin-limites` (el actual) | variables de *Production* | reales |
 
 - Las migraciones se aplican **primero en desarrollo**, se prueban y recién después en producción.
@@ -144,9 +147,11 @@ Más adelante, `progreso.registrar(tipo, valor)` para que cada actividad sume re
 
 ## 9. Pruebas de esta etapa
 
-- `supabase/pruebas/correr.sh`: crea un Postgres 16 desde cero, imita lo que Supabase trae (roles, `auth.users`, `auth.uid()`), aplica las 3 migraciones y corre **71 pruebas de seguridad** (maestra, otra maestra, maestra suspendida o pendiente, alumno, compañero, alumno de otra aula, desactivado, sin sesión, servidor). Resultado: **71 OK · 0 fallas**.
-- Prueba de que las pruebas detectan errores: con 3 reglas debilitadas a propósito, fallan 5 pruebas.
-- Lo que la imitación **no** cubre (se prueba en la etapa 2, en el proyecto de desarrollo): el Auth real, Realtime con RLS y el asesor de seguridad de Supabase.
+- `supabase/pruebas/correr.sh`: crea un Postgres 16 desde cero, imita lo que Supabase trae (roles, `auth.users`, `auth.uid()`, y el **peor caso**: tablas y funciones nuevas expuestas por defecto), aplica las 4 migraciones y corre **75 pruebas de seguridad** (maestra, otra maestra, maestra suspendida o pendiente, alumno, compañero, alumno de otra aula, desactivado, sin sesión, servidor, usuario anónimo, funciones fuera de la API). Resultado: **75 OK · 0 fallas**.
+- Prueba de que las pruebas detectan errores: con 3 reglas debilitadas a propósito fallan 5 pruebas; sin los arreglos del 31/10 (service_role, usuario anónimo, migración 4) fallan las 4 pruebas nuevas.
+- `supabase/pruebas/2-pruebas-supabase-real.sql`: las mismas pruebas + 10 extra (permisos de la API), para correr **en el proyecto dev real** como una sola consulta (conector o SQL Editor). Todo pasa en una transacción y el último paso lanza un error a propósito con el resultado: eso deshace todo. 31/10: **85 OK · 0 fallas**, y después la base quedó vacía (0 usuarios, 0 aulas, sin el esquema de prueba).
+- Asesor de seguridad de Supabase (dev, 31/10): solo queda el aviso **INFO** de `intentos_ingreso` con RLS y sin reglas, que es a propósito (la usa solo el servidor). Asesor de rendimiento: solo avisos esperables en una base vacía (índices sin usar, dos reglas de lectura por tabla, claves foráneas compuestas sin índice propio); se revisan con datos reales.
+- Las versiones de las migraciones en Supabase las pone el conector al aplicarlas (`20261101023801`…), no son las de los nombres de archivo. Para producción se aplican igual, con el conector y en el mismo orden.
 
 ## 10. Decisiones
 
@@ -162,3 +167,32 @@ Pendientes:
 ## 11. Interruptor del sistema real
 
 `NEXT_PUBLIC_AULAS_REALES=1` prende el sistema de aulas (ingreso de maestras y, en las etapas siguientes, aulas y alumnos). Va **solo** en `.env.local` de desarrollo y en las variables *Preview* de Vercel (apuntando al proyecto dev). Sin esa variable, la web es el prototipo de siempre: así producción no cambia hasta aprobarlo.
+
+## 12. Ingreso de maestras en el proyecto dev (configuración)
+
+Se hace una vez, en el panel de Supabase del proyecto **`ciencia-sin-limites-dev`** (mirar el nombre arriba a la izquierda antes de tocar nada) y en Vercel. La dirección de la web de prueba es la del preview de la rama: `https://pasteur-git-supabase-aulas-pasteur2.vercel.app` (comprobarla en Vercel → Deployments → el último de `supabase/aulas` → Domains; si es otra, usar esa en todos los pasos).
+
+### Supabase → Authentication
+1. **Sign In / Providers**: *Allow new users to sign up* **apagado** (solo por invitación); *Allow anonymous sign-ins* apagado; proveedor *Email* prendido.
+2. **URL Configuration**: *Site URL* = la dirección del preview. *Redirect URLs*: esa dirección + `/**`, y `http://localhost:3000/**` para probar en la computadora. Nada más (cuantas menos, más seguro).
+3. **Emails → Templates**:
+   - *Invite user* — asunto `Te invitaron a La ciencia sin límites`, link:
+     `{{ .SiteURL }}/auth/confirmar?token_hash={{ .TokenHash }}&type=invite&siguiente=/maestra/clave`
+   - *Reset password* — asunto `Elegí una contraseña nueva`, link:
+     `{{ .SiteURL }}/auth/confirmar?token_hash={{ .TokenHash }}&type=recovery&siguiente=/maestra/clave`
+4. **Project Settings → API Keys**: copiar la *secret key* (`sb_secret_…`). Va **solo** en Vercel (paso siguiente) y en `.env.local`; nunca en el chat, en GitHub ni con `NEXT_PUBLIC_`.
+
+### Vercel → proyecto `pasteur` → Settings → Environment Variables
+Cuatro variables, cada una con entorno **Preview** y rama **`supabase/aulas`** (así ninguna otra rama ni producción cambia):
+
+| Variable | Valor |
+| --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | `https://zicotbjzbnofydxqmkba.supabase.co` |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | `sb_publishable_kiWWspI9BEZhWpBS_MVrFQ_hZ5eXSvD` (pública a propósito) |
+| `NEXT_PUBLIC_AULAS_REALES` | `1` |
+| `SUPABASE_SECRET_KEY` | la *secret key* del dev, marcada **Sensitive** |
+
+Después hace falta un deploy nuevo de la rama (un push, o *Redeploy* del último).
+
+### Primera maestra (prueba)
+Supabase → Authentication → Users → *Add user* → *Send invitation* → tu mail. Con el servidor de mail de Supabase solo llegan mails a miembros de la organización y como máximo 2 por hora; el link vale una hora y un solo uso. El link lleva a `/auth/confirmar` → `/maestra/clave` (contraseña de 10 caracteres o más) → panel. Después: *Salir* y volver a entrar en `/maestra/entrar` con mail y contraseña.
