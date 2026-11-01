@@ -1,3 +1,5 @@
+> **Reemplazado** por `supabase/migrations/` (aulas persistentes con cuentas de alumno). Ver `docs/ARQUITECTURA-SUPABASE.md`. Este borrador queda como registro de la primera propuesta.
+
 # Borrador de la base de datos (Supabase)
 
 **No está aplicado en ningún lado.** Es la propuesta para revisar antes de crear las tablas.
