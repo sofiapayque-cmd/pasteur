@@ -175,15 +175,11 @@ Se hace una vez, en el panel de Supabase del proyecto **`ciencia-sin-limites-dev
 ### Supabase → Authentication
 1. **Sign In / Providers**: *Allow new users to sign up* **apagado** (solo por invitación); *Allow anonymous sign-ins* apagado; proveedor *Email* prendido.
 2. **URL Configuration**: *Site URL* = la dirección del preview. *Redirect URLs*: esa dirección + `/**`, y `http://localhost:3000/**` para probar en la computadora. Nada más (cuantas menos, más seguro).
-3. **Emails → Templates**:
-   - *Invite user* — asunto `Te invitaron a La ciencia sin límites`, link:
-     `{{ .SiteURL }}/auth/confirmar?token_hash={{ .TokenHash }}&type=invite&siguiente=/maestra/clave`
-   - *Reset password* — asunto `Elegí una contraseña nueva`, link:
-     `{{ .SiteURL }}/auth/confirmar?token_hash={{ .TokenHash }}&type=recovery&siguiente=/maestra/clave`
+3. **Emails → Templates: no se tocan.** Sin un servidor de mail propio (SMTP), Supabase no deja editar las plantillas (aviso "Set up custom SMTP to edit templates"). La web funciona con las de fábrica: el botón del mail pasa por Supabase, que vuelve a la web con la sesión después del `#` (`#access_token=…&type=invite`). `src/components/LinkDeMail.tsx` (en el layout raíz) lo lee, lo borra de la dirección y del historial, y se lo pasa a la Server Action `abrirLinkDeMail`, que lo valida con Supabase, guarda la sesión en cookies y sigue a `/maestra/clave`. Si el link venció o ya se usó, va a `/maestra/entrar` con el aviso. La recuperación de contraseña usa el mismo camino (flujo implícito: se puede pedir en la escuela y abrir en el celular). Con SMTP propio (etapa 9) se pueden poner plantillas en español que apunten a `/auth/confirmar`, que ya está lista.
 4. **Project Settings → API Keys**: copiar la *secret key* (`sb_secret_…`). Va **solo** en Vercel (paso siguiente) y en `.env.local`; nunca en el chat, en GitHub ni con `NEXT_PUBLIC_`.
 
 ### Vercel → proyecto `pasteur` → Settings → Environment Variables
-Cuatro variables, cada una con entorno **Preview** y rama **`supabase/aulas`** (así ninguna otra rama ni producción cambia):
+Las dos que ya existen (*Production and Preview*) apuntan a producción y **no se tocan**. Se agregan cuatro, cada una con entorno **solo Preview** y rama **`supabase/aulas`**: para esa rama ganan las nuevas, y ninguna otra rama ni producción cambia.
 
 | Variable | Valor |
 | --- | --- |
@@ -195,4 +191,4 @@ Cuatro variables, cada una con entorno **Preview** y rama **`supabase/aulas`** (
 Después hace falta un deploy nuevo de la rama (un push, o *Redeploy* del último).
 
 ### Primera maestra (prueba)
-Supabase → Authentication → Users → *Add user* → *Send invitation* → tu mail. Con el servidor de mail de Supabase solo llegan mails a miembros de la organización y como máximo 2 por hora; el link vale una hora y un solo uso. El link lleva a `/auth/confirmar` → `/maestra/clave` (contraseña de 10 caracteres o más) → panel. Después: *Salir* y volver a entrar en `/maestra/entrar` con mail y contraseña.
+Supabase → Authentication → Users → *Add user* → *Send invitation* → tu mail. Con el servidor de mail de Supabase solo llegan mails a miembros de la organización y como máximo 2 por hora; el link vale una hora y un solo uso. El mail llega **en inglés** ("You've been invited" → *Accept invitation*). El link vuelve al inicio de la web, que pasa sola a `/maestra/clave` (contraseña de 10 caracteres o más) → panel. Después: *Salir* y volver a entrar en `/maestra/entrar` con mail y contraseña.

@@ -4,11 +4,12 @@ import type { NextRequest } from 'next/server';
 import { crearClienteServidor } from '@/lib/supabase/servidor';
 
 /*
-  /auth/confirmar — a donde llega la maestra desde el mail de Supabase
-  (link mágico o confirmación de cuenta). Verifica el código y la manda a
-  `siguiente` (por defecto, su panel).
+  /auth/confirmar — para cuando haya SMTP propio y plantillas editables.
+  HOY NO SE USA: sin SMTP, Supabase manda sus plantillas por defecto y la
+  sesión vuelve en el "#" de la dirección (la abre src/components/LinkDeMail.tsx).
+  Verifica el token_hash y manda a `siguiente` (por defecto, su panel).
   Basado en el ejemplo oficial with-supabase de Next.js.
-  En Supabase → Authentication → Email Templates, los links apuntan a:
+  Con plantillas propias (Authentication → Emails), los links apuntarían a:
   · Invite user:     {{ .SiteURL }}/auth/confirmar?token_hash={{ .TokenHash }}&type=invite&siguiente=/maestra/clave
   · Reset password:  {{ .SiteURL }}/auth/confirmar?token_hash={{ .TokenHash }}&type=recovery&siguiente=/maestra/clave
 */

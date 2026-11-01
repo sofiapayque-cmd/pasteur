@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
 import { aulasReales } from '@/lib/supabase/config';
 import { crearClienteServidor } from '@/lib/supabase/servidor';
-import { iniciarSesion, cerrarSesion } from '@/datos/sesion';
+import { iniciarSesion, cerrarSesion, abrirSesionConTokens, pedirLinkDeClave } from '@/datos/sesion';
 import { obtenerDocente } from '@/datos/docente';
 
 /*
@@ -54,13 +54,27 @@ export async function recuperarClave(_previo: EstadoFormulario, datos: FormData)
   if (!aulasReales) return { mensaje: 'El ingreso de maestras todavía no está activado.' };
   const email = leer(datos, 'email').trim().toLowerCase();
   if (!MAIL.test(email)) return { mensaje: 'Revisá el mail.', email };
-  const supabase = await crearClienteServidor();
   const h = await headers();
   const origen = `${h.get('x-forwarded-proto') ?? 'https'}://${h.get('host')}`;
-  // El link del mail pasa por /auth/confirmar (plantilla "Reset password" en Supabase)
-  await supabase?.auth.resetPasswordForEmail(email, { redirectTo: `${origen}/maestra/clave` });
+  // Supabase vuelve a /maestra/entrar con la sesión en el # (lo abre LinkDeMail).
+  // Solo acepta direcciones de su lista "Redirect URLs".
+  await pedirLinkDeClave(email, `${origen}/maestra/entrar`);
   // Mismo mensaje exista o no la cuenta
   return { ok: true, mensaje: 'Si ese mail tiene una cuenta de maestra, te llega un mensaje con un link para elegir una contraseña nueva.' };
+}
+
+/**
+ * Link de un mail de Supabase (invitación o recuperación): LinkDeMail lee la
+ * sesión del # de la dirección y la manda acá. Se valida, se guarda en
+ * cookies seguras y se sigue a elegir la contraseña.
+ */
+export async function abrirLinkDeMail(datos: { accessToken: unknown; refreshToken: unknown; tipo: unknown }): Promise<void> {
+  if (!aulasReales) redirect('/');
+  const { accessToken, refreshToken, tipo } = datos;
+  const valido = (v: unknown, max: number): v is string => typeof v === 'string' && v.length > 0 && v.length <= max;
+  if (!valido(accessToken, 4096) || !valido(refreshToken, 512)) redirect('/maestra/entrar?error=link');
+  if (!(await abrirSesionConTokens(accessToken, refreshToken))) redirect('/maestra/entrar?error=link');
+  redirect(tipo === 'invite' || tipo === 'recovery' ? '/maestra/clave' : '/maestra');
 }
 
 /** Elegir contraseña: al aceptar la invitación o después de recuperarla. Necesita la sesión del link. */

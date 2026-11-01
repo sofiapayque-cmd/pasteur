@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import LinkDeMail from '@/components/LinkDeMail';
 
 // Fuentes incluidas en la web (no dependen de internet: sirven en las Ceibal sin conexión)
 import '@fontsource-variable/lexend'; // interfaz
@@ -27,6 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="es">
       <body>
         <div id="root">{children}</div>
+        <LinkDeMail />
       </body>
     </html>
   );

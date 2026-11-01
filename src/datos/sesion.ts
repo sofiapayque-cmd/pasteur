@@ -1,4 +1,6 @@
 import 'server-only';
+import { createClient } from '@supabase/supabase-js';
+import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from '@/lib/supabase/config';
 import { crearClienteServidor } from '@/lib/supabase/servidor';
 import { crearClienteAdmin } from '@/lib/supabase/admin';
 import { ipDelPedido } from './ip';
@@ -32,4 +34,36 @@ export async function iniciarSesion(email: string, clave: string): Promise<strin
 export async function cerrarSesion(): Promise<void> {
   const cliente = await crearClienteServidor();
   await cliente?.auth.signOut();
+}
+
+/*
+  Abre la sesión que trae un link de mail de Supabase (invitación o
+  recuperación). setSession() le pregunta a Supabase si el token es válido
+  antes de guardarlo en las cookies. Las cuentas de alumnos no entran por acá.
+*/
+export async function abrirSesionConTokens(accessToken: string, refreshToken: string): Promise<boolean> {
+  const cliente = await crearClienteServidor();
+  if (!cliente) return false;
+  const { data, error } = await cliente.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+  if (error || !data.user) return false;
+  if (data.user.app_metadata?.rol === 'alumno') {
+    await cliente.auth.signOut();
+    return false;
+  }
+  return true;
+}
+
+/*
+  Pide el mail para elegir una contraseña nueva. Usa el flujo "implícito"
+  (la sesión vuelve en el # del link; ver src/components/LinkDeMail.tsx), así
+  la maestra puede pedirlo en la escuela y abrirlo en el celular. Con la clave
+  secreta, reenvía la IP real como en el ingreso.
+*/
+export async function pedirLinkDeClave(email: string, volverA: string): Promise<void> {
+  const cliente =
+    crearClienteAdmin(await ipDelPedido()) ??
+    createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+      auth: { flowType: 'implicit', persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+    });
+  await cliente.auth.resetPasswordForEmail(email, { redirectTo: volverA });
 }
