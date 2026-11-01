@@ -1,3 +1,4 @@
+import SoloNavegador from '@/navegacion/SoloNavegador';
 import Solo from '@/pantallas/nino/Solo';
 import { IDS_ACTIVIDAD } from '@/tipos/actividad';
 
@@ -11,5 +12,10 @@ export function generateStaticParams() {
 export default async function Page({ params }: { params: Promise<{ act: string }> }) {
   const { act } = await params;
   // key: al pasar de una actividad a otra la pantalla se monta de nuevo (arreglo de la etapa 2)
-  return <Solo key={act} />;
+  // Solo en el navegador: actividad con Canvas y avance guardado en esta pestaña.
+  return (
+    <SoloNavegador>
+      <Solo key={act} />
+    </SoloNavegador>
+  );
 }

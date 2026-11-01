@@ -11,7 +11,7 @@ Plan completo y diagnóstico: documento "Migración de Vite a Next.js" del proye
 | 1 | Next.js 16 + React 19 + TypeScript como SPA (guía oficial) | Hecha |
 | 2 | ESLint de Next, tipos base, alias `@/`, arreglo de errores previos | Hecha |
 | 3 | App Router: una carpeta por pantalla, se quita react-router | Hecha |
-| 4 | Navegador y Canvas: solo en cliente, sin errores de hidratación | Pendiente |
+| 4 | Navegador y Canvas: solo en cliente, sin errores de hidratación | Hecha |
 | 5 | Supabase SSR preparado (sin base completa) | Pendiente |
 | 6 | Verificación final y Vercel | Pendiente |
 
@@ -55,8 +55,21 @@ Una carpeta por pantalla en `src/app`. Los paréntesis agrupan sin cambiar la di
 - **Links viejos con `#`** (`…/#/clase/K7RM`): `src/instrumentation-client.ts` los pasa a `/clase/K7RM` antes de que se dibuje la página.
 - **Navegación:** `src/navegacion` ofrece `useNavigate`, `useParams`, `<Navigate>` con la misma forma que react-router, pero por dentro usa `next/navigation`. Las pantallas solo cambiaron el import.
 - **"Volver a preparar la clase":** antes viajaba oculto (`location.state.desde`); ahora va en la dirección (`/explorar/a1?desde=/maestra/a1/preparar`), así sobrevive a recargar. Solo acepta rutas de "Preparar".
-- **Por ahora todo se dibuja en el navegador** (`SoloNavegador` en el layout), igual que en Vite: las pantallas leen localStorage y Canvas. La etapa 4 prepara cada pantalla para el servidor.
 - Las actividades se siguen cargando recién cuando se usan (`React.lazy` en `actividades/componentes.js`), sin cambios.
+
+## Servidor y navegador (etapa 4)
+
+| Se dibuja en el servidor (llega HTML con contenido) | Solo en el navegador (`SoloNavegador` en su `page.tsx`) |
+| --- | --- |
+| Inicio, Rol, Panel de la maestra, Preparar la clase, Explorar, Entrar (`/clase` y `/clase/CÓDIGO`) | Sala de espera, Tablero, Puesta en común, Apodo, Espera, Actividad en clase, Actividad en modo individual |
+
+- Las de la derecha dependen de la sala de prueba guardada en este navegador (localStorage) o dibujan en Canvas con el avance guardado en la pestaña (sessionStorage). Cuando la sala viva en Supabase, varias pueden pasar a la izquierda.
+- `useSala()` tiene una "foto" para el servidor (sala vacía); el navegador la usa al hidratar y enseguida lee la sala real.
+- `src/hooks/navegador.ts`: `useHidratado`, `useMediaQuery`, `useOrigen` — leen el navegador sin romper el dibujo del servidor. Usarlos en el código nuevo en vez de `window.` al dibujar.
+- La sala de espera arma el link de la clase con `useOrigen()` (antes leía `window.location` al dibujar).
+- `FondoVivo` redondea a milésimas las coordenadas calculadas con `Math.cos`/`Math.sin`: el servidor (Node) y el navegador difieren en el último decimal y eso daba error de hidratación en todas las pantallas con fondo. No se ve ninguna diferencia.
+- `Date.now()` en el Tablero y `sessionStorage` al iniciar el avance quedan como están: esas pantallas se dibujan solo en el navegador.
+- Verificación: `hidratacion.py` recorre las 19 direcciones con tres situaciones (sin sala, con sala abierta y niño unido, con avance guardado) en desarrollo y producción: 0 errores y 0 avisos.
 
 ## Errores previos a la migración (estado)
 

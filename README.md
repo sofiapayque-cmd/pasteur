@@ -58,7 +58,8 @@ src/
   app/                    Next.js (App Router): el mapa de la web, una carpeta por dirección
                           (publico) · (docente) maestra/ · (alumno) clase/ y explorar/
                           layout.tsx: fuentes, estilos y metadatos
-  navegacion/             navegar entre pantallas (useNavigate, useParams, Navigate)
+  navegacion/             navegar entre pantallas (useNavigate, useParams, Navigate) y SoloNavegador
+  hooks/navegador.ts      leer el navegador sin romper el servidor (useHidratado, useMediaQuery, useOrigen)
   pantallas/              pantallas generales: inicio, rol, maestra/, nino/
                           (no se llama pages/: Next.js reserva ese nombre)
   styles/

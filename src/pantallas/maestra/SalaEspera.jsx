@@ -5,16 +5,18 @@ import GloboMoli from '../../components/GloboMoli';
 import FondoVivo from '../../components/FondoVivo';
 import { ACTIVIDADES } from '../../data/contenido';
 import { useSala, empezar, simularAlumno } from '../../sala/sala';
+import { useOrigen } from '@/hooks/navegador';
 
 /* SALA DE ESPERA — pensada para proyectar en el pizarrón. */
 export default function SalaEspera() {
   const sala = useSala();
   const navegar = useNavigate();
+  const origen = useOrigen();
 
   if (sala.estado === 'cerrada') return <Navigate to="/maestra" replace />;
 
   const act = ACTIVIDADES.find((a) => a.id === sala.actividad);
-  const link = `${window.location.origin}/clase/${sala.codigo}`; // sin # desde la etapa 3
+  const link = `${origen}/clase/${sala.codigo}`; // sin # desde la etapa 3
 
   function arrancar() {
     empezar();

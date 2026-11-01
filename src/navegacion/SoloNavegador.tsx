@@ -1,24 +1,17 @@
 'use client';
 
-import { useSyncExternalStore, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
+import { useHidratado } from '@/hooks/navegador';
 
 /*
-  Las pantallas leen localStorage, window y dibujan en Canvas, así que por
-  ahora se muestran solo en el navegador (como en la versión Vite).
-  - En el servidor y durante la hidratación: no se dibuja nada → sin errores
-    de hidratación.
-  - Al navegar entre pantallas ya está "montado": el cambio es inmediato,
-    sin parpadeo.
-  En la etapa 4 cada pantalla se prepara para el servidor y esto se va achicando.
+  Envuelve las pantallas que dependen de lo guardado en ESTE navegador
+  (la sala de prueba en localStorage, el avance en sessionStorage) o que
+  dibujan en Canvas: sala, tablero, puesta, apodo, espera y las actividades.
+  - En el servidor y durante la hidratación no se dibujan → sin errores de hidratación.
+  - Al navegar entre pantallas ya está "montado": el cambio es inmediato, sin parpadeo.
+  Cuando la sala viva en Supabase (etapa 5 en adelante), varias de estas
+  pantallas van a poder dibujarse en el servidor con los datos reales.
 */
-const nada = () => () => {};
-const enNavegador = () => true;
-const enServidor = () => false;
-
-export function useHidratado(): boolean {
-  return useSyncExternalStore(nada, enNavegador, enServidor);
-}
-
 export default function SoloNavegador({ children }: { children: ReactNode }) {
   return useHidratado() ? children : null;
 }

@@ -1,3 +1,4 @@
+import SoloNavegador from '@/navegacion/SoloNavegador';
 import Tablero from '@/pantallas/maestra/Tablero';
 import { IDS_ACTIVIDAD } from '@/tipos/actividad';
 
@@ -9,5 +10,10 @@ export function generateStaticParams() {
 }
 
 export default function Page() {
-  return <Tablero />;
+  // Solo en el navegador: depende de la sala guardada en este navegador.
+  return (
+    <SoloNavegador>
+      <Tablero />
+    </SoloNavegador>
+  );
 }

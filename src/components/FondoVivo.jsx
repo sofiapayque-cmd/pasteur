@@ -20,6 +20,10 @@ function azar(semilla) {
   };
 }
 
+// Redondeo a milésimas: Math.cos/Math.sin pueden diferir en el último decimal entre
+// el servidor (Node) y el navegador, y eso da error de hidratación. A esta escala no se ve.
+const r3 = (v) => Math.round(v * 1000) / 1000;
+
 function Organismo({ tipo, color }) {
   if (tipo === 'bacilo')
     return (
@@ -34,7 +38,7 @@ function Organismo({ tipo, color }) {
       <svg viewBox="-30 -30 60 60" aria-hidden="true">
         {Array.from({ length: 10 }, (_, k) => {
           const a = (k / 10) * Math.PI * 2;
-          return <line key={k} x1={Math.cos(a) * 14} y1={Math.sin(a) * 14} x2={Math.cos(a) * 24} y2={Math.sin(a) * 24} stroke={color} strokeWidth="2.5" strokeLinecap="round" />;
+          return <line key={k} x1={r3(Math.cos(a) * 14)} y1={r3(Math.sin(a) * 14)} x2={r3(Math.cos(a) * 24)} y2={r3(Math.sin(a) * 24)} stroke={color} strokeWidth="2.5" strokeLinecap="round" />;
         })}
         <circle r="15" fill={color} />
         <circle r="5" fill="#2F4A85" opacity=".25" />
@@ -44,7 +48,7 @@ function Organismo({ tipo, color }) {
     return (
       <svg viewBox="-30 -30 60 60" aria-hidden="true">
         {Array.from({ length: 9 }, (_, k) => (
-          <circle key={k} cx={Math.cos(k * 2.4) * Math.sqrt(k) * 7} cy={Math.sin(k * 2.4) * Math.sqrt(k) * 7} r={6 - k * 0.3} fill={color} />
+          <circle key={k} cx={r3(Math.cos(k * 2.4) * Math.sqrt(k) * 7)} cy={r3(Math.sin(k * 2.4) * Math.sqrt(k) * 7)} r={r3(6 - k * 0.3)} fill={color} />
         ))}
       </svg>
     );
