@@ -1,6 +1,6 @@
 # Aulas persistentes con Supabase — auditoría, esquema y modelo de seguridad
 
-Etapa 2 (en curso). Rama `supabase/aulas`. **Las 5 migraciones están aplicadas solo en el proyecto de desarrollo** (`ciencia-sin-limites-dev`). Producción sigue vacía y sin tocar.
+Etapa 2 (en curso). Rama `supabase/aulas`. **Las 7 migraciones están aplicadas solo en el proyecto de desarrollo** (`ciencia-sin-limites-dev`). Producción sigue vacía y sin tocar.
 
 ## 1. Auditoría (1/11/2026)
 
@@ -9,7 +9,7 @@ Etapa 2 (en curso). Rama `supabase/aulas`. **Las 5 migraciones están aplicadas 
 | Migración a Next.js | Completa en `migracion/nextjs`. PR #1 abierto: `main` sigue con la versión Vite y por eso el deploy de producción en Vercel falla. El preview de `migracion/nextjs` compila y funciona. |
 | Git | Ramas `main` (Vite), `version-vite` (respaldo), `migracion/nextjs`, `supabase/aulas` (esta). Árbol limpio. |
 | Supabase producción (`ciencia-sin-limites`, ref `wjaunybecxirzwebembp`) | Sin tablas (el borrador nunca se aplicó). Auth: solo email, registro abierto con confirmación por mail, inicio anónimo desactivado. Tablas no expuestas por defecto, RLS automático. **Ojo: la región real es us-east-2 (Ohio), no São Paulo** (verificado con el conector el 31/10). |
-| Supabase desarrollo (`ciencia-sin-limites-dev`, ref `zicotbjzbnofydxqmkba`, São Paulo) | Creado el 31/10 con el conector (plan gratuito, sin costo). **Expone las tablas nuevas por defecto** (les da todo a anon, authenticated y service_role): las migraciones ya no dependen de eso. Las 5 migraciones aplicadas. Ingreso de maestra y creación de aula verificados con una cuenta real (1/11). |
+| Supabase desarrollo (`ciencia-sin-limites-dev`, ref `zicotbjzbnofydxqmkba`, São Paulo) | Creado el 31/10 con el conector (plan gratuito, sin costo). **Expone las tablas nuevas por defecto** (les da todo a anon, authenticated y service_role): las migraciones ya no dependen de eso. Las 7 migraciones aplicadas. Ingreso de maestra y creación de aula verificados con una cuenta real (1/11). |
 | Vercel | Proyecto `pasteur` (Hobby) con `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` en Production y Preview, ambas apuntando al mismo proyecto de Supabase. |
 | Código | `src/lib/supabase` (clientes navegador/servidor, proxy), `src/sala/repositorio.ts` (contrato de la sala), sala de prueba en localStorage. |
 
@@ -57,7 +57,7 @@ auth.users ──┬── docentes ── aulas ──┬── alumnos (cuenta
 
 Reglas de integridad: claves foráneas compuestas impiden mezclar aulas o actividades (un progreso de A1 no puede colgarse de una asignación de A3 ni de otra aula); `datos` hasta 64 KB y `resultados` hasta 16 KB; códigos y usuarios con formato fijo. **Nada se borra desde la web**: las aulas se archivan, los alumnos se desactivan, las asignaciones se cierran.
 
-Migraciones: `supabase/migrations/` (1. tablas, 2. seguridad, 3. tiempo real, 4. funciones de ayuda en el esquema `privado`, 5. reglas de aulas que dejan recibir el aula recién creada).
+Migraciones: `supabase/migrations/` (1. tablas, 2. seguridad, 3. tiempo real, 4. funciones de ayuda en el esquema `privado`, 5. reglas de aulas que dejan recibir el aula recién creada, 6. año lectivo y cierre de sesiones de alumnos, 7. una cuenta de alumno nunca es maestra).
 
 Las funciones `security definer` que usan las reglas (`es_docente`, `es_docente_de_aula`, `mi_aula`, `asignacion_abierta`, `generar_codigo_aula`) viven en el esquema **`privado`**, que la API de Supabase no publica: las reglas las usan, pero nadie las puede llamar como `/rest/v1/rpc/…` (recomendación del asesor de seguridad, lint 0029).
 
@@ -137,7 +137,7 @@ Más adelante, `progreso.registrar(tipo, valor)` para que cada actividad sume re
 | --- | --- | --- |
 | **1** | **Auditoría, esquema, seguridad, migraciones probadas en local** ← esta | — |
 | 2 | Proyecto de desarrollo; aplicar migraciones ahí; ingreso de la maestra (`/maestra/entrar`, salir, recuperar contraseña) | crear el proyecto dev; clave secreta en Vercel |
-| 3 | Aulas: crear aula, cantidad de alumnos, cuentas y tarjetas imprimibles, regenerar clave | — |
+| 3 | Aulas: crear aula, cantidad de alumnos, cuentas y tarjetas imprimibles, regenerar clave ← **programada y probada con Supabase simulado; falta la prueba en el Supabase real** | probar en dev |
 | 4 | Ingreso del alumno del lado del servidor, bloqueo por intentos, prueba de 30 ingresos simultáneos | — |
 | 5 | Asignaciones y sesiones en vivo con Supabase (reemplaza la sala local de a poco) | — |
 | 6 | Panel de la maestra con datos reales (tablero en tiempo real, puesta en común) | — |
@@ -197,3 +197,31 @@ Después hace falta un deploy nuevo de la rama (un push, o *Redeploy* del últim
 
 ### Primera maestra (prueba)
 Supabase → Authentication → Users → *Add user* → *Send invitation* → tu mail. Con el servidor de mail de Supabase solo llegan mails a miembros de la organización y como máximo 2 por hora; el link vale una hora y un solo uso. El mail llega **en inglés** ("You've been invited" → *Accept invitation*). El link vuelve al inicio de la web, que pasa sola a `/maestra/clave` (contraseña de 10 caracteres o más) → panel. Después: *Salir* y volver a entrar en `/maestra/entrar` con mail y contraseña.
+
+## 13. Etapa 3 · Aulas y cuentas de alumnos (1/11/2026)
+
+**Pantallas** (solo con `NEXT_PUBLIC_AULAS_REALES=1`): `/maestra/aulas` (Mis aulas + Nueva aula) y `/maestra/aulas/[id]` (alumnos, nueva clave, agregar, claves nuevas para el grupo, activar/desactivar, datos, archivar). Botón "Mis aulas" en la cabecera de la maestra.
+
+**Datos del aula:** nombre de la clase, año escolar (`grado`, 1° a 6°), año lectivo (`anio_lectivo`, por defecto el año actual de Uruguay) y cantidad de alumnos (1 a 40 por vez; hasta 60 números por aula).
+
+**Cuentas de alumnos** (`src/datos/cuentas-alumnos.ts`, único lugar que usa la clave secreta):
+- Usuario `CÓDIGO-NN` (ej. `D2QN-07`); mail interno `d2qn-07@alumnos.invalid`; `app_metadata.rol = 'alumno'`.
+- Clave `palabra-palabra-NN` con `crypto.randomInt` (256 palabras sin tildes, números 10-99: ~5,9 millones). La más larga (`frutilla-cuaderno-99`, 20 caracteres) entra en un renglón de la tarjeta.
+- La clave solo queda con hash en Supabase Auth. No está en ninguna tabla (hay una prueba que lo verifica), ni en el navegador, ni en el registro del servidor.
+- Si la fila en `alumnos` falla, la cuenta recién creada se deshace. Cuentas que fallan se informan por número y se completan con "Agregar alumnos".
+- **Clave nueva:** cambia la clave, cierra las sesiones abiertas del alumno (`cerrar_sesiones_alumno`, solo servidor) y borra sus intentos fallidos. **Desactivar** también cierra sus sesiones.
+
+**Autorización en cada acción** (`src/acciones/aulas.ts`): maestra activa → se busca el aula o el alumno **con la sesión de la maestra** (RLS: si no es suyo, no aparece) → recién ahí la clave secreta, con los datos que devolvió la base (nunca con ids del formulario).
+
+**Tarjetas:** código del aula, número, clave, dónde entrar y un renglón para escribir el nombre a mano. Se muestran una sola vez (al crear o regenerar), con aviso; imprimir saca solo la hoja de tarjetas (A4, ~10 por hoja); el navegador avisa si se cierra la pestaña.
+
+**Migraciones de esta etapa:** 6 (año lectivo, `cerrar_sesiones_alumno`) y 7 (una cuenta de alumno nunca es maestra: el trigger reconoce el mail interno y `es_docente()` rechaza tokens con rol alumno, por si Supabase guarda el usuario antes que su `app_metadata`).
+
+**Pruebas:**
+- Base: local **101 OK**; Supabase dev **111 OK** (deshecho). Nuevas: entre aulas y entre alumnos (ver, editar, desactivar, mover alumnos, cambiar año lectivo), quién puede cerrar sesiones, ninguna columna de contraseñas, cuenta de alumno con fila de docente igual sin permisos. Cada arreglo tiene su prueba que falla sin él.
+- Navegador con Supabase simulado que imita las reglas: **36 OK** (crear, tarjetas, impresión, claves que no vuelven a aparecer, nueva clave, agregar, desactivar, grupo con confirmación, archivar, y 3 trampas de otra maestra cambiando ids ocultos: rechazadas, más 404 para aulas ajenas).
+- Con el interruptor apagado la web no cambia.
+
+**Falta:** prueba con el Supabase real (crear un aula de prueba en el preview y verificar en la base: cuentas, rol, que ninguna sea docente, hash de la clave). Después: ingreso de alumnos (punto 5) y laboratorio personal (punto 6).
+
+**Decisión pendiente:** los links de *preview* de Vercel están protegidos (piden entrar a Vercel). Sirve mientras probamos, pero maestras y niños no podrían abrirlos: para el piloto, producción o sacar la protección.
