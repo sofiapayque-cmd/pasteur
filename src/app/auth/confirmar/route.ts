@@ -12,7 +12,9 @@ import { crearClienteServidor } from '@/lib/supabase/servidor';
   · Invite user:     {{ .SiteURL }}/auth/confirmar?token_hash={{ .TokenHash }}&type=invite&siguiente=/maestra/clave
   · Reset password:  {{ .SiteURL }}/auth/confirmar?token_hash={{ .TokenHash }}&type=recovery&siguiente=/maestra/clave
 */
-const destinoSeguro = (valor: string | null) => (valor && valor.startsWith('/') && !valor.startsWith('//') ? valor : '/maestra');
+// Solo rutas de esta web: empieza con "/", no sigue otra "/" ni "\" (los
+// navegadores leen "/\otro.com" como "//otro.com") y no tiene "\" ni espacios.
+const destinoSeguro = (valor: string | null) => (valor && /^\/(?![/\\])[^\\\s]*$/.test(valor) ? valor : '/maestra');
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;

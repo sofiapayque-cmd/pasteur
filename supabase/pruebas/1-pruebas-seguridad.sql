@@ -41,6 +41,8 @@ insert into auth.users (id, email, raw_app_meta_data) values
   (:C3, 'zzzz-01@alumnos.invalid', '{"rol":"alumno"}');
 select t.ok('trigger: crea docentes solo para maestras', (select count(*) from docentes) = 2);
 select t.ok('trigger: guarda el nombre', (select nombre from docentes where id = :A) = 'Maestra A');
+insert into auth.users (id, is_anonymous) values ('dddddddd-0000-0000-0000-000000000001', true);
+select t.ok('trigger: un usuario anónimo no se vuelve docente', (select count(*) from docentes) = 2);
 
 -- ---------- Maestra A crea su aula ----------
 set role authenticated; select set_config('request.jwt.claim.sub', :A, false);
@@ -70,6 +72,8 @@ insert into alumnos (id, aula_id, numero, usuario) values
   (:C3, (select aula_b from ids), 1, 'ZZZZ-01');
 select t.ok('servidor ve intentos_ingreso', t.filas('select 1 from intentos_ingreso') = 0);
 insert into intentos_ingreso (usuario, fallos) values ('K7RM-01', 1);
+select t.ok('servidor no borra aulas', t.falla('delete from aulas where id is null'));
+select t.ok('servidor no borra alumnos', t.falla('delete from alumnos where id is null'));
 reset role;
 
 -- La maestra no puede crear alumnos sin pasar por el servidor
@@ -190,8 +194,13 @@ reset role; set role anon; select set_config('request.jwt.claim.sub', '', false)
 select t.ok('sin sesión: no lee aulas', t.filas('select 1 from aulas') = -1);
 select t.ok('sin sesión: no lee alumnos', t.filas('select 1 from alumnos') = -1);
 select t.ok('sin sesión: no lee progreso', t.filas('select 1 from progreso') = -1);
-select t.ok('sin sesión: no genera códigos', t.falla('select public.generar_codigo_aula()'));
+select t.ok('sin sesión: no genera códigos', t.falla('select privado.generar_codigo_aula()'));
 reset role;
+
+-- ---------- Funciones de ayuda fuera de la API (lo que mira el asesor, lint 0029) ----------
+select t.ok('la API no publica funciones security definer que un usuario pueda llamar',
+  not exists (select 1 from pg_proc p where p.pronamespace = 'public'::regnamespace and p.prosecdef
+              and (has_function_privilege('authenticated', p.oid, 'execute') or has_function_privilege('anon', p.oid, 'execute'))));
 
 -- ---------- Resultado ----------
 \o

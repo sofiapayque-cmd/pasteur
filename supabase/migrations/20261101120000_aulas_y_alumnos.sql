@@ -194,12 +194,15 @@ create trigger progreso_tocar before update on public.progreso
 
 -- ---------------------------------------------------------------------
 -- Alta automática de docentes: todo usuario nuevo que NO sea alumno
--- (los alumnos los crea el servidor con app_metadata.rol = 'alumno').
+-- (los alumnos los crea el servidor con app_metadata.rol = 'alumno')
+-- ni anónimo (si alguna vez se prende el ingreso anónimo de Supabase, esos
+-- usuarios no tienen que volverse maestras).
 -- ---------------------------------------------------------------------
 create function public.crear_docente() returns trigger
 language plpgsql security definer set search_path = '' as $$
 begin
-  if coalesce(new.raw_app_meta_data ->> 'rol', '') <> 'alumno' then
+  if coalesce(new.raw_app_meta_data ->> 'rol', '') <> 'alumno'
+     and not coalesce(new.is_anonymous, false) then
     insert into public.docentes (id, nombre)
       values (new.id, coalesce(left(new.raw_user_meta_data ->> 'nombre', 120), ''))
       on conflict (id) do nothing;

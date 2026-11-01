@@ -9,8 +9,10 @@
 --   · service_role (clave secreta, solo en el servidor de Vercel): crea las
 --     cuentas de los alumnos, cambia sus claves y registra intentos de ingreso.
 --
--- El proyecto se crea con "Automatically expose new tables" desactivado:
--- cada permiso se da acá, uno por uno.
+-- No depende de cómo se creó el proyecto: algunos proyectos tienen
+-- "Automatically expose new tables" prendido y les dan TODO a anon,
+-- authenticated y service_role en cada tabla nueva. Acá primero se quita
+-- todo a los tres y después cada permiso se da uno por uno.
 -- =====================================================================
 
 -- ---------------------------------------------------------------------
@@ -64,10 +66,10 @@ alter table public.progreso         enable row level security;
 alter table public.resultados       enable row level security;
 alter table public.intentos_ingreso enable row level security;  -- sin reglas: solo service_role
 
--- Partimos de cero: nadie tiene nada
+-- Partimos de cero: nadie tiene nada (tampoco service_role; ver al final)
 revoke all on public.docentes, public.aulas, public.alumnos, public.asignaciones,
   public.sesiones, public.progreso, public.resultados, public.intentos_ingreso
-  from anon, authenticated;
+  from anon, authenticated, service_role;
 
 -- ---------------------------------------------------------------------
 -- Docentes: cada maestra ve y edita solo su fila (se crea con el trigger)
