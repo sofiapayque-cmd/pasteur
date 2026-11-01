@@ -2,11 +2,11 @@
 
 Proyecto: **La ciencia sin límites**, plataforma educativa del Institut Pasteur de Montevideo para niñas y niños de 7 a 11 años. Se usa en clase: cada niño en su **Ceibal** (computadoras escolares modestas, pantalla típica 1366×768, a veces tablets) y la maestra guía desde su computadora proyectada. También hay un modo individual (sin sala).
 
-Stack: React 18 + React Router 6 (HashRouter) + Vite 6. CSS puro con tokens. `three@0.169.0` está instalado (solo usarlo si una actividad lo necesita de verdad, y siempre con alternativa liviana). **No instales otros paquetes.**
+Stack: Next.js 16 (App Router) + React 19. Para navegar usá `@/navegacion` (no `next/router`). Las actividades se dibujan solo en el navegador, así que pueden usar Canvas, window y matchMedia; fuera de ellas, para leer el navegador al dibujar usá `@/hooks/navegador`. CSS puro con tokens. `three@0.169.0` está instalado (solo usarlo si una actividad lo necesita de verdad, y siempre con alternativa liviana). **No instales otros paquetes.**
 
 ## Qué archivos son tuyos
 
-Cada actividad vive en `src/actividades/aN/`. Solo escribís dentro de tu carpeta (podés crear subcarpetas, CSS, componentes). **No modifiques archivos compartidos** (`src/components`, `src/sala`, `src/styles`, `src/pages`, `App.jsx`, otras actividades). Si necesitás un cambio compartido, describilo en tu informe final.
+Cada actividad vive en `src/actividades/aN/`. Solo escribís dentro de tu carpeta (podés crear subcarpetas, CSS, componentes). **No modifiques archivos compartidos** (`src/components`, `src/sala`, `src/styles`, `src/pantallas`, `src/app`, `App.jsx`, otras actividades). Si necesitás un cambio compartido, describilo en tu informe final.
 
 Tu carpeta debe exportar:
 
@@ -72,12 +72,12 @@ Titulares de pantalla en Fraunces (32–56px), instrucciones en Lexend 18–20px
 
 ## Cómo probar tu actividad
 
-En modo individual se abre en `#/explorar/aN`. Para compilar sin pisar a otros:
+En modo individual se abre en `/explorar/aN`. Para compilar sin pisar a otros:
 
 ```
 cd /home/claude/ciencia-sin-limites
-npx vite build --outDir /tmp/claude-0/-home-claude/256eadea-e47f-54f6-a32a-685df866a4c2/scratchpad/build-aN --emptyOutDir
-npx vite preview --outDir /tmp/claude-0/-home-claude/256eadea-e47f-54f6-a32a-685df866a4c2/scratchpad/build-aN --port 41N0 &
+npm run build
+npx next start -p 41N0 &
 ```
 
 Y recorrela con Playwright en Python (`from playwright.async_api import async_playwright`, Chromium ya instalado; viewport 1366×768), sacando capturas de cada etapa y revisando errores de consola (ignorá las fuentes de Google, que la red bloquea). Si el build falla por un archivo que NO es tuyo, esperá un minuto y reintentá: otra persona lo está editando.

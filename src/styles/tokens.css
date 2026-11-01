@@ -30,7 +30,7 @@
 
   /* Tipografía */
   --font-display: 'Bricolage Grotesque Variable', 'Lexend', system-ui, sans-serif; /* titulares gordos con carácter (v1.2) */
-  --font-sans: 'Lexend', 'Segoe UI', system-ui, sans-serif;
+  --font-sans: 'Lexend Variable', 'Lexend', 'Segoe UI', system-ui, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
   --font-cuaderno: 'The Girl Next Door', 'Segoe Print', 'Comic Neue', cursive; /* notas del cuaderno de laboratorio */
 

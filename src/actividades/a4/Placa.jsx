@@ -196,7 +196,7 @@ export default function Placa({ sim, version, enMarcha, intervalo = 900, reducid
     const px = Math.round(rv * 3.4 * dpr);
     const lado = rv * 3.4;
 
-    const dibujar = (forzar) => {
+    const dibujar = () => {
       const ahora = performance.now();
       const dt = Math.min(64, ahora - (ultimo.current || ahora));
       ultimo.current = ahora;

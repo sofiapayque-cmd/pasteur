@@ -121,6 +121,8 @@ export default function Laboratorio({ progreso, reducido }) {
     if (!reducido) setEnMarcha(true);
   };
 
+  // `version` sube cada vez que la simulación cambia por dentro (sim es el mismo objeto): fuerza a rearmar el árbol.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const arbol = useMemo(() => armarArbol(sim), [sim, version]);
   const destacado = useMemo(() => {
     if (!amb) return null;

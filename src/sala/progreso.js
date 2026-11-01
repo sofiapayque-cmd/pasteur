@@ -17,6 +17,8 @@ import { INFO_ACTIVIDADES } from '../actividades/info';
   En clase, todo se guarda en la sala (la maestra lo ve en el tablero).
   Sin sala (modo individual), se guarda en esta pestaña.
 */
+// Se lee al iniciar el estado: las pantallas con actividades se dibujan solo en
+// el navegador (SoloNavegador), así que nunca corre en el servidor.
 function leerLocal(id) {
   try {
     const t = sessionStorage.getItem(`csl-solo-${id}`);
