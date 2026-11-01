@@ -226,6 +226,18 @@ update docentes set estado = 'activa' where id = :B;
 set role authenticated; select set_config('request.jwt.claim.sub', :B, false);
 select t.ok('reactivada: vuelve a ver su aula', t.filas('select 1 from aulas') = 1);
 
+-- ---------- Una cuenta de alumno nunca es maestra (migración 7) ----------
+reset role;
+insert into auth.users (id, email) values ('eeeeeeee-0000-0000-0000-000000000001', 'k7rm-09@alumnos.invalid');
+select t.ok('trigger: un mail interno de alumno nunca crea una fila de docente', not exists (select 1 from docentes where id = 'eeeeeeee-0000-0000-0000-000000000001'));
+insert into docentes (id, nombre) values ('cccccccc-0000-0000-0000-000000000002', 'fila puesta a propósito');
+set role authenticated; select set_config('request.jwt.claim.sub', 'cccccccc-0000-0000-0000-000000000002', false), set_config('request.jwt.claims', '{"sub":"cccccccc-0000-0000-0000-000000000002","role":"authenticated","app_metadata":{"rol":"alumno"}}', false);
+select t.ok('alumno con fila de docente igual no crea aulas', t.falla($$insert into aulas (nombre) values ('trampa')$$));
+select t.ok('alumno con fila de docente igual no ve aulas como maestra', t.filas('select 1 from aulas') = 1);
+reset role;
+delete from aulas where nombre = 'trampa'; delete from docentes where id = 'cccccccc-0000-0000-0000-000000000002';
+select set_config('request.jwt.claims', '', false);
+
 -- ---------- Sin sesión ----------
 reset role; set role anon; select set_config('request.jwt.claim.sub', '', false);
 select t.ok('sin sesión: no lee aulas', t.filas('select 1 from aulas') = -1);
