@@ -3,15 +3,24 @@
 -- dato, versiones, citas con pasaje, revisiones y registro editorial.
 --
 -- La regla central: una ficha cuenta como "revisada por el Pasteur" solo si
--- su versión publicada la aprobó una VALIDADORA distinta de quien la
--- escribió, y el texto publicado es idéntico al aprobado (misma huella).
--- La base lo impone con triggers; la web no puede saltearlo.
+-- su versión publicada la aprobó una VALIDADORA, y el texto publicado es
+-- idéntico al que ella aprobó (misma huella). La base lo impone con
+-- triggers; la web no puede saltearlo.
 --
 -- Ciclo de una versión:
---   borrador → en_revision → publicada (la anterior pasa a reemplazada)
---                          → cambios_pedidos  (se escribe una versión nueva)
+--   borrador ⇄ en_revision → publicada (la anterior pasa a reemplazada)
+--                          → borrador   (si la validadora pide cambios)
 --                          → rechazada
--- Al salir de borrador el contenido y sus citas quedan congelados.
+--   · En borrador la edita su autora.
+--   · En revisión la pueden corregir su autora y cualquier validadora. Cada
+--     cambio recalcula la huella: la validadora aprueba solo el texto que
+--     está viendo; si alguien lo cambió en el medio, tiene que volver a
+--     cargarlo.
+--   · Publicada, reemplazada o rechazada ya no cambia nunca. Para cambiar
+--     una ficha publicada se abre una versión nueva (copia), y los chicos
+--     siguen viendo la anterior hasta que se apruebe la nueva.
+--   · Una validadora puede aprobar su propio texto: queda marcado.
+--     Una redactora o la admin no aprueban nunca.
 --
 -- Quién lee esto: solo el equipo (con su sesión) y el servidor (clave
 -- secreta). Maestras y alumnos no ven estas tablas: el asistente les
@@ -101,7 +110,7 @@ create table public.ficha_versiones (
   asistida_por_ia        boolean not null default false,
   nota_interna           text not null default '' check (char_length(nota_interna) <= 2000),
   estado                 text not null default 'borrador'
-                           check (estado in ('borrador', 'en_revision', 'publicada', 'reemplazada', 'cambios_pedidos', 'rechazada')),
+                           check (estado in ('borrador', 'en_revision', 'publicada', 'reemplazada', 'rechazada')),
   autor_id               uuid not null default auth.uid() references public.equipo (id) on delete restrict,
   huella                 text check (huella ~ '^[0-9a-f]{64}$'),
   creada_en              timestamptz not null default now(),
@@ -149,6 +158,7 @@ create table public.revisiones (
   decision            text not null check (decision in ('aprobar', 'pedir_cambios', 'rechazar')),
   comentario          text not null default '' check (char_length(comentario) <= 2000),
   huella_revisada     text not null check (huella_revisada ~ '^[0-9a-f]{64}$'),
+  autoaprobada        boolean not null default false,
   licencia_al_aprobar text check (char_length(licencia_al_aprobar) <= 60),
   creada_en           timestamptz not null default now()
 );
@@ -202,8 +212,9 @@ $$;
 revoke all on function privado.es_directo() from public, anon;
 grant execute on function privado.es_directo() to authenticated, service_role;
 
--- Huella de una versión: contenido + citas, en un orden fijo
-create function privado.huella_version(p_version uuid) returns text
+-- Huella de una versión: su contenido (tal como viene, también desde un
+-- trigger BEFORE) + sus citas guardadas, en un orden fijo
+create function privado.huella_de(v public.ficha_versiones) returns text
 language sql stable security definer set search_path = '' as $$
   select encode(sha256(convert_to(jsonb_build_object(
     'pregunta', v.pregunta,
@@ -211,15 +222,13 @@ language sql stable security definer set search_path = '' as $$
     'explicacion', v.explicacion_cientifica,
     'infantil', v.version_infantil,
     'grados', jsonb_build_array(v.grado_min, v.grado_max),
-    'formato', f.formato,
+    'formato', (select f.formato from public.fichas f where f.id = v.ficha_id),
     'fuentes', coalesce((
       select jsonb_agg(jsonb_build_array(vf.publicacion_id, vf.fuente_id, vf.pasaje, vf.pasaje_textual,
                                          vf.ubicacion, vf.parafrasis)
                        order by vf.orden, vf.id)
       from public.version_fuentes vf where vf.version_id = v.id), '[]'::jsonb)
-  )::text, 'UTF8')), 'hex')
-  from public.ficha_versiones v join public.fichas f on f.id = v.ficha_id
-  where v.id = p_version;
+  )::text, 'UTF8')), 'hex');
 $$;
 
 -- Registro editorial
@@ -227,6 +236,41 @@ create function privado.registrar(p_accion text, p_entidad text, p_id uuid, p_an
 returns void language sql security definer set search_path = '' as $$
   insert into public.eventos_editoriales (actor_id, accion, entidad, entidad_id, antes, despues)
   values (auth.uid(), p_accion, p_entidad, p_id, p_antes, p_despues);
+$$;
+
+-- ¿La versión cumple lo mínimo para estar en revisión? (si no, error)
+create function privado.validar_para_revision(v public.ficha_versiones) returns void
+language plpgsql stable security definer set search_path = '' as $$
+declare
+  formato text;
+  limite int;
+begin
+  select f.formato into formato from public.fichas f where f.id = v.ficha_id;
+  limite := case formato when 'pregunta' then 90 else 60 end;
+  if formato = 'pregunta' and char_length(btrim(v.pregunta)) < 5 then
+    raise exception 'falta la pregunta principal' using errcode = '23514';
+  end if;
+  if formato = 'pregunta' and char_length(btrim(v.explicacion_cientifica)) < 20 then
+    raise exception 'falta la explicación científica' using errcode = '23514';
+  end if;
+  if char_length(btrim(v.version_infantil)) < 10 then
+    raise exception 'falta la versión para chicos' using errcode = '23514';
+  end if;
+  if privado.palabras(v.version_infantil) > limite then
+    raise exception 'la versión para chicos tiene más de % palabras', limite using errcode = '23514';
+  end if;
+  if not exists (select 1 from public.version_fuentes vf where vf.version_id = v.id) then
+    raise exception 'hace falta al menos una fuente para estar en revisión' using errcode = '23514';
+  end if;
+  if exists (select 1 from public.version_fuentes vf where vf.version_id = v.id and vf.publicacion_id is not null
+             and (char_length(btrim(vf.pasaje)) = 0 or char_length(btrim(vf.ubicacion)) = 0)) then
+    raise exception 'cada artículo citado necesita su pasaje y dónde está' using errcode = '23514';
+  end if;
+  if exists (select 1 from public.version_fuentes vf where vf.version_id = v.id
+             and char_length(btrim(vf.pasaje)) > 0 and not vf.pasaje_textual and char_length(btrim(vf.parafrasis)) = 0) then
+    raise exception 'un pasaje que no es textual necesita su paráfrasis' using errcode = '23514';
+  end if;
+end;
 $$;
 
 -- ---------- Fichas ----------
@@ -294,74 +338,50 @@ create trigger fichas_despues after insert or update on public.fichas
 -- Sin security definer, por la misma razón.
 create function privado.versiones_antes() returns trigger
 language plpgsql set search_path = '' as $$
-declare
-  f public.fichas;
-  n_fuentes int;
-  limite int;
 begin
   if tg_op = 'INSERT' then
     if privado.es_directo() then
       new.estado := 'borrador';
       new.autor_id := auth.uid();
-      new.huella := null;
       new.enviada_en := null;
       new.decidida_en := null;
     end if;
+    new.huella := null;
     select coalesce(max(numero), 0) + 1 into new.numero
       from public.ficha_versiones where ficha_id = new.ficha_id;
     return new;
   end if;
 
-  -- Contenido congelado fuera de borrador (para todos, también los triggers)
-  if old.estado <> 'borrador' and (
-       new.ficha_id is distinct from old.ficha_id or new.numero is distinct from old.numero
-    or new.pregunta is distinct from old.pregunta or new.variantes is distinct from old.variantes
+  -- Publicada, reemplazada o rechazada: el contenido ya no cambia (para
+  -- nadie, tampoco los triggers ni el dueño de la base)
+  if old.estado not in ('borrador', 'en_revision') and (
+       new.pregunta is distinct from old.pregunta or new.variantes is distinct from old.variantes
     or new.explicacion_cientifica is distinct from old.explicacion_cientifica
     or new.version_infantil is distinct from old.version_infantil
     or new.grado_min is distinct from old.grado_min or new.grado_max is distinct from old.grado_max
     or new.asistida_por_ia is distinct from old.asistida_por_ia
-    or new.autor_id is distinct from old.autor_id or new.huella is distinct from old.huella) then
-    raise exception 'una versión enviada a revisión no se modifica: creá una versión nueva'
-      using errcode = '42501';
+    or new.huella is distinct from old.huella) then
+    raise exception 'una versión ya decidida no se modifica: abrí una versión nueva' using errcode = '42501';
   end if;
   if new.ficha_id is distinct from old.ficha_id or new.numero is distinct from old.numero
      or new.autor_id is distinct from old.autor_id or new.creada_en is distinct from old.creada_en then
     raise exception 'ficha, número, autora y fecha de una versión no se cambian' using errcode = '42501';
   end if;
 
-  if new.estado is distinct from old.estado then
-    if privado.es_directo() and not (old.estado = 'borrador' and new.estado = 'en_revision') then
-      raise exception 'la autora solo puede enviar su borrador a revisión' using errcode = '42501';
-    end if;
+  -- Quien edita por la API solo puede enviar a revisión o retirar su envío
+  if new.estado is distinct from old.estado and privado.es_directo()
+     and not (old.estado, new.estado) in (('borrador', 'en_revision'), ('en_revision', 'borrador')) then
+    raise exception 'el estado de una versión lo cambia una revisión' using errcode = '42501';
+  end if;
 
-    if old.estado = 'borrador' and new.estado = 'en_revision' then
-      select * into f from public.fichas where id = new.ficha_id;
-      limite := case f.formato when 'pregunta' then 90 else 60 end;
-      if f.formato = 'pregunta' and char_length(btrim(new.pregunta)) < 5 then
-        raise exception 'falta la pregunta principal' using errcode = '23514';
-      end if;
-      if f.formato = 'pregunta' and char_length(btrim(new.explicacion_cientifica)) < 20 then
-        raise exception 'falta la explicación científica' using errcode = '23514';
-      end if;
-      if char_length(btrim(new.version_infantil)) < 10 then
-        raise exception 'falta la versión para chicos' using errcode = '23514';
-      end if;
-      if privado.palabras(new.version_infantil) > limite then
-        raise exception 'la versión para chicos tiene más de % palabras', limite using errcode = '23514';
-      end if;
-      select count(*) into n_fuentes from public.version_fuentes where version_id = new.id;
-      if n_fuentes = 0 then
-        raise exception 'hace falta al menos una fuente para enviar a revisión' using errcode = '23514';
-      end if;
-      if exists (select 1 from public.version_fuentes vf where vf.version_id = new.id and vf.publicacion_id is not null
-                 and (char_length(btrim(vf.pasaje)) = 0 or char_length(btrim(vf.ubicacion)) = 0)) then
-        raise exception 'cada artículo citado necesita su pasaje y dónde está' using errcode = '23514';
-      end if;
-      if exists (select 1 from public.version_fuentes vf where vf.version_id = new.id
-                 and char_length(btrim(vf.pasaje)) > 0 and not vf.pasaje_textual and char_length(btrim(vf.parafrasis)) = 0) then
-        raise exception 'un pasaje que no es textual necesita su paráfrasis' using errcode = '23514';
-      end if;
-      new.huella := privado.huella_version(new.id);
+  if new.estado = 'borrador' then
+    new.huella := null;
+    new.enviada_en := null;
+  elsif new.estado = 'en_revision' then
+    -- Al enviar y en cada corrección: cumple lo mínimo y huella nueva
+    perform privado.validar_para_revision(new);
+    new.huella := privado.huella_de(new);
+    if old.estado = 'borrador' then
       new.enviada_en := now();
     end if;
   end if;
@@ -378,9 +398,15 @@ begin
     perform privado.registrar('crear_version', 'ficha_version', new.id, null,
       jsonb_build_object('ficha_id', new.ficha_id, 'numero', new.numero, 'autor_id', new.autor_id));
   elsif new.estado is distinct from old.estado then
-    perform privado.registrar(case new.estado when 'en_revision' then 'enviar_a_revision' else new.estado end,
+    perform privado.registrar(
+      case when new.estado = 'en_revision' then 'enviar_a_revision'
+           when old.estado = 'en_revision' and new.estado = 'borrador' then 'volver_a_borrador'
+           else new.estado end,
       'ficha_version', new.id, jsonb_build_object('estado', old.estado),
       jsonb_build_object('estado', new.estado, 'huella', new.huella));
+  elsif new.estado = 'en_revision' and new.huella is distinct from old.huella then
+    perform privado.registrar('corregir_en_revision', 'ficha_version', new.id,
+      jsonb_build_object('huella', old.huella), jsonb_build_object('huella', new.huella));
   end if;
   return null;
 end;
@@ -388,8 +414,8 @@ $$;
 create trigger versiones_despues after insert or update on public.ficha_versiones
   for each row execute function privado.versiones_despues();
 
--- ---------- Citas: solo se tocan mientras la versión es borrador ----------
-create function privado.citas_solo_en_borrador() returns trigger
+-- ---------- Citas: se tocan en borrador o en revisión ----------
+create function privado.citas_editables() returns trigger
 language plpgsql security definer set search_path = '' as $$
 declare
   v_ids uuid[];
@@ -397,24 +423,39 @@ begin
   v_ids := case tg_op when 'INSERT' then array[new.version_id]
                       when 'DELETE' then array[old.version_id]
                       else array[old.version_id, new.version_id] end;
-  if exists (select 1 from public.ficha_versiones v where v.id = any (v_ids) and v.estado <> 'borrador') then
-    raise exception 'las citas de una versión enviada no se modifican' using errcode = '42501';
+  if exists (select 1 from public.ficha_versiones v
+             where v.id = any (v_ids) and v.estado not in ('borrador', 'en_revision')) then
+    raise exception 'las citas de una versión ya decidida no se modifican' using errcode = '42501';
   end if;
   return case tg_op when 'DELETE' then old else new end;
 end;
 $$;
-create trigger citas_solo_en_borrador before insert or update or delete on public.version_fuentes
-  for each row execute function privado.citas_solo_en_borrador();
+create trigger citas_editables before insert or update or delete on public.version_fuentes
+  for each row execute function privado.citas_editables();
 
--- ---------- Revisiones: cuatro ojos, huella y efectos ----------
+-- Si la versión está en revisión, cambiar una cita cambia su huella
+create function privado.citas_rehuellar() returns trigger
+language plpgsql security definer set search_path = '' as $$
+begin
+  update public.ficha_versiones set huella = huella
+   where id in (case tg_op when 'DELETE' then old.version_id else new.version_id end,
+                case tg_op when 'UPDATE' then old.version_id else null end)
+     and estado = 'en_revision';
+  return null;
+end;
+$$;
+create trigger citas_rehuellar after insert or update or delete on public.version_fuentes
+  for each row execute function privado.citas_rehuellar();
+
+-- ---------- Revisiones: validadora, huella y efectos ----------
 create function privado.revisar() returns trigger
 language plpgsql security definer set search_path = '' as $$
 declare
   v public.ficha_versiones;
   anterior uuid;
 begin
-  -- revisor_id y creada_en no están entre las columnas que el usuario puede
-  -- mandar: toman auth.uid() y now() por defecto.
+  -- revisor_id, autoaprobada y creada_en no están entre las columnas que el
+  -- usuario puede mandar: toman sus valores acá o por defecto.
   if new.objeto <> 'ficha_version' then
     raise exception 'la revisión de % todavía no está disponible', new.objeto using errcode = '0A000';
   end if;
@@ -429,15 +470,13 @@ begin
   if v.estado <> 'en_revision' then
     raise exception 'esa versión no está esperando revisión' using errcode = '23514';
   end if;
-  if v.autor_id = new.revisor_id then
-    raise exception 'nadie aprueba su propio texto' using errcode = '42501';
-  end if;
-  if v.huella <> new.huella_revisada or privado.huella_version(v.id) <> v.huella then
+  if v.huella <> new.huella_revisada or privado.huella_de(v) <> v.huella then
     raise exception 'el texto cambió desde que lo abriste: volvé a cargarlo' using errcode = '40001';
   end if;
   if new.decision <> 'aprobar' and char_length(btrim(new.comentario)) < 5 then
     raise exception 'pedir cambios o rechazar exige un comentario' using errcode = '23514';
   end if;
+  new.autoaprobada := (new.decision = 'aprobar' and v.autor_id = new.revisor_id);
 
   if new.decision = 'aprobar' then
     select version_publicada_id into anterior from public.fichas where id = v.ficha_id for update;
@@ -449,15 +488,16 @@ begin
     update public.fichas
        set estado = 'publicada', version_publicada_id = v.id, retirada_en = null, motivo_retiro = null
      where id = v.ficha_id;
+  elsif new.decision = 'pedir_cambios' then
+    -- Vuelve a borrador la MISMA versión: la autora corrige y la reenvía
+    update public.ficha_versiones set estado = 'borrador' where id = v.id;
   else
-    update public.ficha_versiones
-       set estado = case new.decision when 'pedir_cambios' then 'cambios_pedidos' else 'rechazada' end,
-           decidida_en = now()
-     where id = v.id;
+    update public.ficha_versiones set estado = 'rechazada', decidida_en = now() where id = v.id;
   end if;
 
   perform privado.registrar('revisar', 'ficha_version', v.id, null,
-    jsonb_build_object('decision', new.decision, 'revisor_id', new.revisor_id, 'huella', new.huella_revisada));
+    jsonb_build_object('decision', new.decision, 'revisor_id', new.revisor_id,
+                       'huella', new.huella_revisada, 'autoaprobada', new.autoaprobada));
   return new;
 end;
 $$;
@@ -496,11 +536,15 @@ $$;
 create trigger fragmentos_valido before insert or update on public.fragmentos
   for each row execute function privado.fragmento_valido();
 
-revoke all on function privado.huella_version(uuid), privado.registrar(text, text, uuid, jsonb, jsonb),
+revoke all on function privado.huella_de(public.ficha_versiones), privado.registrar(text, text, uuid, jsonb, jsonb),
+  privado.validar_para_revision(public.ficha_versiones),
   privado.fichas_antes(), privado.fichas_despues(), privado.versiones_antes(), privado.versiones_despues(),
-  privado.citas_solo_en_borrador(), privado.revisar(), privado.solo_agregar(), privado.fragmento_valido()
+  privado.citas_editables(), privado.citas_rehuellar(), privado.revisar(), privado.solo_agregar(),
+  privado.fragmento_valido()
   from public, anon, authenticated;
-grant execute on function privado.huella_version(uuid) to authenticated, service_role;
+-- versiones_antes corre con el rol de quien edita y las necesita
+grant execute on function privado.huella_de(public.ficha_versiones),
+  privado.validar_para_revision(public.ficha_versiones) to authenticated, service_role;
 
 -- ---------------------------------------------------------------------
 -- Vista: lo único que puede llevar el sello "Revisado por el Pasteur"
@@ -509,15 +553,15 @@ grant execute on function privado.huella_version(uuid) to authenticated, service
 create view public.fichas_validadas with (security_invoker = true) as
 select f.id as ficha_id, f.slug, f.formato, f.tema_id, f.actividad,
        v.id as version_id, v.numero, v.pregunta, v.variantes, v.explicacion_cientifica,
-       v.version_infantil, v.grado_min, v.grado_max, v.huella,
-       r.revisor_id as aprobada_por, r.creada_en as aprobada_en
+       v.version_infantil, v.grado_min, v.grado_max, v.huella, v.autor_id,
+       r.revisor_id as aprobada_por, r.creada_en as aprobada_en, r.autoaprobada
 from public.fichas f
 join public.ficha_versiones v on v.id = f.version_publicada_id and v.estado = 'publicada'
 join lateral (
-  select r.revisor_id, r.creada_en from public.revisiones r
+  select r.revisor_id, r.creada_en, r.autoaprobada from public.revisiones r
   join public.equipo e on e.id = r.revisor_id and e.rol = 'validador'
   where r.objeto = 'ficha_version' and r.objeto_id = v.id and r.decision = 'aprobar'
-    and r.revisor_id <> v.autor_id and r.huella_revisada = v.huella
+    and r.huella_revisada = v.huella
   order by r.creada_en desc limit 1
 ) r on true
 where f.estado = 'publicada';
@@ -577,41 +621,48 @@ grant select on public.fichas to authenticated;
 grant insert (slug, formato, tema_id, actividad) on public.fichas to authenticated;
 grant update (tema_id, actividad, estado, motivo_retiro) on public.fichas to authenticated;
 
--- Versiones: el equipo las ve; cada una escribe y envía SUS borradores
+-- Versiones: el equipo las ve; cada una escribe SUS borradores y los envía;
+-- en revisión las corrigen su autora y las validadoras.
 create policy "versiones: el equipo ve" on public.ficha_versiones
   for select to authenticated using ((select privado.es_equipo()));
 create policy "versiones: el equipo crea borradores" on public.ficha_versiones
   for insert to authenticated with check ((select privado.es_equipo()));
-create policy "versiones: la autora edita su borrador" on public.ficha_versiones
+create policy "versiones: la autora edita la suya" on public.ficha_versiones
   for update to authenticated
-  using ((select privado.es_equipo()) and autor_id = (select auth.uid()) and estado = 'borrador')
+  using ((select privado.es_equipo()) and autor_id = (select auth.uid()) and estado in ('borrador', 'en_revision'))
   with check (autor_id = (select auth.uid()) and estado in ('borrador', 'en_revision'));
+create policy "versiones: la validadora corrige en revisión" on public.ficha_versiones
+  for update to authenticated
+  using ((select privado.es_validador()) and estado = 'en_revision')
+  with check (estado = 'en_revision');
 grant select on public.ficha_versiones to authenticated;
 grant insert (ficha_id, pregunta, variantes, explicacion_cientifica, version_infantil, grado_min, grado_max,
   asistida_por_ia, nota_interna) on public.ficha_versiones to authenticated;
 grant update (pregunta, variantes, explicacion_cientifica, version_infantil, grado_min, grado_max,
   asistida_por_ia, nota_interna, estado) on public.ficha_versiones to authenticated;
 
--- Citas: el equipo las ve; la autora del borrador las agrega, cambia o quita
+-- Citas: el equipo las ve; las cambia la autora (borrador o revisión) y las
+-- validadoras (en revisión)
+create function privado.puede_editar_version(p_version uuid) returns boolean
+language sql stable security definer set search_path = '' as $$
+  select exists (
+    select 1 from public.ficha_versiones v
+    where v.id = p_version
+      and ((v.autor_id = auth.uid() and v.estado in ('borrador', 'en_revision') and privado.es_equipo())
+           or (v.estado = 'en_revision' and privado.es_validador())));
+$$;
+revoke all on function privado.puede_editar_version(uuid) from public, anon;
+grant execute on function privado.puede_editar_version(uuid) to authenticated;
+
 create policy "citas: el equipo ve" on public.version_fuentes
   for select to authenticated using ((select privado.es_equipo()));
-create policy "citas: la autora agrega" on public.version_fuentes
-  for insert to authenticated with check (
-    (select privado.es_equipo())
-    and exists (select 1 from public.ficha_versiones v
-                where v.id = version_id and v.autor_id = (select auth.uid()) and v.estado = 'borrador'));
-create policy "citas: la autora cambia" on public.version_fuentes
+create policy "citas: agregar" on public.version_fuentes
+  for insert to authenticated with check (privado.puede_editar_version(version_id));
+create policy "citas: cambiar" on public.version_fuentes
   for update to authenticated
-  using ((select privado.es_equipo())
-         and exists (select 1 from public.ficha_versiones v
-                     where v.id = version_id and v.autor_id = (select auth.uid()) and v.estado = 'borrador'))
-  with check (exists (select 1 from public.ficha_versiones v
-                      where v.id = version_id and v.autor_id = (select auth.uid()) and v.estado = 'borrador'));
-create policy "citas: la autora quita" on public.version_fuentes
-  for delete to authenticated
-  using ((select privado.es_equipo())
-         and exists (select 1 from public.ficha_versiones v
-                     where v.id = version_id and v.autor_id = (select auth.uid()) and v.estado = 'borrador'));
+  using (privado.puede_editar_version(version_id)) with check (privado.puede_editar_version(version_id));
+create policy "citas: quitar" on public.version_fuentes
+  for delete to authenticated using (privado.puede_editar_version(version_id));
 grant select, delete on public.version_fuentes to authenticated;
 grant insert (version_id, publicacion_id, fuente_id, pasaje, pasaje_textual, ubicacion, parafrasis, orden)
   on public.version_fuentes to authenticated;

@@ -27,7 +27,7 @@ create function t3.ok(prueba text, cond boolean) returns void language sql as
 grant execute on all functions in schema t3 to anon, authenticated, service_role;
 
 \set ADM  '''a0000000-0000-0000-0000-000000000001'''
-\set INV  '''a0000000-0000-0000-0000-000000000002'''
+\set RED  '''a0000000-0000-0000-0000-000000000002'''
 \set VAL  '''a0000000-0000-0000-0000-000000000003'''
 \set VAL2 '''a0000000-0000-0000-0000-000000000004'''
 \set MAE  '''aaaaaaaa-0000-0000-0000-000000000001'''
@@ -45,33 +45,34 @@ select t3.ok('alta: con invitación NO se vuelve maestra', not exists (select 1 
 select t3.ok('alta: la invitación queda usada', (select usada_por from invitaciones_equipo where email = 'admin@pasteur.test') = :ADM);
 
 set role authenticated; select set_config('request.jwt.claim.sub', :ADM, false);
-insert into invitaciones_equipo (email, rol, nombre_visible) values ('autora@pasteur.test', 'investigador', 'Autora');
+insert into invitaciones_equipo (email, rol, nombre_visible) values ('redactora@pasteur.test', 'redactor', 'Redactora');
 insert into invitaciones_equipo (email, rol, nombre_visible, laboratorio) values ('val@pasteur.test', 'validador', 'Validadora', 'Lab');
 insert into invitaciones_equipo (email, rol) values ('val2@pasteur.test', 'validador');
 select t3.ok('admin: crea invitaciones y las ve', t3.filas('select 1 from invitaciones_equipo') = 4);
 select t3.ok('admin: no repite una invitación pendiente', t3.falla($$insert into invitaciones_equipo (email, rol) values ('val@pasteur.test', 'validador')$$));
 select t3.ok('admin: no invita a un mail interno de alumno', t3.falla($$insert into invitaciones_equipo (email, rol) values ('k7rm-05@alumnos.invalid', 'validador')$$));
 select t3.ok('admin: no marca una invitación como usada', t3.falla($$insert into invitaciones_equipo (email, rol, usada_en) values ('x@pasteur.test', 'validador', now())$$));
+select t3.ok('el rol viejo "investigador" ya no existe', t3.falla($$insert into invitaciones_equipo (email, rol) values ('y@pasteur.test', 'investigador')$$));
 reset role;
-insert into auth.users (id, email) values (:INV, 'autora@pasteur.test'), (:VAL, 'Val@Pasteur.test'), (:VAL2, 'val2@pasteur.test');
+insert into auth.users (id, email) values (:RED, 'redactora@pasteur.test'), (:VAL, 'Val@Pasteur.test'), (:VAL2, 'val2@pasteur.test');
 select t3.ok('alta: el mail se compara sin mayúsculas', (select rol from equipo where id = :VAL) = 'validador');
 select t3.ok('alta: sin invitación sigue siendo maestra', exists (select 1 from docentes where id = :MAE) and not exists (select 1 from equipo where id = :MAE));
 
 -- =====================================================================
 -- Roles
 -- =====================================================================
-set role authenticated; select set_config('request.jwt.claim.sub', :INV, false);
-select t3.ok('investigadora: ve al equipo', t3.filas('select 1 from equipo') = 4);
-select t3.ok('investigadora: edita su nombre', t3.afecta($$update equipo set nombre_visible = 'Sofia' where id = 'a0000000-0000-0000-0000-000000000002'$$) = 1);
-select t3.ok('investigadora: no se sube el rol', t3.falla($$update equipo set rol = 'validador' where id = 'a0000000-0000-0000-0000-000000000002'$$));
-select t3.ok('investigadora: no cambia el rol de otra', t3.afecta($$update equipo set rol = 'investigador' where id = 'a0000000-0000-0000-0000-000000000003'$$) <= 0
+set role authenticated; select set_config('request.jwt.claim.sub', :RED, false);
+select t3.ok('redactora: ve al equipo', t3.filas('select 1 from equipo') = 4);
+select t3.ok('redactora: edita su nombre', t3.afecta($$update equipo set nombre_visible = 'Sofia' where id = 'a0000000-0000-0000-0000-000000000002'$$) = 1);
+select t3.ok('redactora: no se sube el rol', t3.falla($$update equipo set rol = 'validador' where id = 'a0000000-0000-0000-0000-000000000002'$$));
+select t3.ok('redactora: no cambia el rol de otra', t3.afecta($$update equipo set rol = 'redactor' where id = 'a0000000-0000-0000-0000-000000000003'$$) <= 0
   and (select rol from equipo where id = :VAL) = 'validador');
-select t3.ok('investigadora: no ve invitaciones', t3.filas('select 1 from invitaciones_equipo') = 0);
-select t3.ok('investigadora: no invita', t3.falla($$insert into invitaciones_equipo (email, rol) values ('z@pasteur.test', 'admin')$$));
+select t3.ok('redactora: no ve invitaciones', t3.filas('select 1 from invitaciones_equipo') = 0);
+select t3.ok('redactora: no invita', t3.falla($$insert into invitaciones_equipo (email, rol) values ('z@pasteur.test', 'admin')$$));
 reset role;
 set role authenticated; select set_config('request.jwt.claim.sub', :ADM, false);
 select t3.ok('admin: no cambia su propio rol', t3.falla($$update equipo set rol = 'validador' where id = 'a0000000-0000-0000-0000-000000000001'$$));
-select t3.ok('admin: cambia el rol de otra', t3.afecta($$update equipo set rol = 'investigador' where id = 'a0000000-0000-0000-0000-000000000004'$$) = 1);
+select t3.ok('admin: cambia el rol de otra', t3.afecta($$update equipo set rol = 'redactor' where id = 'a0000000-0000-0000-0000-000000000004'$$) = 1);
 select t3.ok('admin: lo vuelve a validadora', t3.afecta($$update equipo set rol = 'validador' where id = 'a0000000-0000-0000-0000-000000000004'$$) = 1);
 reset role;
 set role authenticated; select set_config('request.jwt.claim.sub', :MAE, false);
@@ -83,12 +84,12 @@ select t3.ok('sin sesión: no lee el equipo', t3.filas('select 1 from equipo') =
 reset role;
 
 -- =====================================================================
--- Fichas: la autora escribe, la validadora revisa
+-- Fichas: la redactora escribe, la validadora revisa
 -- =====================================================================
-set role authenticated; select set_config('request.jwt.claim.sub', :INV, false);
+set role authenticated; select set_config('request.jwt.claim.sub', :RED, false);
 insert into fichas (slug, formato, actividad) values ('celula-que-es', 'pregunta', 'a3');
-select t3.ok('autora: crea una ficha en borrador', (select estado from fichas where slug = 'celula-que-es') = 'borrador');
-select t3.ok('autora: la ficha queda a su nombre', (select creada_por from fichas where slug = 'celula-que-es') = :INV);
+select t3.ok('redactora: crea una ficha en borrador', (select estado from fichas where slug = 'celula-que-es') = 'borrador');
+select t3.ok('redactora: la ficha queda a su nombre', (select creada_por from fichas where slug = 'celula-que-es') = :RED);
 insert into ficha_versiones (ficha_id, pregunta, explicacion_cientifica, version_infantil)
   select id, '¿Qué es una célula?', 'La célula es la unidad estructural y funcional de los seres vivos.',
          'Una célula es la pieza más chiquita de un ser vivo que puede vivir por su cuenta.'
@@ -98,44 +99,61 @@ select id as v1 from ficha_versiones where pregunta = '¿Qué es una célula?' \
 select id as f1 from fichas where slug = 'celula-que-es' \gset
 select t3.ok('versión: número 1, borrador, sin huella', (select numero = 1 and estado = 'borrador' and huella is null from ficha_versiones where id = :'v1'));
 
-set role authenticated; select set_config('request.jwt.claim.sub', :INV, false);
-select t3.ok('autora: no la publica ella misma', t3.falla(format($$update ficha_versiones set estado = 'publicada' where id = %L$$, :'v1')));
-select t3.ok('autora: sin fuentes no se envía', t3.error(format($$update ficha_versiones set estado = 'en_revision' where id = %L$$, :'v1')) like '%al menos una fuente%');
+set role authenticated; select set_config('request.jwt.claim.sub', :RED, false);
+select t3.ok('redactora: no la publica ella misma', t3.falla(format($$update ficha_versiones set estado = 'publicada' where id = %L$$, :'v1')));
+select t3.ok('redactora: sin fuentes no se envía', t3.error(format($$update ficha_versiones set estado = 'en_revision' where id = %L$$, :'v1')) like '%al menos una fuente%');
 insert into fuentes (tipo, cita) values ('comunicacion', 'Comunicación de una investigadora del Institut Pasteur de Montevideo, 2026');
 insert into version_fuentes (version_id, publicacion_id, pasaje, ubicacion)
   values (:'v1', 'eeeeeeee-1111-0000-0000-000000000001', '', '');
-select t3.ok('autora: un artículo sin pasaje no se envía', t3.error(format($$update ficha_versiones set estado = 'en_revision' where id = %L$$, :'v1')) like '%pasaje%');
-select t3.ok('autora: un pasaje no textual pide paráfrasis', t3.error(format($$update version_fuentes set pasaje = 'Cells are the basic unit of life.', ubicacion = 'Resumen' where version_id = %L$$, :'v1')) = ''
+select t3.ok('redactora: un artículo sin pasaje no se envía', t3.error(format($$update ficha_versiones set estado = 'en_revision' where id = %L$$, :'v1')) like '%pasaje%');
+select t3.ok('redactora: un pasaje no textual pide paráfrasis', t3.error(format($$update version_fuentes set pasaje = 'Cells are the basic unit of life.', ubicacion = 'Resumen' where version_id = %L$$, :'v1')) = ''
   and t3.error(format($$update ficha_versiones set estado = 'en_revision' where id = %L$$, :'v1')) like '%paráfrasis%');
-select t3.ok('autora: quita una cita de su borrador', t3.afecta(format($$delete from version_fuentes where version_id = %L and publicacion_id is not null$$, :'v1')) = 1);
+select t3.ok('redactora: quita una cita de su borrador', t3.afecta(format($$delete from version_fuentes where version_id = %L and publicacion_id is not null$$, :'v1')) = 1);
 insert into version_fuentes (version_id, fuente_id, ubicacion) select :'v1', id, 'conversación' from fuentes limit 1;
 update ficha_versiones set version_infantil = repeat('palabra ', 91) where id = :'v1';
-select t3.ok('autora: más de 90 palabras no se envía', t3.error(format($$update ficha_versiones set estado = 'en_revision' where id = %L$$, :'v1')) like '%90 palabras%');
-update ficha_versiones set version_infantil = 'Una célula es la pieza más chiquita de un ser vivo que puede vivir por su cuenta.' where id = :'v1';
-select t3.ok('autora: envía a revisión', t3.afecta(format($$update ficha_versiones set estado = 'en_revision' where id = %L$$, :'v1')) = 1);
+select t3.ok('redactora: más de 90 palabras no se envía', t3.error(format($$update ficha_versiones set estado = 'en_revision' where id = %L$$, :'v1')) like '%90 palabras%');
+update ficha_versiones set version_infantil = 'Una célula es la pieza más chiquita de un ser vivo.' where id = :'v1';
+select t3.ok('redactora: envía a revisión', t3.afecta(format($$update ficha_versiones set estado = 'en_revision' where id = %L$$, :'v1')) = 1);
 reset role;
 select huella as h1 from ficha_versiones where id = :'v1' \gset
 select t3.ok('envío: calcula la huella', :'h1' ~ '^[0-9a-f]{64}$');
 
-set role authenticated; select set_config('request.jwt.claim.sub', :INV, false);
-select t3.ok('enviada: la autora ya no la cambia', t3.afecta(format($$update ficha_versiones set version_infantil = 'otra cosa' where id = %L$$, :'v1')) <= 0);
-select t3.ok('enviada: no se agregan citas', t3.falla(format($$insert into version_fuentes (version_id, fuente_id) select %L, id from fuentes limit 1$$, :'v1')));
-select t3.ok('autora: no puede revisar', t3.falla(format($$insert into revisiones (objeto, objeto_id, decision, huella_revisada) values ('ficha_version', %L, 'aprobar', %L)$$, :'v1', :'h1')));
+-- ---------- Corregir en revisión ----------
+set role authenticated; select set_config('request.jwt.claim.sub', :RED, false);
+select t3.ok('en revisión: la redactora corrige su texto', t3.afecta(format($$update ficha_versiones set version_infantil = 'Una célula es la pieza más chiquita de un ser vivo que puede vivir por su cuenta.' where id = %L$$, :'v1')) = 1);
 reset role;
-select t3.ok('enviada: ni el dueño de la base cambia el texto', t3.falla(format($$update ficha_versiones set version_infantil = 'trampa' where id = %L$$, :'v1')));
+select huella as h1b from ficha_versiones where id = :'v1' \gset
+select t3.ok('en revisión: corregir cambia la huella', :'h1b' <> :'h1' and (select estado from ficha_versiones where id = :'v1') = 'en_revision');
+set role authenticated; select set_config('request.jwt.claim.sub', :RED, false);
+select t3.ok('en revisión: no se pasa del largo al corregir', t3.error(format($$update ficha_versiones set version_infantil = repeat('palabra ', 91) where id = %L$$, :'v1')) like '%90 palabras%');
+select t3.ok('en revisión: no se queda sin fuentes', t3.falla(format($$delete from version_fuentes where version_id = %L$$, :'v1')));
+select t3.ok('redactora: no puede revisar', t3.falla(format($$insert into revisiones (objeto, objeto_id, decision, huella_revisada) values ('ficha_version', %L, 'aprobar', %L)$$, :'v1', :'h1b')));
+reset role;
 
 set role authenticated; select set_config('request.jwt.claim.sub', :VAL, false);
-select t3.ok('validadora: no edita el texto de otra', t3.afecta(format($$update ficha_versiones set version_infantil = 'x' where id = %L$$, :'v1')) <= 0);
-select t3.ok('validadora: con huella vieja no aprueba', t3.error(format($$insert into revisiones (objeto, objeto_id, decision, huella_revisada) values ('ficha_version', %L, 'aprobar', %L)$$, :'v1', repeat('0', 64))) like '%cambió%');
-select t3.ok('validadora: rechazar sin comentario no vale', t3.falla(format($$insert into revisiones (objeto, objeto_id, decision, huella_revisada) values ('ficha_version', %L, 'rechazar', %L)$$, :'v1', :'h1')));
-select t3.ok('validadora: no se pone otra como revisora', t3.falla(format($$insert into revisiones (objeto, objeto_id, decision, huella_revisada, revisor_id) values ('ficha_version', %L, 'aprobar', %L, 'a0000000-0000-0000-0000-000000000004')$$, :'v1', :'h1')));
-select t3.ok('validadora: aprueba', t3.afecta(format($$insert into revisiones (objeto, objeto_id, decision, huella_revisada) values ('ficha_version', %L, 'aprobar', %L)$$, :'v1', :'h1')) = 1);
+select t3.ok('validadora: con el texto viejo no aprueba', t3.error(format($$insert into revisiones (objeto, objeto_id, decision, huella_revisada) values ('ficha_version', %L, 'aprobar', %L)$$, :'v1', :'h1')) like '%cambió%');
+select t3.ok('validadora: corrige una palabra en revisión', t3.afecta(format($$update ficha_versiones set explicacion_cientifica = 'La célula es la unidad estructural y funcional de todos los seres vivos.' where id = %L$$, :'v1')) = 1);
+select t3.ok('validadora: no cambia el estado a mano', t3.afecta(format($$update ficha_versiones set estado = 'publicada' where id = %L$$, :'v1')) <= 0
+  and (select estado from ficha_versiones where id = :'v1') = 'en_revision');
+reset role;
+select huella as h1c from ficha_versiones where id = :'v1' \gset
+select t3.ok('registro: queda quién corrigió en revisión', exists (select 1 from eventos_editoriales where accion = 'corregir_en_revision' and actor_id = :VAL));
+set role authenticated; select set_config('request.jwt.claim.sub', :VAL, false);
+select t3.ok('validadora: rechazar sin comentario no vale', t3.falla(format($$insert into revisiones (objeto, objeto_id, decision, huella_revisada) values ('ficha_version', %L, 'rechazar', %L)$$, :'v1', :'h1c')));
+select t3.ok('validadora: no se pone otra como revisora', t3.falla(format($$insert into revisiones (objeto, objeto_id, decision, huella_revisada, revisor_id) values ('ficha_version', %L, 'aprobar', %L, 'a0000000-0000-0000-0000-000000000004')$$, :'v1', :'h1c')));
+select t3.ok('validadora: aprueba lo que está viendo', t3.afecta(format($$insert into revisiones (objeto, objeto_id, decision, huella_revisada) values ('ficha_version', %L, 'aprobar', %L)$$, :'v1', :'h1c')) = 1);
 select t3.ok('aprobada: versión publicada', (select estado from ficha_versiones where id = :'v1') = 'publicada');
 select t3.ok('aprobada: la ficha apunta a esa versión', (select estado = 'publicada' and version_publicada_id = :'v1' from fichas where id = :'f1'));
-select t3.ok('aprobada: aparece en fichas_validadas con la revisora', t3.filas(format($$select 1 from fichas_validadas where version_id = %L and aprobada_por = 'a0000000-0000-0000-0000-000000000003'$$, :'v1')) = 1);
-select t3.ok('aprobada: no se aprueba dos veces', t3.falla(format($$insert into revisiones (objeto, objeto_id, decision, huella_revisada) values ('ficha_version', %L, 'aprobar', %L)$$, :'v1', :'h1')));
+select t3.ok('aprobada: aparece en fichas_validadas, no autoaprobada', t3.filas(format($$select 1 from fichas_validadas where version_id = %L and aprobada_por = 'a0000000-0000-0000-0000-000000000003' and not autoaprobada$$, :'v1')) = 1);
+select t3.ok('aprobada: no se aprueba dos veces', t3.falla(format($$insert into revisiones (objeto, objeto_id, decision, huella_revisada) values ('ficha_version', %L, 'aprobar', %L)$$, :'v1', :'h1c')));
+select t3.ok('publicada: la validadora ya no la cambia', t3.afecta(format($$update ficha_versiones set version_infantil = 'x' where id = %L$$, :'v1')) <= 0);
 select t3.ok('revisiones: no se editan', t3.afecta($$update revisiones set comentario = 'x'$$) <= 0);
 reset role;
+set role authenticated; select set_config('request.jwt.claim.sub', :RED, false);
+select t3.ok('publicada: la redactora ya no la cambia', t3.afecta(format($$update ficha_versiones set version_infantil = 'x' where id = %L$$, :'v1')) <= 0);
+select t3.ok('publicada: no se le agregan citas', t3.falla(format($$insert into version_fuentes (version_id, fuente_id) select %L, id from fuentes limit 1$$, :'v1')));
+reset role;
+select t3.ok('publicada: ni el dueño de la base cambia el texto', t3.falla(format($$update ficha_versiones set version_infantil = 'trampa' where id = %L$$, :'v1')));
 select t3.ok('revisiones: ni el dueño de la base las cambia', t3.falla($$update revisiones set comentario = 'x'$$));
 select t3.ok('revisiones: ni el dueño de la base las borra', t3.falla($$delete from revisiones$$));
 select t3.ok('registro: quedó crear, enviar y revisar', (select count(distinct accion) from eventos_editoriales where accion in ('crear', 'enviar_a_revision', 'revisar')) = 3);
@@ -148,7 +166,7 @@ select t3.ok('índice: encuentra "CÉLULAS" en mayúsculas y plural', t3.filas($
 select t3.ok('servidor: no cambia el texto de un fragmento', t3.falla($$update fragmentos set texto = 'otra'$$));
 reset role;
 
--- ---------- Nadie aprueba su propio texto ----------
+-- ---------- La validadora aprueba su propio texto (queda marcado) ----------
 set role authenticated; select set_config('request.jwt.claim.sub', :VAL, false);
 insert into fichas (slug, formato, actividad) values ('mitocondria', 'dato', 'a3');
 insert into ficha_versiones (ficha_id, version_infantil) select id, repeat('dato ', 61) from fichas where slug = 'mitocondria';
@@ -157,63 +175,78 @@ select id as v9 from ficha_versiones where version_infantil like 'dato dato%' \g
 set role authenticated; select set_config('request.jwt.claim.sub', :VAL, false);
 insert into version_fuentes (version_id, fuente_id, ubicacion) select :'v9', id, 'conversación' from fuentes limit 1;
 select t3.ok('dato: más de 60 palabras no se envía', t3.error(format($$update ficha_versiones set estado = 'en_revision' where id = %L$$, :'v9')) like '%60 palabras%');
-update ficha_versiones set version_infantil = 'Las mitocondrias son como pequeñas centrales de energía dentro de la célula.' where id = :'v9';
-select t3.ok('dato: sin pregunta igual se envía', t3.afecta(format($$update ficha_versiones set estado = 'en_revision' where id = %L$$, :'v9')) = 1);
+update ficha_versiones set version_infantil = 'Las mitocondrias son pequeñas centrales de energía.' where id = :'v9';
+select t3.ok('dato: corto y sin pregunta igual se envía', t3.afecta(format($$update ficha_versiones set estado = 'en_revision' where id = %L$$, :'v9')) = 1);
 reset role;
 select huella as h9 from ficha_versiones where id = :'v9' \gset
 set role authenticated; select set_config('request.jwt.claim.sub', :VAL, false);
-select t3.ok('validadora: no aprueba su propio texto', t3.error(format($$insert into revisiones (objeto, objeto_id, decision, huella_revisada) values ('ficha_version', %L, 'aprobar', %L)$$, :'v9', :'h9')) like '%propio texto%');
-reset role;
-set role authenticated; select set_config('request.jwt.claim.sub', :VAL2, false);
-select t3.ok('otra validadora sí la aprueba', t3.afecta(format($$insert into revisiones (objeto, objeto_id, decision, huella_revisada) values ('ficha_version', %L, 'aprobar', %L)$$, :'v9', :'h9')) = 1);
+select t3.ok('validadora: aprueba su propio texto', t3.afecta(format($$insert into revisiones (objeto, objeto_id, decision, huella_revisada) values ('ficha_version', %L, 'aprobar', %L)$$, :'v9', :'h9')) = 1);
+select t3.ok('autoaprobada: queda marcada en fichas_validadas', t3.filas(format($$select 1 from fichas_validadas where version_id = %L and autoaprobada$$, :'v9')) = 1);
+select t3.ok('autoaprobada: queda marcada en el registro', exists (select 1 from eventos_editoriales where accion = 'revisar' and entidad_id = :'v9' and (despues ->> 'autoaprobada')::boolean));
 reset role;
 
--- ---------- Versión nueva: cambios pedidos y reemplazo ----------
-set role authenticated; select set_config('request.jwt.claim.sub', :INV, false);
+-- ---------- La admin escribe pero no aprueba ----------
+set role authenticated; select set_config('request.jwt.claim.sub', :ADM, false);
+insert into fichas (slug, formato) values ('nucleo', 'dato');
+insert into ficha_versiones (ficha_id, version_infantil) select id, 'El núcleo guarda el ADN de la célula, como una caja fuerte.' from fichas where slug = 'nucleo';
+reset role;
+select v.id as v7 from ficha_versiones v join fichas f on f.id = v.ficha_id where f.slug = 'nucleo' \gset
+set role authenticated; select set_config('request.jwt.claim.sub', :ADM, false);
+insert into version_fuentes (version_id, fuente_id, ubicacion) select :'v7', id, 'conversación' from fuentes limit 1;
+update ficha_versiones set estado = 'en_revision' where id = :'v7';
+reset role;
+select huella as h7 from ficha_versiones where id = :'v7' \gset
+set role authenticated; select set_config('request.jwt.claim.sub', :ADM, false);
+select t3.ok('admin: no aprueba (ni su propio texto)', t3.falla(format($$insert into revisiones (objeto, objeto_id, decision, huella_revisada) values ('ficha_version', %L, 'aprobar', %L)$$, :'v7', :'h7')));
+reset role;
+set role authenticated; select set_config('request.jwt.claim.sub', :VAL2, false);
+select t3.ok('otra validadora aprueba lo de la admin', t3.afecta(format($$insert into revisiones (objeto, objeto_id, decision, huella_revisada) values ('ficha_version', %L, 'aprobar', %L)$$, :'v7', :'h7')) = 1);
+reset role;
+
+-- ---------- Cambiar una ficha publicada: versión nueva, pedir cambios, reenviar ----------
+set role authenticated; select set_config('request.jwt.claim.sub', :RED, false);
 insert into ficha_versiones (ficha_id, pregunta, explicacion_cientifica, version_infantil)
   values (:'f1', '¿Qué es una célula?', 'La célula es la unidad estructural y funcional de todos los seres vivos.',
           'Todos los seres vivos están hechos de células, como una casa está hecha de ladrillos.');
-select t3.ok('autora: no abre dos borradores a la vez', t3.falla(format($$insert into ficha_versiones (ficha_id) values (%L)$$, :'f1')));
+select t3.ok('redactora: no abre dos versiones a la vez', t3.falla(format($$insert into ficha_versiones (ficha_id) values (%L)$$, :'f1')));
 reset role;
 select id as v2 from ficha_versiones where ficha_id = :'f1' and numero = 2 \gset
-set role authenticated; select set_config('request.jwt.claim.sub', :INV, false);
+set role authenticated; select set_config('request.jwt.claim.sub', :RED, false);
 insert into version_fuentes (version_id, fuente_id, ubicacion) select :'v2', id, 'conversación' from fuentes limit 1;
+update ficha_versiones set estado = 'en_revision' where id = :'v2';
+select t3.ok('redactora: retira su envío para seguir editando', t3.afecta(format($$update ficha_versiones set estado = 'borrador' where id = %L$$, :'v2')) = 1);
+select t3.ok('retirar el envío: vuelve a borrador sin huella', (select estado = 'borrador' and huella is null from ficha_versiones where id = :'v2'));
 update ficha_versiones set estado = 'en_revision' where id = :'v2';
 reset role;
 select huella as h2 from ficha_versiones where id = :'v2' \gset
 set role authenticated; select set_config('request.jwt.claim.sub', :VAL, false);
+select t3.ok('validadora: no devuelve a borrador a mano', t3.afecta(format($$update ficha_versiones set estado = 'borrador' where id = %L$$, :'v2')) <= 0);
 insert into revisiones (objeto, objeto_id, decision, huella_revisada, comentario) values ('ficha_version', :'v2', 'pedir_cambios', :'h2', 'Aclarar que algunos seres vivos tienen una sola célula.');
-select t3.ok('cambios pedidos: la versión queda así', (select estado from ficha_versiones where id = :'v2') = 'cambios_pedidos');
+select t3.ok('cambios pedidos: la MISMA versión vuelve a borrador', (select estado from ficha_versiones where id = :'v2') = 'borrador');
 select t3.ok('cambios pedidos: sigue publicada la anterior', (select version_publicada_id from fichas where id = :'f1') = :'v1');
 reset role;
-set role authenticated; select set_config('request.jwt.claim.sub', :INV, false);
-insert into ficha_versiones (ficha_id, pregunta, explicacion_cientifica, version_infantil)
-  values (:'f1', '¿Qué es una célula?', 'La célula es la unidad estructural y funcional de todos los seres vivos.',
-          'Los seres vivos están hechos de células. Algunos, como las bacterias, son una sola célula.');
-reset role;
-select id as v3 from ficha_versiones where ficha_id = :'f1' and numero = 3 \gset
-set role authenticated; select set_config('request.jwt.claim.sub', :INV, false);
-insert into version_fuentes (version_id, fuente_id, ubicacion) select :'v3', id, 'conversación' from fuentes limit 1;
-update ficha_versiones set estado = 'en_revision' where id = :'v3';
-reset role;
-select huella as h3 from ficha_versiones where id = :'v3' \gset
 set role service_role;
-select t3.ok('servidor: no indexa una versión que no está publicada', t3.falla(format($$insert into fragmentos (ficha_id, version_id, tipo, texto) values (%L, %L, 'infantil', 'x')$$, :'f1', :'v3')));
+select t3.ok('servidor: no indexa una versión que no está publicada', t3.falla(format($$insert into fragmentos (ficha_id, version_id, tipo, texto) values (%L, %L, 'infantil', 'x')$$, :'f1', :'v2')));
 reset role;
+set role authenticated; select set_config('request.jwt.claim.sub', :RED, false);
+select t3.ok('redactora: corrige y reenvía la misma versión', t3.afecta(format($$update ficha_versiones set version_infantil = 'Los seres vivos están hechos de células. Algunos, como las bacterias, son una sola célula.', estado = 'en_revision' where id = %L$$, :'v2')) = 1);
+reset role;
+select huella as h2b from ficha_versiones where id = :'v2' \gset
+select t3.ok('reenvío: la huella es del texto corregido', :'h2b' <> :'h2');
 set role authenticated; select set_config('request.jwt.claim.sub', :VAL, false);
-insert into revisiones (objeto, objeto_id, decision, huella_revisada) values ('ficha_version', :'v3', 'aprobar', :'h3');
+insert into revisiones (objeto, objeto_id, decision, huella_revisada) values ('ficha_version', :'v2', 'aprobar', :'h2b');
 select t3.ok('reemplazo: la versión 1 pasa a reemplazada', (select estado from ficha_versiones where id = :'v1') = 'reemplazada');
-select t3.ok('reemplazo: la ficha apunta a la versión 3', (select version_publicada_id from fichas where id = :'f1') = :'v3');
+select t3.ok('reemplazo: la ficha apunta a la versión 2', (select version_publicada_id from fichas where id = :'f1') = :'v2');
 select t3.ok('reemplazo: el índice de la versión 1 se apaga', not exists (select 1 from fragmentos where version_id = :'v1' and activo));
-select t3.ok('reemplazo: fichas_validadas muestra solo la versión 3', t3.filas(format($$select 1 from fichas_validadas where ficha_id = %L and version_id = %L$$, :'f1', :'v3')) = 1
+select t3.ok('reemplazo: fichas_validadas muestra solo la versión 2', t3.filas(format($$select 1 from fichas_validadas where ficha_id = %L and version_id = %L$$, :'f1', :'v2')) = 1
   and t3.filas(format($$select 1 from fichas_validadas where ficha_id = %L$$, :'f1')) = 1);
 reset role;
 
 -- ---------- Retirar ----------
-set role authenticated; select set_config('request.jwt.claim.sub', :INV, false);
-select t3.ok('autora: no retira (eso es de validadora o admin)', t3.falla(format($$update fichas set estado = 'retirada', motivo_retiro = 'ya no sirve' where id = %L$$, :'f1')));
-select t3.ok('autora: no elige la versión publicada', t3.falla(format($$update fichas set version_publicada_id = %L where id = %L$$, :'v2', :'f1')));
-select t3.ok('autora: cambia el tema y la actividad', t3.afecta(format($$update fichas set actividad = 'a1' where id = %L$$, :'f1')) = 1);
+set role authenticated; select set_config('request.jwt.claim.sub', :RED, false);
+select t3.ok('redactora: no retira (eso es de validadora o admin)', t3.falla(format($$update fichas set estado = 'retirada', motivo_retiro = 'ya no sirve' where id = %L$$, :'f1')));
+select t3.ok('redactora: no elige la versión publicada', t3.falla(format($$update fichas set version_publicada_id = %L where id = %L$$, :'v1', :'f1')));
+select t3.ok('redactora: cambia el tema y la actividad', t3.afecta(format($$update fichas set actividad = 'a1' where id = %L$$, :'f1')) = 1);
 reset role;
 set role authenticated; select set_config('request.jwt.claim.sub', :VAL, false);
 select t3.ok('validadora: retirar exige motivo', t3.falla(format($$update fichas set estado = 'retirada' where id = %L$$, :'f1')));
@@ -226,21 +259,22 @@ set role authenticated; select set_config('request.jwt.claim.sub', :ADM, false);
 update equipo set estado = 'suspendida' where id = :VAL2;
 reset role;
 select t3.ok('suspendida: guarda la fecha', (select estado_desde > creado_en from equipo where id = :VAL2));
-set role authenticated; select set_config('request.jwt.claim.sub', :INV, false);
+set role authenticated; select set_config('request.jwt.claim.sub', :RED, false);
 insert into fichas (slug, formato) values ('adn', 'dato');
 insert into ficha_versiones (ficha_id, version_infantil) select id, 'El ADN es como un libro de instrucciones que tiene cada célula.' from fichas where slug = 'adn';
 reset role;
 select v.id as v8 from ficha_versiones v join fichas f on f.id = v.ficha_id where f.slug = 'adn' \gset
-set role authenticated; select set_config('request.jwt.claim.sub', :INV, false);
+set role authenticated; select set_config('request.jwt.claim.sub', :RED, false);
 insert into version_fuentes (version_id, fuente_id, ubicacion) select :'v8', id, 'conversación' from fuentes limit 1;
 update ficha_versiones set estado = 'en_revision' where id = :'v8';
 reset role;
 select huella as h8 from ficha_versiones where id = :'v8' \gset
 set role authenticated; select set_config('request.jwt.claim.sub', :VAL2, false);
 select t3.ok('suspendida: no revisa', t3.falla(format($$insert into revisiones (objeto, objeto_id, decision, huella_revisada) values ('ficha_version', %L, 'aprobar', %L)$$, :'v8', :'h8')));
+select t3.ok('suspendida: no corrige', t3.afecta(format($$update ficha_versiones set version_infantil = 'otra cosa larga' where id = %L$$, :'v8')) <= 0);
 select t3.ok('suspendida: no ve fichas', t3.filas('select 1 from fichas') = 0);
 reset role;
-select t3.ok('suspendida: lo que aprobó antes sigue validado', exists (select 1 from fichas_validadas where version_id = :'v9'));
+select t3.ok('suspendida: lo que aprobó antes sigue validado', exists (select 1 from fichas_validadas where version_id = :'v7'));
 select t3.ok('revisión de publicaciones: todavía no disponible', t3.error(format($$insert into revisiones (objeto, objeto_id, decision, huella_revisada, revisor_id) values ('publicacion', %L, 'aprobar', %L, %L)$$, :'v8', :'h8', :VAL)) like '%todavía no está disponible%');
 
 -- =====================================================================
@@ -251,8 +285,9 @@ select t3.ok('maestra: no ve fichas', t3.filas('select 1 from fichas') = 0);
 select t3.ok('maestra: no ve versiones', t3.filas('select 1 from ficha_versiones') = 0);
 select t3.ok('maestra: no ve fichas_validadas', t3.filas('select 1 from fichas_validadas') = 0);
 select t3.ok('maestra: no crea fichas', t3.falla($$insert into fichas (slug, formato) values ('trampa', 'dato')$$));
+select t3.ok('maestra: no corrige en revisión', t3.afecta(format($$update ficha_versiones set version_infantil = 'trampa larga' where id = %L$$, :'v8')) <= 0);
 select t3.ok('maestra: no revisa', t3.falla(format($$insert into revisiones (objeto, objeto_id, decision, huella_revisada) values ('ficha_version', %L, 'aprobar', %L)$$, :'v8', :'h8')));
-select t3.ok('maestra: no indexa', t3.falla(format($$insert into fragmentos (ficha_id, version_id, tipo, texto) values (%L, %L, 'infantil', 'x')$$, :'f1', :'v3')));
+select t3.ok('maestra: no indexa', t3.falla(format($$insert into fragmentos (ficha_id, version_id, tipo, texto) values (%L, %L, 'infantil', 'x')$$, :'f1', :'v2')));
 reset role;
 set role authenticated; select set_config('request.jwt.claim.sub', :ALU, false), set_config('request.jwt.claims', '{"sub":"cccccccc-0000-0000-0000-000000000001","app_metadata":{"rol":"alumno"}}', false);
 select t3.ok('alumno: no ve fichas', t3.filas('select 1 from fichas') = 0);
@@ -263,6 +298,7 @@ insert into equipo (id, rol) values (:ALU, 'validador');
 set role authenticated;
 select t3.ok('alumno con fila en equipo: no ve fichas', t3.filas('select 1 from fichas') = 0);
 select t3.ok('alumno con fila en equipo: no revisa', t3.falla(format($$insert into revisiones (objeto, objeto_id, decision, huella_revisada) values ('ficha_version', %L, 'aprobar', %L)$$, :'v8', :'h8')));
+select t3.ok('alumno con fila en equipo: no corrige', t3.afecta(format($$update ficha_versiones set version_infantil = 'trampa larga' where id = %L$$, :'v8')) <= 0);
 reset role;
 delete from equipo where id = :ALU;
 select set_config('request.jwt.claims', '', false);

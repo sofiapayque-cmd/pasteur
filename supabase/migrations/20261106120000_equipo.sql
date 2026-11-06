@@ -1,18 +1,20 @@
 -- =====================================================================
--- Migración 8 · Equipo del Pasteur: investigadoras, validadoras y admin
+-- Migración 8 · Equipo del Pasteur: redactoras, validadoras y admin
 --
 -- Quiénes son (ver docs del asistente, sección 4):
---   · investigador → escribe fichas y fuentes, las manda a revisión.
---   · validador    → además aprueba, pide cambios o rechaza lo que escribió
---                    OTRA persona (nadie aprueba su propio texto).
---   · admin        → invita y suspende miembros, cambia roles y ajustes.
---                    No valida contenido científico.
+--   · redactor  → escribe fichas y fuentes y las manda a revisión. Nunca
+--                 aprueba (en el arranque: quien redacta el contenido para chicos).
+--   · validador → científica del Pasteur: además corrige, aprueba, pide
+--                 cambios o rechaza. Puede aprobar su propio texto; queda
+--                 registrado como "escrita y aprobada por la misma persona".
+--   · admin     → invita y suspende miembros, cambia roles y ajustes, y
+--                 puede redactar. No valida contenido científico.
 --
 -- Cómo se entra: SOLO por invitación. La admin anota el mail y el rol en
 -- invitaciones_equipo; el servidor manda la invitación de Supabase Auth.
 -- Cuando Supabase crea el usuario, el trigger de alta lo encuentra en la
 -- lista y le crea su fila en equipo, NO en docentes. Sin invitación todo
--- sigue como antes (maestra). Una persona que es maestra e investigadora
+-- sigue como antes (maestra). Una persona que es maestra y redactora
 -- usa dos cuentas con mails distintos.
 --
 -- Lo único existente que se toca: la función del trigger de alta
@@ -26,7 +28,7 @@ create table public.equipo (
   id              uuid primary key references auth.users (id) on delete cascade,
   nombre_visible  text not null default '' check (char_length(nombre_visible) <= 120),
   laboratorio     text not null default '' check (char_length(laboratorio) <= 160),
-  rol             text not null check (rol in ('investigador', 'validador', 'admin')),
+  rol             text not null check (rol in ('redactor', 'validador', 'admin')),
   estado          text not null default 'activa' check (estado in ('activa', 'suspendida')),
   creado_en       timestamptz not null default now(),
   estado_desde    timestamptz not null default now()
@@ -39,7 +41,7 @@ create table public.invitaciones_equipo (
                     email = lower(email)
                     and email ~ '^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$'
                     and email not like '%@alumnos.invalid'),
-  rol             text not null check (rol in ('investigador', 'validador', 'admin')),
+  rol             text not null check (rol in ('redactor', 'validador', 'admin')),
   nombre_visible  text not null default '' check (char_length(nombre_visible) <= 120),
   laboratorio     text not null default '' check (char_length(laboratorio) <= 160),
   invitado_por    uuid default auth.uid() references public.equipo (id) on delete set null,
