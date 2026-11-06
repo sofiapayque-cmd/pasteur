@@ -10,7 +10,8 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test:ciencia": "node --test --experimental-strip-types pruebas/ciencia.test.mjs",
-    "test:ia": "node --test --experimental-strip-types pruebas/redaccion.test.mjs"
+    "test:ia": "node --test --experimental-strip-types pruebas/redaccion.test.mjs",
+    "test:ingreso": "node --test --experimental-strip-types pruebas/ingreso.test.mjs"
   },
   "dependencies": {
     "@fontsource-variable/bricolage-grotesque": "^5.3.0",

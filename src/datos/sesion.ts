@@ -31,6 +31,35 @@ export async function iniciarSesion(email: string, clave: string): Promise<strin
   return error || !data.user ? null : data.user.id;
 }
 
+/*
+  Ingreso de un ALUMNO (etapa 4). Como el de la maestra, pero:
+  · solo con la clave secreta (reenvía la IP real: el límite de Supabase
+    cuenta por escuela) — sin ella, el ingreso de alumnos no está disponible;
+  · distingue "clave equivocada" de "Supabase frenó el pedido por exceso"
+    (una clase entera entrando a la vez), para no contar ese intento;
+  · solo acepta cuentas de alumno (app_metadata.rol, que pone el servidor).
+*/
+export type IngresoAlumno = { id: string } | { error: 'clave' | 'limite' | 'otro' };
+
+export async function iniciarSesionAlumno(email: string, clave: string): Promise<IngresoAlumno> {
+  const cliente = await crearClienteServidor();
+  const admin = crearClienteAdmin(await ipDelPedido());
+  if (!cliente || !admin) return { error: 'otro' };
+  const { data, error } = await admin.auth.signInWithPassword({ email, password: clave });
+  if (error || !data.session) {
+    if (error?.status === 429 || error?.code === 'over_request_rate_limit') return { error: 'limite' };
+    if (error?.code === 'invalid_credentials' || error?.status === 400) return { error: 'clave' };
+    console.error('[alumno] ingreso:', error?.code ?? error?.status);
+    return { error: 'otro' };
+  }
+  if (data.session.user.app_metadata?.rol !== 'alumno') return { error: 'clave' };
+  const { error: errorCookies } = await cliente.auth.setSession({
+    access_token: data.session.access_token,
+    refresh_token: data.session.refresh_token,
+  });
+  return errorCookies ? { error: 'otro' } : { id: data.session.user.id };
+}
+
 export async function cerrarSesion(): Promise<void> {
   const cliente = await crearClienteServidor();
   await cliente?.auth.signOut();

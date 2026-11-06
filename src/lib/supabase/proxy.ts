@@ -40,9 +40,11 @@ export async function actualizarSesion(request: NextRequest) {
   const sinSesionMaestra = aulasReales && !docente && ruta.startsWith('/maestra') && !SIN_SESION.includes(ruta);
   // Panel del equipo del Pasteur: mismo criterio (la seguridad real está en las páginas, las acciones y RLS)
   const sinSesionEquipo = equipoReal && !docente && ruta.startsWith('/equipo') && ruta !== '/equipo/entrar';
-  if (sinSesionMaestra || sinSesionEquipo) {
+  // Laboratorio del alumno (etapa 4): sin sesión, a /clase a entrar con la tarjeta
+  const sinSesionAlumno = aulasReales && !docente && (ruta === '/lab' || ruta.startsWith('/lab/'));
+  if (sinSesionMaestra || sinSesionEquipo || sinSesionAlumno) {
     const url = request.nextUrl.clone();
-    url.pathname = sinSesionEquipo ? '/equipo/entrar' : RUTA_INICIAR_SESION;
+    url.pathname = sinSesionEquipo ? '/equipo/entrar' : sinSesionAlumno ? '/clase' : RUTA_INICIAR_SESION;
     url.search = '';
     const redireccion = NextResponse.redirect(url);
     respuesta.cookies.getAll().forEach((c) => redireccion.cookies.set(c));

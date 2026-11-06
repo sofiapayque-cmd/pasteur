@@ -225,3 +225,27 @@ Supabase → Authentication → Users → *Add user* → *Send invitation* → t
 **Falta:** prueba con el Supabase real (crear un aula de prueba en el preview y verificar en la base: cuentas, rol, que ninguna sea docente, hash de la clave). Después: ingreso de alumnos (punto 5) y laboratorio personal (punto 6).
 
 **Decisión pendiente:** los links de *preview* de Vercel están protegidos (piden entrar a Vercel). Sirve mientras probamos, pero maestras y niños no podrían abrirlos: para el piloto, producción o sacar la protección.
+
+## 14. Etapa 4 · Ingreso de los alumnos (6/11/2026, rama `ia/asistente`)
+
+Se desarrolló en `ia/asistente` (la rama que ya tiene todo configurado en Vercel y Supabase dev).
+
+**Pantallas** (solo con `NEXT_PUBLIC_AULAS_REALES=1`; apagado, `/clase` sigue siendo la sala de prueba):
+- `/clase` y `/clase/[código]`: código del aula (4 casillas), número y clave, como dice la tarjeta. Perdona lo fácil de errar (minúsculas, espacios en vez de guiones, tildes, "7" o "07"; `src/lib/aulas/ingreso.ts`). La clave va tapada, con botón "Ver". Si ya entró, va a `/lab`.
+- `/lab`: el laboratorio del alumno. Saludo, **apodo científico y color elegidos de listas** (nunca escritos: nadie pone su nombre real), "Explorar las actividades" y **Salir**. Las tareas y el avance guardado llegan en las etapas 5 y 7. Sin sesión de alumno → `/clase`.
+
+**Ingreso del lado del servidor** (`src/acciones/alumno.ts`):
+1. Ordena y valida el formato. Si algo está mal *escrito*, lo dice; si los datos no coinciden, nunca dice cuál.
+2. Pide permiso para un intento (`reservar_intento_ingreso`, migración 16): hasta 5 seguidos por usuario; el 6.º bloquea 10 minutos. Se cuentan intentos (no solo fallos) con la fila bloqueada: **30 intentos a la vez contra el mismo usuario → pasan 5**.
+3. Entra a Supabase con la clave secreta y la **IP real del chico** (`Sb-Forwarded-For`): el límite de Supabase cuenta por escuela. Si Supabase frena por exceso de pedidos (una clase entera a la vez), el intento se devuelve y el mensaje pide esperar un minuto.
+4. Solo cuentas con `app_metadata.rol = 'alumno'`. Cuenta desactivada o aula archivada → sale y avisa "Tu cuenta está pausada".
+5. Borra la cuenta de intentos y anota `ultimo_ingreso`. Sesión en cookies seguras; el proxy la renueva en `/clase` y `/lab`.
+
+**Migración 16** (`20261106150000_ingreso_alumnos.sql`): `reservar_intento_ingreso` y `devolver_intento_ingreso`, SECURITY INVOKER, solo `service_role`. No toca nada existente.
+
+**Pruebas:**
+- `9-pruebas-ingreso-alumnos.sql`: 29 OK (quién puede usarlas, 5 intentos y bloqueo, fin del bloqueo, ventana de 10 minutos, devolver, formatos raros). Versión para el proyecto real: `10-…-real.sql`, probada en local (29 OK, nada queda).
+- `carrera-ingreso.sh`: 30 conexiones a la vez → mismo usuario: pasan 5 y queda bloqueado; 30 alumnos distintos: pasan los 30. Sin el bloqueo de fila pasan 6: la prueba lo detecta.
+- `npm run test:ingreso`: 4 pruebas de cómo se ordena lo que escribe el chico.
+- Pantallas en 1024×600 (Ceibal), 1366×768 y celular, sin desborde; después de un error no se borra lo escrito.
+- **Falta:** aplicar la 16 en dev (con el OK de Sofia) y probar con una tarjeta real en el preview.
