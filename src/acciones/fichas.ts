@@ -77,7 +77,8 @@ export async function guardarVersion(versionId: string, _previo: Estado, datos: 
     version_infantil: texto(datos, 'infantil', 1000),
     grado_min: gradoMin,
     grado_max: gradoMax,
-    asistida_por_ia: datos.get('asistida_por_ia') === 'on',
+    // Solo se manda para marcarla: una vez marcada, la base no deja sacarla (migración 15)
+    ...(datos.get('asistida_por_ia') === 'on' ? { asistida_por_ia: true } : {}),
     nota_interna: texto(datos, 'nota', 2000),
   };
   const db = await supabase();
@@ -249,9 +250,49 @@ export async function revisarVersion(versionId: string, _p: Estado, datos: FormD
   if (!['aprobar', 'pedir_cambios', 'rechazar'].includes(decision)) return { mensaje: 'Elegí una decisión.' };
   if (!/^[0-9a-f]{64}$/.test(huella)) return { mensaje: 'Volvé a cargar la página: falta la huella del texto.' };
   if (decision !== 'aprobar' && comentario.length < 5) return { mensaje: 'Para pedir cambios o rechazar, escribí un comentario.' };
+
+  // Artículos citados que esperan revisión, con la huella que la validadora tiene en pantalla
+  let articulos: Record<string, string> = {};
+  try {
+    const crudo = JSON.parse(leer(datos, 'articulos') || '{}') as unknown;
+    if (crudo && typeof crudo === 'object' && !Array.isArray(crudo)) {
+      articulos = Object.fromEntries(
+        Object.entries(crudo as Record<string, unknown>).filter(([k, h]) => UUID.test(k) && typeof h === 'string' && /^[0-9a-f]{64}$/.test(h)),
+      ) as Record<string, string>;
+    }
+  } catch {
+    return { mensaje: 'Volvé a cargar la página: faltan los datos de los artículos.' };
+  }
+
   const db = await supabase();
-  const { error } = await db.from('revisiones').insert({ objeto: 'ficha_version', objeto_id: versionId, decision, comentario, huella_revisada: huella });
+  const { error } =
+    decision === 'aprobar' && Object.keys(articulos).length
+      ? // Ficha y artículos juntos, en una sola transacción (migración 15)
+        await db.rpc('aprobar_con_articulos', { p_version: versionId, p_huella: huella, p_articulos: articulos, p_comentario: comentario })
+      : await db.from('revisiones').insert({ objeto: 'ficha_version', objeto_id: versionId, decision, comentario, huella_revisada: huella });
   if (error) return { mensaje: mensajeDeError(error) };
-  const { data: v } = await db.from('ficha_versiones').select('ficha_id').eq('id', versionId).maybeSingle();
+
+  const { data: v } = await db.from('ficha_versiones').select('ficha_id, asistida_por_ia').eq('id', versionId).maybeSingle();
+  // Una respuesta de la IA rechazada: sus artículos que nadie más cita salen de la fila de revisión
+  if (decision === 'rechazar' && v?.asistida_por_ia) await devolverArticulosSueltos(versionId);
+  const volver = leer(datos, 'volver');
+  if (volver === '/equipo/respuestas') redirect(`/equipo/respuestas?revisada=${decision}`);
   redirect(v ? `/equipo/fichas/${v.ficha_id}?revisada=${decision}` : '/equipo/revisar');
+}
+
+/** Vuelve a candidatos los artículos en revisión que solo citaba esta versión (con la sesión de la validadora). */
+async function devolverArticulosSueltos(versionId: string) {
+  const db = await supabase();
+  const { data: propias } = await db.from('version_fuentes').select('publicacion_id').eq('version_id', versionId).not('publicacion_id', 'is', null);
+  const ids = [...new Set((propias ?? []).map((c) => c.publicacion_id as string))];
+  if (!ids.length) return;
+  const { data: otras } = await db
+    .from('version_fuentes')
+    .select('publicacion_id, ficha_versiones!inner(estado)')
+    .in('publicacion_id', ids)
+    .neq('version_id', versionId)
+    .in('ficha_versiones.estado', ['borrador', 'en_revision', 'publicada']);
+  const citadas = new Set((otras ?? []).map((c) => c.publicacion_id as string));
+  const sueltas = ids.filter((id) => !citadas.has(id));
+  if (sueltas.length) await db.from('publicaciones').update({ estado: 'candidata' }).in('id', sueltas).eq('estado', 'en_revision');
 }

@@ -31,11 +31,14 @@ Biblioteca científica (migraciones 13 y 14, aplicadas en dev el 6/11): ver `doc
 
 Ver `docs/PANEL-EQUIPO.md`: ingreso del equipo, fichas, revisión, biblioteca con búsqueda en vivo (B-1) e invitaciones por link.
 
+Respuestas redactadas con IA y tablero `/equipo/respuestas` (pedido de Sofia, 6/11): la IA busca artículos, redacta con citas comprobadas y manda a revisión; la validadora aprueba ficha y artículos juntos. Necesita la **migración 15** (`20261106140000_respuestas_ia.sql`), escrita y probada en local (37 OK), **sin aplicar todavía**. Detalle en `docs/PANEL-EQUIPO.md`.
+
 ## Pruebas
 
 `bash supabase/pruebas/correr.sh` (Postgres 16 con pgvector, desde cero):
 
 - `1-pruebas-seguridad.sql`: 101 OK (aulas, sin cambios).
+- `7-pruebas-respuestas-ia.sql`: 37 OK (migración 15).
 - `3-pruebas-equipo-fichas.sql`: 111 OK (alta por invitación, roles, flujo editorial completo, corrección en revisión, autoaprobación, pedir cambios y reenviar, huella, retiro, suspendida, índice, accesos de maestra/alumno/sin sesión).
 - Con cuatro reglas debilitadas a propósito (roles, texto publicado congelado, huella al aprobar, solo validadoras aprueban) fallan las pruebas que las cuidan.
 

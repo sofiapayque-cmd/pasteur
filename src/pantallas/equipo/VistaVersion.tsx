@@ -1,8 +1,26 @@
+import Link from 'next/link';
 import type { Cita, Version } from '@/datos/fichas';
 import { NOMBRE_ESTADO, palabras, type Formato } from '@/lib/equipo/comun';
 
-/* Una versión de ficha tal como la va a leer la validadora (o como quedó publicada). Solo lectura. */
-export default function VistaVersion({ v, formato, citas, autor }: { v: Version; formato: Formato; citas?: Cita[]; autor?: string }) {
+/*
+  Una versión de ficha tal como la va a leer la validadora (o como quedó
+  publicada). Solo lectura. "evidencia": para las citas que no copian el
+  pasaje (por la licencia), la oración del resumen guardado, para que la
+  validadora la compare sin salir de la página (es interno del equipo).
+*/
+export default function VistaVersion({
+  v,
+  formato,
+  citas,
+  autor,
+  evidencia = {},
+}: {
+  v: Version;
+  formato: Formato;
+  citas?: Cita[];
+  autor?: string;
+  evidencia?: Record<string, string>;
+}) {
   return (
     <div className="eq-form">
       <div className="eq-meta">
@@ -12,8 +30,13 @@ export default function VistaVersion({ v, formato, citas, autor }: { v: Version;
         <span>
           {v.grado_min}° a {v.grado_max}° año
         </span>
-        {v.asistida_por_ia && <span>Borrador asistido por IA</span>}
+        {v.asistida_por_ia && <span className="eq-ia">Redactada con IA</span>}
       </div>
+      {v.asistida_por_ia && v.estado === 'en_revision' && (
+        <p className="eq-caja eq-caja--aviso" style={{ margin: 0 }}>
+          La escribió la IA a partir de los artículos de abajo. Revisá que cada idea esté en la oración que la respalda y que no falte ni sobre nada.
+        </p>
+      )}
       {formato === 'pregunta' && (
         <>
           <h3>{v.pregunta || 'Sin pregunta todavía'}</h3>
@@ -38,7 +61,15 @@ export default function VistaVersion({ v, formato, citas, autor }: { v: Version;
           <ul className="eq-lista">
             {citas.map((c) => (
               <li key={c.id} className="eq-cita">
-                <strong>{c.publicaciones ? c.publicaciones.titulo : c.fuentes?.cita}</strong>
+                <strong>
+                  {c.publicaciones ? (
+                    <Link href={`/equipo/biblioteca/${c.publicaciones.id}`} target="_blank">
+                      {c.publicaciones.titulo}
+                    </Link>
+                  ) : (
+                    c.fuentes?.cita
+                  )}
+                </strong>
                 {c.publicaciones && (
                   <span className="eq-meta">
                     <span>{[c.publicaciones.revista, c.publicaciones.anio].filter(Boolean).join(', ')}</span>
@@ -47,6 +78,11 @@ export default function VistaVersion({ v, formato, citas, autor }: { v: Version;
                   </span>
                 )}
                 {c.pasaje && <blockquote>{c.pasaje_textual ? `“${c.pasaje}”` : c.pasaje}</blockquote>}
+                {!c.pasaje && evidencia[c.id] && (
+                  <blockquote>
+                    “{evidencia[c.id]}” <span className="eq-ayuda">(del resumen; por la licencia no se copia en la ficha)</span>
+                  </blockquote>
+                )}
                 {c.parafrasis && <span>Paráfrasis: {c.parafrasis}</span>}
                 {c.ubicacion && <span className="eq-meta">Dónde está: {c.ubicacion}</span>}
               </li>

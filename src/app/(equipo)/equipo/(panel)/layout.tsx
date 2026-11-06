@@ -15,6 +15,7 @@ export const metadata: Metadata = { title: 'Panel del equipo · La ciencia sin l
 export default async function LayoutEquipo({ children }: { children: ReactNode }) {
   const yo = await exigirMiembro();
   let pendientes = 0;
+  let respuestas = 0;
   if (yo.rol === 'validador') {
     const db = await crearClienteServidor();
     const [v, p] = await Promise.all([
@@ -22,10 +23,11 @@ export default async function LayoutEquipo({ children }: { children: ReactNode }
       db!.from('publicaciones').select('id', { count: 'exact', head: true }).eq('estado', 'en_revision'),
     ]);
     pendientes = (v.count ?? 0) + (p.count ?? 0);
+    respuestas = v.count ?? 0;
   }
   return (
     <div className="eq">
-      <Barra nombre={nombreDe(yo)} rol={yo.rol} pendientes={pendientes} />
+      <Barra nombre={nombreDe(yo)} rol={yo.rol} pendientes={pendientes} respuestas={respuestas} />
       {children}
     </div>
   );

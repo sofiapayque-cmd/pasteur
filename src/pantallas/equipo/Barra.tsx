@@ -6,10 +6,11 @@ import { salirEquipo } from '@/acciones/equipo';
 import { NOMBRE_ROL, type Rol } from '@/lib/equipo/comun';
 
 /* Barra de arriba del panel del equipo: secciones, quién entró y Salir. */
-export default function Barra({ nombre, rol, pendientes }: { nombre: string; rol: Rol; pendientes: number }) {
+export default function Barra({ nombre, rol, pendientes, respuestas }: { nombre: string; rol: Rol; pendientes: number; respuestas: number }) {
   const ruta = usePathname();
   const secciones = [
     { href: '/equipo', texto: 'Inicio', exacto: true },
+    { href: '/equipo/respuestas', texto: 'Respuestas', cuenta: rol === 'validador' ? respuestas : 0 },
     { href: '/equipo/fichas', texto: 'Fichas' },
     ...(rol === 'validador' ? [{ href: '/equipo/revisar', texto: 'Para revisar', cuenta: pendientes }] : []),
     { href: '/equipo/biblioteca', texto: 'Biblioteca' },

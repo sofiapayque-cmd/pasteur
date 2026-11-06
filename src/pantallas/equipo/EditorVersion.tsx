@@ -67,9 +67,13 @@ export default function EditorVersion({ v, formato, enRevision }: { v: VersionEd
           </select>
         </label>
       </div>
-      <label className="eq-check">
-        <input type="checkbox" name="asistida_por_ia" defaultChecked={v.asistida_por_ia} /> Usé inteligencia artificial para escribir un primer borrador
-      </label>
+      {v.asistida_por_ia ? (
+        <p className="eq-ayuda">Redactada con IA: esta marca queda siempre, aunque la corrijas.</p>
+      ) : (
+        <label className="eq-check">
+          <input type="checkbox" name="asistida_por_ia" /> Usé inteligencia artificial para escribir un primer borrador (después no se puede desmarcar)
+        </label>
+      )}
       <label className="campo">
         <span className="campo__nombre">Nota interna (solo la ve el equipo)</span>
         <textarea className="campo__entrada" name="nota" rows={2} maxLength={2000} defaultValue={v.nota_interna} />

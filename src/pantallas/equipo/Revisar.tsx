@@ -6,7 +6,9 @@ import Forma from './Forma';
 /*
   Decisión de una validadora (sirve para fichas y para publicaciones).
   Lleva escondida la huella de lo que está viendo: la base solo acepta la
-  decisión si el texto no cambió desde que se cargó la página.
+  decisión si el texto no cambió desde que se cargó la página. Si la ficha
+  cita artículos que también esperan revisión, lleva sus huellas y al
+  aprobar se aprueban juntos (migración 15).
 */
 type Estado = { mensaje: string; ok?: boolean };
 
@@ -15,15 +17,20 @@ export default function Revisar({
   huella,
   propia,
   que = 'ficha',
+  articulos = {},
+  volver,
 }: {
   accion: (p: Estado, d: FormData) => Promise<Estado>;
   huella: string;
   propia: boolean;
   que?: 'ficha' | 'publicacion';
+  articulos?: Record<string, string>;
+  volver?: string;
 }) {
   const [decision, setDecision] = useState<'aprobar' | 'pedir_cambios' | 'rechazar'>('aprobar');
+  const n = Object.keys(articulos).length;
   const texto = {
-    aprobar: que === 'ficha' ? 'Aprobar y publicar' : 'Aprobar como fuente',
+    aprobar: que === 'ficha' ? (n ? `Aprobar la ficha y ${n === 1 ? 'su artículo' : `sus ${n} artículos`}` : 'Aprobar y publicar') : 'Aprobar como fuente',
     pedir_cambios: 'Pedir cambios',
     rechazar: 'Rechazar',
   }[decision];
@@ -36,6 +43,8 @@ export default function Revisar({
       confirmar={decision === 'rechazar' ? '¿Rechazar? Queda registrado y no se puede deshacer.' : undefined}
     >
       <input type="hidden" name="huella" value={huella} />
+      {que === 'ficha' && <input type="hidden" name="articulos" value={JSON.stringify(articulos)} />}
+      {volver && <input type="hidden" name="volver" value={volver} />}
       <fieldset className="eq-form" style={{ border: 0, padding: 0, margin: 0 }}>
         <legend className="solo-lector">Decisión</legend>
         <label className="eq-check">
@@ -55,6 +64,12 @@ export default function Revisar({
         <span className="campo__nombre">Comentario {decision === 'aprobar' ? '(opcional)' : '(obligatorio)'}</span>
         <textarea className="campo__entrada" name="comentario" rows={3} maxLength={2000} required={decision !== 'aprobar'} />
       </label>
+      {n > 0 && decision === 'aprobar' && (
+        <p className="eq-ayuda">
+          {n === 1 ? 'El artículo que cita todavía no está aprobado como fuente: se aprueba' : `Los ${n} artículos que cita todavía no están aprobados como fuente: se aprueban`} junto con la
+          ficha. Revisá que sean confiables (título, revista, año) en la lista de fuentes.
+        </p>
+      )}
       {propia && decision === 'aprobar' && <p className="eq-ayuda">La agregaste o escribiste vos: queda registrado que la misma persona la aprobó.</p>}
     </Forma>
   );

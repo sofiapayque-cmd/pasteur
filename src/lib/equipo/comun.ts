@@ -21,10 +21,10 @@ export const NOMBRE_ESTADO: Record<string, string> = {
 };
 
 export const ACTIVIDADES: Record<string, string> = {
-  a1: 'A1 · Microbios',
-  a2: 'A2 · Mosquitos y virus',
-  a3: 'A3 · Células',
-  a4: 'A4',
+  a1: 'A1 · Genómica microbiana',
+  a2: 'A2 · Simulaciones biomoleculares',
+  a3: 'A3 · Bioimagenología',
+  a4: 'A4 · Evolución de virus',
 };
 
 /** Máximo de palabras de la versión para chicos (migración 9). Son máximos, no mínimos. */
@@ -49,6 +49,16 @@ const FECHA_HORA = new Intl.DateTimeFormat('es-UY', {
 });
 export const fecha = (iso: string | null | undefined) => (iso ? FECHA.format(new Date(iso)) : '');
 export const fechaHora = (iso: string | null | undefined) => (iso ? FECHA_HORA.format(new Date(iso)) : '');
+
+/** "hoy", "ayer", "hace 3 días" (para el tablero). */
+export function haceCuanto(iso: string | null | undefined, ahora = Date.now()): string {
+  if (!iso) return '';
+  const dias = Math.floor((ahora - new Date(iso).getTime()) / 86_400_000);
+  if (dias <= 0) return 'hoy';
+  if (dias === 1) return 'ayer';
+  if (dias < 30) return `hace ${dias} días`;
+  return fecha(iso);
+}
 
 /** Nombre corto para la dirección: "¿Qué es una célula?" → "que-es-una-celula" */
 export function slugDe(texto: string): string {

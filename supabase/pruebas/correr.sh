@@ -18,3 +18,4 @@ done
 $P -f "$AQUI/1-pruebas-seguridad.sql"
 $P -f "$AQUI/3-pruebas-equipo-fichas.sql"
 $P -f "$AQUI/5-pruebas-biblioteca.sql"
+$P -f "$AQUI/7-pruebas-respuestas-ia.sql"
