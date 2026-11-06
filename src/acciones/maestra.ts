@@ -2,7 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
-import { aulasReales } from '@/lib/supabase/config';
+import { aulasReales, equipoReal } from '@/lib/supabase/config';
 import { crearClienteServidor } from '@/lib/supabase/servidor';
 import { iniciarSesion, cerrarSesion, abrirSesionConTokens, pedirLinkDeClave } from '@/datos/sesion';
 import { obtenerDocente } from '@/datos/docente';
@@ -73,12 +73,18 @@ export async function recuperarClave(_previo: EstadoFormulario, datos: FormData)
  * cookies seguras y se sigue a elegir la contraseña.
  */
 export async function abrirLinkDeMail(datos: { accessToken: unknown; refreshToken: unknown; tipo: unknown }): Promise<void> {
-  if (!aulasReales) redirect('/');
+  if (!aulasReales && !equipoReal) redirect('/');
   const { accessToken, refreshToken, tipo } = datos;
   const valido = (v: unknown, max: number): v is string => typeof v === 'string' && v.length > 0 && v.length <= max;
-  if (!valido(accessToken, 4096) || !valido(refreshToken, 512)) redirect('/maestra/entrar?error=link');
-  if (!(await abrirSesionConTokens(accessToken, refreshToken))) redirect('/maestra/entrar?error=link');
-  redirect(tipo === 'invite' || tipo === 'recovery' ? '/maestra/clave' : '/maestra');
+  const ingreso = equipoReal && !aulasReales ? '/equipo/entrar' : '/maestra/entrar';
+  if (!valido(accessToken, 4096) || !valido(refreshToken, 512)) redirect(`${ingreso}?error=link`);
+  const quien = await abrirSesionConTokens(accessToken, refreshToken);
+  if (!quien) redirect(`${ingreso}?error=link`);
+  const paraClave = tipo === 'invite' || tipo === 'recovery';
+  // Una invitada del equipo (migración 8) no es maestra: sigue al panel del equipo
+  if (quien === 'equipo' && equipoReal) redirect(paraClave ? '/equipo/clave' : '/equipo');
+  if (!aulasReales) redirect('/equipo/entrar?error=link');
+  redirect(paraClave ? '/maestra/clave' : '/maestra');
 }
 
 /** Elegir contraseña: al aceptar la invitación o después de recuperarla. Necesita la sesión del link. */

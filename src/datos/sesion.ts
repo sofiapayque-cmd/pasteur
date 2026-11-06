@@ -41,16 +41,18 @@ export async function cerrarSesion(): Promise<void> {
   recuperación). setSession() le pregunta a Supabase si el token es válido
   antes de guardarlo en las cookies. Las cuentas de alumnos no entran por acá.
 */
-export async function abrirSesionConTokens(accessToken: string, refreshToken: string): Promise<boolean> {
+export async function abrirSesionConTokens(accessToken: string, refreshToken: string): Promise<'maestra' | 'equipo' | null> {
   const cliente = await crearClienteServidor();
-  if (!cliente) return false;
+  if (!cliente) return null;
   const { data, error } = await cliente.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
-  if (error || !data.user) return false;
+  if (error || !data.user) return null;
   if (data.user.app_metadata?.rol === 'alumno') {
     await cliente.auth.signOut();
-    return false;
+    return null;
   }
-  return true;
+  // ¿Es del equipo del Pasteur? (migración 8; si la tabla no existe todavía, es maestra)
+  const { data: fila } = await cliente.from('equipo').select('id').eq('id', data.user.id).maybeSingle();
+  return fila ? 'equipo' : 'maestra';
 }
 
 /*

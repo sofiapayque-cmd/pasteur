@@ -2,7 +2,7 @@
 
 import { useEffect, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { aulasReales } from '@/lib/supabase/config';
+import { aulasReales, equipoReal } from '@/lib/supabase/config';
 import { abrirLinkDeMail } from '@/acciones/maestra';
 
 /*
@@ -19,7 +19,8 @@ import { abrirLinkDeMail } from '@/acciones/maestra';
     1. lo lee y lo borra de la dirección y del historial;
     2. se lo pasa a una Server Action, que lo valida con Supabase, guarda la
        sesión en cookies seguras y sigue a /maestra/clave.
-  Con el sistema de aulas apagado no hace nada.
+  Con el sistema de aulas y el panel del equipo apagados no hace nada. Las
+  invitadas del equipo (migración 8) siguen a /equipo/clave.
   (Cuando haya SMTP y plantillas propias, los links pueden ir directo a
   /auth/confirmar con token_hash, y este componente queda de respaldo.)
 */
@@ -28,7 +29,7 @@ export default function LinkDeMail() {
   const [abriendo, empezar] = useTransition();
 
   useEffect(() => {
-    if (!aulasReales) return;
+    if (!aulasReales && !equipoReal) return;
     const { hash, pathname, search } = window.location;
     if (!hash.includes('access_token=') && !hash.includes('error_code=')) return;
 
@@ -38,7 +39,7 @@ export default function LinkDeMail() {
     const accessToken = datos.get('access_token');
     const refreshToken = datos.get('refresh_token');
     if (!accessToken || !refreshToken) {
-      router.replace('/maestra/entrar?error=link');
+      router.replace(aulasReales ? '/maestra/entrar?error=link' : '/equipo/entrar?error=link');
       return;
     }
     empezar(async () => {

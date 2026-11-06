@@ -1,0 +1,356 @@
+/*
+  Panel del equipo del Pasteur. Es una herramienta de trabajo para adultos:
+  misma paleta y tipografías que la web, más densa y tranquila (sin escenas
+  animadas), pensada para leer y escribir mucho texto.
+*/
+.eq {
+  min-height: 100vh;
+  background: var(--agar);
+  color: var(--tinta);
+  font-family: var(--font-sans);
+}
+
+.eq-barra {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  padding: var(--space-2) var(--space-4);
+  background: var(--agar);
+  border-bottom: 1px solid var(--vidrio);
+}
+.eq-barra__marca {
+  font: 700 1.05rem/1.2 var(--font-display);
+  color: var(--nucleo);
+  text-decoration: none;
+}
+.eq-barra__marca small {
+  display: block;
+  font: 500 0.72rem/1.2 var(--font-mono);
+  color: var(--tinta-suave);
+  letter-spacing: 0.04em;
+}
+.eq-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  flex: 1;
+}
+.eq-nav a {
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  color: var(--tinta);
+  text-decoration: none;
+  font-weight: 500;
+}
+.eq-nav a:hover {
+  background: var(--membrana);
+}
+.eq-nav a[aria-current='page'] {
+  background: var(--nucleo);
+  color: var(--sobre-nucleo);
+}
+.eq-nav__cuenta {
+  margin-left: 6px;
+  min-width: 1.4em;
+  padding: 0 6px;
+  border-radius: var(--radius-pill);
+  background: var(--clorofila);
+  color: var(--tinta);
+  font: 600 0.8rem/1.4 var(--font-mono);
+}
+.eq-barra__yo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.9rem;
+  color: var(--tinta-suave);
+}
+
+.eq-cuerpo {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: var(--space-4) var(--space-4) var(--space-6);
+  display: grid;
+  gap: var(--space-4);
+}
+.eq-cuerpo--angosto {
+  max-width: 760px;
+}
+.eq-cuerpo h1 {
+  margin: 0;
+  font: 700 clamp(1.6rem, 3vw, 2.2rem) / 1.15 var(--font-display);
+  color: var(--nucleo);
+}
+.eq-cuerpo h2 {
+  margin: 0 0 var(--space-2);
+  font: 650 1.2rem/1.25 var(--font-display);
+  color: var(--nucleo);
+}
+.eq-cuerpo h3 {
+  margin: 0 0 var(--space-1);
+  font: 600 1rem/1.3 var(--font-sans);
+}
+.eq-bajada {
+  margin: var(--space-1) 0 0;
+  max-width: 68ch;
+  color: var(--tinta-suave);
+  line-height: 1.5;
+}
+
+.eq-caja {
+  background: #fff;
+  border: 1px solid var(--vidrio);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3) var(--space-4);
+}
+.eq-caja--aviso {
+  background: #fff8e6;
+  border-color: var(--cultivo);
+}
+.eq-caja--ok {
+  background: #f4f9dc;
+  border-color: #c6d66b;
+}
+.eq-caja--peligro {
+  border-color: var(--coral);
+}
+
+.eq-grilla {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+.eq-dos {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: minmax(0, 3fr) minmax(260px, 2fr);
+  align-items: start;
+}
+@media (max-width: 860px) {
+  .eq-dos {
+    grid-template-columns: 1fr;
+  }
+}
+
+.eq-numero {
+  font: 700 2rem/1 var(--font-display);
+  color: var(--nucleo);
+}
+
+.eq-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+.eq-tabla th {
+  text-align: left;
+  font: 500 0.75rem/1.2 var(--font-mono);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--tinta-suave);
+  padding: 8px;
+  border-bottom: 1px solid var(--vidrio);
+}
+.eq-tabla td {
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--vidrio);
+  vertical-align: top;
+}
+.eq-tabla a {
+  color: var(--nucleo);
+  font-weight: 600;
+}
+.eq-tabla__chico {
+  display: block;
+  margin-top: 2px;
+  color: var(--tinta-suave);
+  font-size: 0.85rem;
+}
+
+.eq-estado {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: var(--radius-pill);
+  font: 500 0.78rem/1.6 var(--font-mono);
+  white-space: nowrap;
+  background: var(--vidrio);
+}
+.eq-estado--borrador,
+.eq-estado--candidata {
+  background: var(--vidrio);
+}
+.eq-estado--en_revision {
+  background: #fde9b8;
+}
+.eq-estado--publicada,
+.eq-estado--aprobada,
+.eq-estado--activa {
+  background: var(--clorofila);
+}
+.eq-estado--rechazada,
+.eq-estado--retirada,
+.eq-estado--suspendida {
+  background: #f8d3cd;
+}
+.eq-estado--reemplazada {
+  background: var(--membrana);
+}
+
+.eq-form {
+  display: grid;
+  gap: var(--space-3);
+}
+.eq-fila {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: end;
+}
+.eq-fila > .campo {
+  flex: 1 1 180px;
+}
+.eq textarea.campo__entrada {
+  min-height: 7em;
+  resize: vertical;
+  line-height: 1.5;
+  font-family: var(--font-sans);
+}
+.eq-ayuda {
+  margin: 2px 0 0;
+  font-size: 0.85rem;
+  color: var(--tinta-suave);
+  line-height: 1.4;
+}
+.eq-contador {
+  font: 500 0.8rem/1.4 var(--font-mono);
+  color: var(--tinta-suave);
+}
+.eq-contador--pasado {
+  color: #b33a2a;
+  font-weight: 700;
+}
+.eq-check {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+.eq-botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+.eq-mensaje {
+  margin: 0;
+  min-height: 1.4em;
+  font-size: 0.95rem;
+}
+.eq-mensaje--ok {
+  color: #3f6a00;
+}
+.eq-mensaje--error {
+  color: #a12e1f;
+}
+
+.eq-texto-infantil {
+  font: 500 1.15rem/1.55 var(--font-sans);
+  background: var(--a3-fondo);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  margin: 0;
+}
+.eq-cita {
+  border-left: 3px solid var(--plasma);
+  padding: var(--space-1) var(--space-3);
+  display: grid;
+  gap: var(--space-1);
+}
+.eq-cita blockquote {
+  margin: 0;
+  font-style: italic;
+}
+.eq-lista {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--space-3);
+}
+.eq-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  font-size: 0.88rem;
+  color: var(--tinta-suave);
+}
+.eq-detalles summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--nucleo);
+}
+.eq-link {
+  word-break: break-all;
+  font: 500 0.85rem/1.4 var(--font-mono);
+  background: var(--vidrio);
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+}
+.eq-resultado h3 {
+  font-size: 1.02rem;
+}
+.eq-resultado p {
+  margin: var(--space-1) 0;
+  line-height: 1.45;
+}
+.eq .btn--chico {
+  padding: 6px 14px;
+  font-size: 0.9rem;
+  min-height: 0;
+}
+.eq-pestanas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+.eq-pestanas a {
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--vidrio);
+  color: var(--tinta);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+.eq-pestanas a[aria-current='true'] {
+  background: var(--membrana);
+  border-color: var(--plasma);
+}
+
+/* Celular: las secciones en una fila que se desliza, y menos margen */
+@media (max-width: 640px) {
+  .eq-barra {
+    padding: var(--space-2) var(--space-3);
+  }
+  .eq-nav {
+    order: 3;
+    flex-basis: 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+  .eq-nav a {
+    white-space: nowrap;
+  }
+  .eq-barra__yo {
+    margin-left: auto;
+  }
+  .eq-cuerpo {
+    padding: var(--space-3) var(--space-3) var(--space-5);
+  }
+  .eq-caja {
+    padding: var(--space-3);
+  }
+}

@@ -22,3 +22,11 @@ export const supabaseConfigurado = Boolean(SUPABASE_URL && SUPABASE_PUBLISHABLE_
   funciona igual que el prototipo (sala de prueba en el navegador).
 */
 export const aulasReales = supabaseConfigurado && process.env.NEXT_PUBLIC_AULAS_REALES === '1';
+
+/*
+  Interruptor del panel del equipo del Pasteur (/equipo: fichas, revisión,
+  biblioteca científica). Se prende con NEXT_PUBLIC_ASISTENTE=1, igual que el
+  de aulas: solo en desarrollo y en los links de prueba de la rama
+  ia/asistente. Apagado, /equipo no existe (404) y nada del asistente corre.
+*/
+export const equipoReal = supabaseConfigurado && process.env.NEXT_PUBLIC_ASISTENTE === '1';

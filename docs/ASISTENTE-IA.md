@@ -27,6 +27,10 @@ Reglas que impone la base (ajustadas el 5/11 con Sofia):
 
 Biblioteca científica (migraciones 13 y 14, aplicadas en dev el 6/11): ver `docs/BIBLIOTECA.md`. Como reemplazan `validar_para_revision` y `revisar`, las 111 pruebas de equipo y fichas se volvieron a correr en dev con el `4-…` regenerado: 111 OK.
 
+## Etapa IA-2 · Panel del equipo (6/11, en la rama, sin probar con cuentas reales)
+
+Ver `docs/PANEL-EQUIPO.md`: ingreso del equipo, fichas, revisión, biblioteca con búsqueda en vivo (B-1) e invitaciones por link.
+
 ## Pruebas
 
 `bash supabase/pruebas/correr.sh` (Postgres 16 con pgvector, desde cero):

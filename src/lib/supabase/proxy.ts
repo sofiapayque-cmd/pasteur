@@ -1,6 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
-import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL, aulasReales, supabaseConfigurado } from './config';
+import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL, aulasReales, equipoReal, supabaseConfigurado } from './config';
 
 /*
   Renueva la sesión de Supabase en cada pedido (lo llama src/proxy.ts).
@@ -37,9 +37,13 @@ export async function actualizarSesion(request: NextRequest) {
   const docente = data?.claims;
 
   const ruta = request.nextUrl.pathname;
-  if (aulasReales && !docente && ruta.startsWith('/maestra') && !SIN_SESION.includes(ruta)) {
+  const sinSesionMaestra = aulasReales && !docente && ruta.startsWith('/maestra') && !SIN_SESION.includes(ruta);
+  // Panel del equipo del Pasteur: mismo criterio (la seguridad real está en las páginas, las acciones y RLS)
+  const sinSesionEquipo = equipoReal && !docente && ruta.startsWith('/equipo') && ruta !== '/equipo/entrar';
+  if (sinSesionMaestra || sinSesionEquipo) {
     const url = request.nextUrl.clone();
-    url.pathname = RUTA_INICIAR_SESION;
+    url.pathname = sinSesionEquipo ? '/equipo/entrar' : RUTA_INICIAR_SESION;
+    url.search = '';
     const redireccion = NextResponse.redirect(url);
     respuesta.cookies.getAll().forEach((c) => redireccion.cookies.set(c));
     return redireccion;
