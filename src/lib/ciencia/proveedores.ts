@@ -13,7 +13,7 @@ import { deEuropePmc, deOpenAlex, normalizarDoi, PASTEUR_OPENALEX, type Proveedo
   Cada pedido tiene 10 segundos como máximo y nunca rompe la pantalla: si una
   fuente falla, se muestra lo de la otra.
 */
-export type Consulta = { texto: string; desde?: number; hasta?: number; soloAbierto?: boolean; soloInstituto?: boolean; max: number };
+export type Consulta = { texto: string; desde?: number; hasta?: number; soloAbierto?: boolean; soloInstituto?: boolean; soloRevisiones?: boolean; max: number };
 export type Respuesta = { proveedor: Proveedor; registros: Registro[]; total: number; consultaEnviada: string; costoUsd: number | null; error?: string };
 
 const AGENTE = 'LaCienciaSinLimites/0.2 (proyecto educativo con el Institut Pasteur de Montevideo)';
@@ -48,6 +48,7 @@ export async function buscarOpenAlex(c: Consulta): Promise<Respuesta> {
   else if (c.hasta) filtros.push(`publication_year:<${c.hasta + 1}`);
   if (c.soloAbierto) filtros.push('open_access.is_oa:true');
   if (c.soloInstituto) filtros.push(`authorships.institutions.lineage:${PASTEUR_OPENALEX}`);
+  if (c.soloRevisiones) filtros.push('type:review');
   const params = new URLSearchParams({ search: limpiarConsulta(c.texto), per_page: String(Math.min(Math.max(c.max, 1), 50)), select: CAMPOS_OPENALEX });
   if (filtros.length) params.set('filter', filtros.join(','));
   const consultaEnviada = `${OPENALEX}/works?${params}`;
@@ -94,6 +95,7 @@ export async function buscarEuropePmc(c: Consulta): Promise<Respuesta> {
   if (c.desde || c.hasta) partes.push(`PUB_YEAR:[${c.desde ?? 1800} TO ${c.hasta ?? 2100}]`);
   if (c.soloAbierto) partes.push('OPEN_ACCESS:y');
   if (c.soloInstituto) partes.push('AFF:"Pasteur de Montevideo"');
+  if (c.soloRevisiones) partes.push('PUB_TYPE:"review"');
   const r = await consultarEuropePmc(partes.join(' AND '), c.max);
   return { proveedor: 'europepmc', costoUsd: null, ...r };
 }

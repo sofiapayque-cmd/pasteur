@@ -92,6 +92,13 @@ test('control: una salida buena pasa, con el texto de la cita sacado del resumen
   assert.deepEqual(r.borrador.variantes, ['¿Para qué se dividen las células?'], 'saca la variante igual a la pregunta');
 });
 
+test('control: una respuesta parcial pasa y guarda qué quedó afuera', () => {
+  const r = revisarSalida(salida({ motivo: 'Los resúmenes no explican cómo apareció el núcleo.' }), candidatos());
+  assert.equal(r.ok, true);
+  assert.equal(r.borrador.faltante, 'Los resúmenes no explican cómo apareció el núcleo.');
+  assert.equal(revisarSalida(salida({}), candidatos()).borrador.faltante, '');
+});
+
 test('control: rechaza o limpia lo que no sirve', () => {
   const largo = Array.from({ length: 95 }, () => 'palabra').join(' ');
   const r1 = revisarSalida(salida({ version_infantil: largo }), candidatos());

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useActionState, useState } from 'react';
+import { startTransition, useActionState, useState, type FormEvent } from 'react';
 import { ideasDePreguntas, pedirRespuestas, type EstadoIdeas, type EstadoPedido } from '@/acciones/respuestas';
 import { ACTIVIDADES } from '@/lib/equipo/comun';
 
@@ -10,7 +10,15 @@ import { ACTIVIDADES } from '@/lib/equipo/comun';
   actividad. Mientras trabaja muestra qué está haciendo; al terminar, qué
   pasó con cada pregunta. "Ideas" le pide a la IA preguntas posibles para
   la actividad y se agregan a la lista con un clic.
+  Se envía con onSubmit (y no con action=) para que React no reinicie el
+  formulario al terminar: si no, la actividad volvía sola a A1.
 */
+const enviar = (accion: (datos: FormData) => void) => (e: FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+  const datos = new FormData(e.currentTarget);
+  startTransition(() => accion(datos));
+};
+
 export default function PedirRespuestas() {
   const [preguntas, setPreguntas] = useState('');
   const [actividad, setActividad] = useState('a3');
@@ -35,7 +43,7 @@ export default function PedirRespuestas() {
           validadora.
         </p>
       </div>
-      <form action={pedir} className="eq-form">
+      <form onSubmit={enviar(pedir)} className="eq-form">
         <div className="eq-fila">
           <label className="campo" style={{ flex: '0 1 260px' }}>
             <span className="campo__nombre">Actividad</span>
@@ -97,7 +105,7 @@ export default function PedirRespuestas() {
 
       <details className="eq-detalles">
         <summary>¿No se te ocurren preguntas? Pedile ideas a la IA</summary>
-        <form action={pedirIdeas} className="eq-form" style={{ marginTop: 'var(--space-2)' }}>
+        <form onSubmit={enviar(pedirIdeas)} className="eq-form" style={{ marginTop: 'var(--space-2)' }}>
           <input type="hidden" name="actividad" value={actividad} />
           <div className="eq-fila">
             <label className="campo">

@@ -64,7 +64,13 @@ async function consultasPara(pregunta: string, actividad: string | null) {
 }
 
 async function buscar(consultas: string[]) {
-  const pedidos = consultas.flatMap((texto) => [buscarOpenAlex({ texto, max: 8 }), buscarEuropePmc({ texto, max: 8 })]);
+  // Cada consulta en las dos fuentes, y la primera (el concepto central) también solo entre revisiones,
+  // que son las que explican lo básico. Las revisiones van primero: elegirArticulos les da más peso.
+  const pedidos = [
+    buscarOpenAlex({ texto: consultas[0], max: 8, soloRevisiones: true }),
+    buscarEuropePmc({ texto: consultas[0], max: 8, soloRevisiones: true }),
+    ...consultas.flatMap((texto) => [buscarOpenAlex({ texto, max: 8 }), buscarEuropePmc({ texto, max: 8 })]),
+  ];
   const respuestas = await Promise.all(pedidos);
   return elegirArticulos(respuestas.map((r) => r.registros));
 }
@@ -155,7 +161,7 @@ export async function responderPregunta(c: Contexto, pregunta: string): Promise<
 
   const red = await redactar(pregunta, c.actividad, candidatos);
   const uso = sumar(q.uso ?? { entrada: 0, salida: 0 }, red.uso);
-  if (!red.ok) return { pregunta, ok: false, mensaje: `No la redacté: ${red.motivo}.`, uso };
+  if (!red.ok) return { pregunta, ok: false, mensaje: `No la redacté: ${red.motivo.replace(/\.+$/, '')}. (Busqué: ${q.consultas.join(' · ')}.)`, uso };
 
   // Artículos: guardar los citados y comprobar cada cita contra el resumen guardado
   const { data: politicas } = await c.db.from('licencias').select('codigo, pasaje');
@@ -189,6 +195,7 @@ export async function responderPregunta(c: Contexto, pregunta: string): Promise<
     `Redactada con IA (${red.modelo}) el ${fecha}. Revisá cada idea contra la oración del artículo que la respalda.`,
     `Pregunta pedida: ${pregunta}`,
     `Búsquedas: ${q.consultas.join(' · ')}`,
+    red.borrador.faltante ? `Respuesta parcial. Quedó afuera: ${red.borrador.faltante}` : '',
     ...red.borrador.citas.map((x) => (x.respalda ? `A${x.articulo + 1} respalda: ${x.respalda}` : '')).filter(Boolean),
     descartes.length ? `Descartado por el control: ${descartes.join('; ')}` : '',
   ]
@@ -202,7 +209,14 @@ export async function responderPregunta(c: Contexto, pregunta: string): Promise<
 
   const { error: errorEnvio } = await c.db.from('ficha_versiones').update({ estado: 'en_revision' }).eq('id', f.versionId);
   if (errorEnvio) return { pregunta, ok: true, fichaId: f.fichaId, enRevision: false, uso, mensaje: `Quedó en borrador: ${mensajeDeError(errorEnvio)}.` };
-  return { pregunta, ok: true, fichaId: f.fichaId, enRevision: true, uso, mensaje: `Lista y esperando revisión, con ${citas.length} ${citas.length === 1 ? 'fuente' : 'fuentes'}.` };
+  return {
+    pregunta,
+    ok: true,
+    fichaId: f.fichaId,
+    enRevision: true,
+    uso,
+    mensaje: `Lista y esperando revisión, con ${citas.length} ${citas.length === 1 ? 'fuente' : 'fuentes'}.${red.borrador.faltante ? ` Es parcial: ${red.borrador.faltante.replace(/\.+$/, '')}.` : ''}`,
+  };
 }
 
 /** Ideas de preguntas para una actividad (sin guardar nada). */
