@@ -5,7 +5,7 @@ Rama: `ia/asistente`. Complementa `docs/ASISTENTE-IA.md`.
 
 ## Etapa B-2 · Base de datos (en revisión)
 
-**Migraciones escritas y probadas en un Postgres local. Todavía NO están aplicadas en ningún proyecto de Supabase: esperan la aprobación de Sofia.**
+**Aplicadas el 6/11 en `ciencia-sin-limites-dev` con la aprobación de Sofia ("aplicalas"), idénticas byte a byte a los archivos (mismo md5). Producción no se tocó.** En dev: `6-pruebas-biblioteca-real.sql` dio **130 OK · 0 FALLAS** sin dejar datos; los controles de seguridad de Supabase no marcan nada nuevo. Falta volver a correr ahí `4-pruebas-equipo-fichas-real.sql` (el conector pide confirmación y esa vez no se contestó a tiempo).
 
 | Migración | Qué crea |
 | --- | --- |
