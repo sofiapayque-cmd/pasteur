@@ -174,6 +174,7 @@ Las preguntas de chicos suelen ser sobre conceptos básicos, que los artículos 
 - La primera: el concepto central, como lo nombraría una revisión (por ejemplo "cell nucleus function", "antibiotic resistance mechanisms").
 - La segunda: la pregunta concreta con términos técnicos.
 - La tercera: un sinónimo o un enfoque más amplio (por ejemplo, el origen o la evolución del concepto).
+Siempre en biología, salud o ciencias de la vida: si un término también se usa en otros campos (materiales, ingeniería, física), agregá una palabra que lo deje en biología (por ejemplo "cell", "biology", "tissue").
 Si la pregunta no es de ciencia, devolvé una lista vacía.`;
 
 export const INSTRUCCIONES_PREGUNTAS = `Proponés preguntas que harían chicos de 10 a 12 años de escuelas de Uruguay durante una actividad de ciencia del Institut Pasteur de Montevideo.
@@ -190,12 +191,14 @@ REGLAS
 3. Si los resúmenes respaldan una PARTE de la respuesta, respondé solo esa parte, bien y sin rellenar (por ejemplo, qué hace el núcleo aunque no expliquen cómo apareció), y contá en "motivo" qué quedó afuera; la investigadora decide si alcanza.
    Poné se_puede_responder en false solo si los resúmenes no dicen nada útil para la pregunta, si no es de ciencia o si es sobre la salud de alguien en particular; en ese caso explicá el motivo y dejá los demás campos vacíos.
 4. Cada idea de la versión para chicos tiene que estar respaldada por al menos una cita.
+5. Citá solo artículos sobre seres vivos, salud o biología que tengan que ver con la pregunta. Ignorá los de otros campos (materiales, ingeniería…) aunque usen la misma técnica.
+6. Respondé la pregunta de entrada, en la primera oración. Explicá el cómo o el porqué; no hagas una lista de tipos o variantes salvo que la pregunta lo pida.
 
 CAMPOS
 - pregunta: la pregunta clara, como la diría un chico (hasta 120 letras).
 - variantes: 2 a 4 maneras distintas en que un chico podría preguntar lo mismo.
 - explicacion_cientifica: para el equipo, de 60 a 150 palabras, precisa y con los términos técnicos que hagan falta.
-- version_infantil: como máximo ${limite} palabras. Castellano del Uruguay con voseo ("vos tenés", "fijate"), 2 a 4 oraciones cortas, sin tecnicismos (o explicados con palabras simples). Podés usar una comparación con algo de todos los días. Sin exagerar, sin dar miedo, sin "los estudios demuestran", sin consejos médicos.
+- version_infantil: como máximo ${limite} palabras. Castellano del Uruguay con voseo ("vos tenés", "fijate"), 2 a 4 oraciones cortas, con palabras de todos los días; si usás una palabra científica (ADN, proteína, fotón), explicala en la misma oración. Podés usar una comparación con algo de todos los días. Sin exagerar, sin dar miedo, sin "los estudios demuestran", sin consejos médicos.
 - citas: de 1 a 4. articulo es "A1", "A2"…; oraciones son los números de oración de ESE artículo (hasta 3, las que de verdad dicen eso); parafrasis cuenta en castellano, fiel y sin agregar nada, lo que dicen esas oraciones; respalda dice qué parte de la respuesta respaldan.`;
 }
 
