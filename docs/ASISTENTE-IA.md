@@ -31,7 +31,7 @@ Biblioteca científica (migraciones 13 y 14, aplicadas en dev el 6/11): ver `doc
 
 Ver `docs/PANEL-EQUIPO.md`: ingreso del equipo, fichas, revisión, biblioteca con búsqueda en vivo (B-1) e invitaciones por link.
 
-Respuestas redactadas con IA y tablero `/equipo/respuestas` (pedido de Sofia, 6/11): la IA busca artículos, redacta con citas comprobadas y manda a revisión; la validadora aprueba ficha y artículos juntos. Necesita la **migración 15** (`20261106140000_respuestas_ia.sql`), escrita y probada en local (37 OK), **sin aplicar todavía**. Detalle en `docs/PANEL-EQUIPO.md`.
+Respuestas redactadas con IA y tablero `/equipo/respuestas` (pedido de Sofia, 6/11): la IA busca artículos, redacta con citas comprobadas y manda a revisión; la validadora aprueba ficha y artículos juntos. Necesita la **migración 15** (`20261106140000_respuestas_ia.sql`), **aplicada en dev el 6/11** (37 OK también en dev, sin dejar datos). Detalle en `docs/PANEL-EQUIPO.md`.
 
 ## Pruebas
 

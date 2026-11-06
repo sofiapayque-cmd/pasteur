@@ -42,7 +42,7 @@ La IA busca, redacta y manda a revisión; la validadora aprueba en el tablero. C
 
 Límites: hasta 4 preguntas por vez y 40 por persona cada 24 horas. Costo estimado con `gpt-6.1-sol` (US$2 / US$10 por millón de tokens, 26/10/2026): unos 2 dólares cada 100 respuestas. Los tokens de cada pedido quedan en los logs de Vercel (`[ia] tokens: …`).
 
-**Migración 15** (`20261106140000_respuestas_ia.sql`, escrita y probada; **falta el OK de Sofia para aplicarla en dev**): la marca de IA no se saca; una ficha puede ir a revisión citando artículos en revisión (no candidatos); aprobar una ficha exige sus artículos aprobados; `public.aprobar_con_articulos()` (security invoker). Pruebas: `7-pruebas-respuestas-ia.sql`, 37 OK; con cuatro de sus reglas debilitadas fallan las pruebas que las cuidan. Para el proyecto real: `8-pruebas-respuestas-ia-real.sql` (probada en local: 37 OK y nada queda guardado). Sin la 15 aplicada, las respuestas de la IA quedan en borrador con el motivo.
+**Migración 15** (`20261106140000_respuestas_ia.sql`, **aplicada en `ciencia-sin-limites-dev` el 6/11** con el OK de Sofia, idéntica al archivo (mismo md5)): la marca de IA no se saca; una ficha puede ir a revisión citando artículos en revisión (no candidatos); aprobar una ficha exige sus artículos aprobados; `public.aprobar_con_articulos()` (security invoker). Pruebas: `7-pruebas-respuestas-ia.sql`, 37 OK; con cuatro de sus reglas debilitadas fallan las pruebas que las cuidan. Para el proyecto real: `8-pruebas-respuestas-ia-real.sql`: **en dev, 37 OK · 0 FALLAS** el 6/11, y después se verificó que no quedó nada (ni el esquema `t7`, ni usuarios, artículos o fichas de prueba). El asesor de seguridad no marca nada nuevo.
 
 ## Verificación (6/11)
 
