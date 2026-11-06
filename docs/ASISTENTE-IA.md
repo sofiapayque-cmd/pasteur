@@ -25,7 +25,7 @@ Reglas que impone la base (ajustadas el 5/11 con Sofia):
 - El índice `fragmentos` solo acepta la versión publicada vigente, y lo escribe el servidor.
 - Maestras, alumnos y visitantes no ven ninguna tabla editorial.
 
-Biblioteca científica (migraciones 13 y 14, aplicadas en dev el 6/11): ver `docs/BIBLIOTECA.md`. Como reemplazan `validar_para_revision` y `revisar`, las 111 pruebas de equipo y fichas hay que volver a correrlas en dev con el `4-…` regenerado.
+Biblioteca científica (migraciones 13 y 14, aplicadas en dev el 6/11): ver `docs/BIBLIOTECA.md`. Como reemplazan `validar_para_revision` y `revisar`, las 111 pruebas de equipo y fichas se volvieron a correr en dev con el `4-…` regenerado: 111 OK.
 
 ## Pruebas
 

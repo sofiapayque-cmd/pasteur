@@ -5,7 +5,7 @@ Rama: `ia/asistente`. Complementa `docs/ASISTENTE-IA.md`.
 
 ## Etapa B-2 · Base de datos (en revisión)
 
-**Aplicadas el 6/11 en `ciencia-sin-limites-dev` con la aprobación de Sofia ("aplicalas"), idénticas byte a byte a los archivos (mismo md5). Producción no se tocó.** En dev: `6-pruebas-biblioteca-real.sql` dio **130 OK · 0 FALLAS** sin dejar datos; los controles de seguridad de Supabase no marcan nada nuevo. Falta volver a correr ahí `4-pruebas-equipo-fichas-real.sql` (el conector pide confirmación y esa vez no se contestó a tiempo).
+**Aplicadas el 6/11 en `ciencia-sin-limites-dev` con la aprobación de Sofia ("aplicalas"), idénticas byte a byte a los archivos (mismo md5). Producción no se tocó.** En dev: `6-pruebas-biblioteca-real.sql` dio **130 OK · 0 FALLAS** sin dejar datos; los controles de seguridad de Supabase no marcan nada nuevo. El 6/11 también se volvió a correr ahí `4-pruebas-equipo-fichas-real.sql` con la 13 y la 14 ya aplicadas: **111 OK · 0 FALLAS**. Después de las dos tandas no quedó nada (ni esquemas `t3`/`t5`, ni usuarios de prueba, ni filas en las tablas nuevas) y la política de licencias quedó igual.
 
 | Migración | Qué crea |
 | --- | --- |
