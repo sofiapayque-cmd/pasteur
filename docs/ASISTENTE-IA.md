@@ -5,7 +5,7 @@ Rama: `ia/asistente` (sale de `supabase/aulas`).
 
 ## Etapa IA-1 · Base de datos (en revisión)
 
-**Migraciones escritas y probadas en un Postgres local. NO están aplicadas en ningún proyecto de Supabase.**
+**Aplicadas el 5/11 en `ciencia-sin-limites-dev` (las dos, idénticas byte a byte a los archivos: mismo md5). Producción (`ciencia-sin-limites`) no se tocó.** Las advertencias de seguridad de Supabase no marcan nada nuevo.
 
 | Migración | Qué crea |
 | --- | --- |
@@ -33,4 +33,4 @@ Reglas que impone la base (ajustadas el 5/11 con Sofia):
 - `3-pruebas-equipo-fichas.sql`: 111 OK (alta por invitación, roles, flujo editorial completo, corrección en revisión, autoaprobación, pedir cambios y reenviar, huella, retiro, suspendida, índice, accesos de maestra/alumno/sin sesión).
 - Con cuatro reglas debilitadas a propósito (roles, texto publicado congelado, huella al aprobar, solo validadoras aprueban) fallan las pruebas que las cuidan.
 
-Falta antes de aplicar en `ciencia-sin-limites-dev`: la aprobación de Sofia y una versión de las pruebas nuevas para correr en el proyecto real (como `2-pruebas-supabase-real.sql`, que se deshace sola).
+En el proyecto real: `4-pruebas-equipo-fichas-real.sql` (las mismas 111, en una sola transacción que termina con un error a propósito y se deshace entera; probada en local: 111 OK y nada queda guardado). Pendiente de correr en `ciencia-sin-limites-dev`: el conector pide confirmación antes de mandarla.
