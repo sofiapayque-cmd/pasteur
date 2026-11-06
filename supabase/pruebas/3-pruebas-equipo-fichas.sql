@@ -103,6 +103,10 @@ set role authenticated; select set_config('request.jwt.claim.sub', :RED, false);
 select t3.ok('redactora: no la publica ella misma', t3.falla(format($$update ficha_versiones set estado = 'publicada' where id = %L$$, :'v1')));
 select t3.ok('redactora: sin fuentes no se envía', t3.error(format($$update ficha_versiones set estado = 'en_revision' where id = %L$$, :'v1')) like '%al menos una fuente%');
 insert into fuentes (tipo, cita) values ('comunicacion', 'Comunicación de una investigadora del Institut Pasteur de Montevideo, 2026');
+reset role;
+-- Una publicación de la biblioteca (migración 13), todavía candidata
+insert into publicaciones (id, titulo) values ('eeeeeeee-1111-0000-0000-000000000001', 'Cells are the basic unit of life');
+set role authenticated; select set_config('request.jwt.claim.sub', :RED, false);
 insert into version_fuentes (version_id, publicacion_id, pasaje, ubicacion)
   values (:'v1', 'eeeeeeee-1111-0000-0000-000000000001', '', '');
 select t3.ok('redactora: un artículo sin pasaje no se envía', t3.error(format($$update ficha_versiones set estado = 'en_revision' where id = %L$$, :'v1')) like '%pasaje%');
@@ -275,7 +279,7 @@ select t3.ok('suspendida: no corrige', t3.afecta(format($$update ficha_versiones
 select t3.ok('suspendida: no ve fichas', t3.filas('select 1 from fichas') = 0);
 reset role;
 select t3.ok('suspendida: lo que aprobó antes sigue validado', exists (select 1 from fichas_validadas where version_id = :'v7'));
-select t3.ok('revisión de publicaciones: todavía no disponible', t3.error(format($$insert into revisiones (objeto, objeto_id, decision, huella_revisada, revisor_id) values ('publicacion', %L, 'aprobar', %L, %L)$$, :'v8', :'h8', :VAL)) like '%todavía no está disponible%');
+select t3.ok('revisión de curiosidades: todavía no disponible', t3.error(format($$insert into revisiones (objeto, objeto_id, decision, huella_revisada, revisor_id) values ('curiosidad', %L, 'aprobar', %L, %L)$$, :'v8', :'h8', :VAL)) like '%todavía no está disponible%');
 
 -- =====================================================================
 -- Maestras, alumnos y sin sesión no ven nada editorial

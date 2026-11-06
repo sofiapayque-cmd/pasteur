@@ -1,16 +1,11 @@
 -- =====================================================================
--- Pruebas de las migraciones 8 (equipo) y 9 (fichas) para correr en un
--- proyecto REAL de Supabase (solo el de desarrollo), sin dejar rastro.
+-- GENERADO con a-real.py desde 3-pruebas-equipo-fichas.sql: no editar a mano.
 --
--- Generado desde 3-pruebas-equipo-fichas.sql. Se manda como UNA sola
--- consulta (conector de Supabase o SQL Editor): Postgres la ejecuta como
--- una transacción, y la última sentencia lanza un error A PROPÓSITO con el
+-- Para correr en un proyecto REAL de Supabase (solo el de desarrollo), sin
+-- dejar rastro. Se manda como UNA sola consulta: Postgres la ejecuta como una
+-- transacción, y la última sentencia lanza un error A PROPÓSITO con el
 -- resultado adentro. El error deshace todo: usuarios de prueba, equipo,
--- fichas, el esquema "t3"… nada queda guardado.
---
--- Diferencias con la versión local: crea su propia maestra y su propio
--- alumno de prueba, guarda los ids en t3.v en vez de variables de psql y
--- cambia de rol con SET LOCAL.
+-- fichas, publicaciones, el esquema "t3"… nada queda guardado.
 -- =====================================================================
 
 -- Maestra y alumno de prueba (en la versión local los crean las pruebas de aulas)
@@ -116,6 +111,10 @@ set local role authenticated; select set_config('request.jwt.claim.sub', 'a00000
 select t3.ok('redactora: no la publica ella misma', t3.falla(format($$update ficha_versiones set estado = 'publicada' where id = %L$$, (select val::uuid from t3.v where k = 'v1'))));
 select t3.ok('redactora: sin fuentes no se envía', t3.error(format($$update ficha_versiones set estado = 'en_revision' where id = %L$$, (select val::uuid from t3.v where k = 'v1'))) like '%al menos una fuente%');
 insert into fuentes (tipo, cita) values ('comunicacion', 'Comunicación de una investigadora del Institut Pasteur de Montevideo, 2026');
+reset role;
+-- Una publicación de la biblioteca (migración 13), todavía candidata
+insert into publicaciones (id, titulo) values ('eeeeeeee-1111-0000-0000-000000000001', 'Cells are the basic unit of life');
+set local role authenticated; select set_config('request.jwt.claim.sub', 'a0000000-0000-0000-0000-000000000002', false);
 insert into version_fuentes (version_id, publicacion_id, pasaje, ubicacion)
   values ((select val::uuid from t3.v where k = 'v1'), 'eeeeeeee-1111-0000-0000-000000000001', '', '');
 select t3.ok('redactora: un artículo sin pasaje no se envía', t3.error(format($$update ficha_versiones set estado = 'en_revision' where id = %L$$, (select val::uuid from t3.v where k = 'v1'))) like '%pasaje%');
@@ -289,7 +288,7 @@ select t3.ok('suspendida: no corrige', t3.afecta(format($$update ficha_versiones
 select t3.ok('suspendida: no ve fichas', t3.filas('select 1 from fichas') = 0);
 reset role;
 select t3.ok('suspendida: lo que aprobó antes sigue validado', exists (select 1 from fichas_validadas where version_id = (select val::uuid from t3.v where k = 'v7')));
-select t3.ok('revisión de publicaciones: todavía no disponible', t3.error(format($$insert into revisiones (objeto, objeto_id, decision, huella_revisada, revisor_id) values ('publicacion', %L, 'aprobar', %L, %L)$$, (select val::uuid from t3.v where k = 'v8'), (select val from t3.v where k = 'h8'), 'a0000000-0000-0000-0000-000000000003')) like '%todavía no está disponible%');
+select t3.ok('revisión de curiosidades: todavía no disponible', t3.error(format($$insert into revisiones (objeto, objeto_id, decision, huella_revisada, revisor_id) values ('curiosidad', %L, 'aprobar', %L, %L)$$, (select val::uuid from t3.v where k = 'v8'), (select val from t3.v where k = 'h8'), 'a0000000-0000-0000-0000-000000000003')) like '%todavía no está disponible%');
 
 -- =====================================================================
 -- Maestras, alumnos y sin sesión no ven nada editorial

@@ -25,6 +25,8 @@ Reglas que impone la base (ajustadas el 5/11 con Sofia):
 - El índice `fragmentos` solo acepta la versión publicada vigente, y lo escribe el servidor.
 - Maestras, alumnos y visitantes no ven ninguna tabla editorial.
 
+Biblioteca científica (migraciones 13 y 14, escritas y probadas en local, sin aplicar): ver `docs/BIBLIOTECA.md`.
+
 ## Pruebas
 
 `bash supabase/pruebas/correr.sh` (Postgres 16 con pgvector, desde cero):
