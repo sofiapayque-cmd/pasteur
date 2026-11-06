@@ -28,6 +28,9 @@ grant usage on schema auth to anon, authenticated, service_role;
 grant execute on function auth.uid() to anon, authenticated, service_role;
 grant usage on schema public to anon, authenticated, service_role;
 create publication supabase_realtime;
+-- Supabase trae el esquema "extensions" (ahí van pgvector, unaccent, pg_trgm…)
+create schema extensions;
+grant usage on schema extensions to anon, authenticated, service_role;
 -- Peor caso: proyecto con "Automatically expose new tables" PRENDIDO (como
 -- ciencia-sin-limites-dev, creado desde la API). Cada tabla y función nueva
 -- nace con todos los permisos para los tres roles; las migraciones tienen

@@ -16,3 +16,4 @@ for m in "$AQUI"/../migrations/*.sql; do
   $P -f "$m" 2>&1 | grep -v "wal_level\|HINT" || true
 done
 $P -f "$AQUI/1-pruebas-seguridad.sql"
+$P -f "$AQUI/3-pruebas-equipo-fichas.sql"
