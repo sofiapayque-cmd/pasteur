@@ -44,11 +44,14 @@ export default function Laboratorio({ alumno, tareas }: { alumno: Alumno; tareas
         </div>
       </section>
 
-      <section className="lab__caja" aria-labelledby="apodo-titulo">
-        <h2 id="apodo-titulo">{alumno.apodo ? 'Tu apodo científico' : 'Elegí tu apodo científico'}</h2>
-        <p>No hace falta tu nombre: con el apodo alcanza.</p>
-        <ElegirApodo actual={alumno.apodo} colorActual={alumno.color} semilla={alumno.numero} />
-      </section>
+      {/* El apodo se elige una sola vez: después ya no aparece (pedido de Sofia, 6/11) */}
+      {!alumno.apodo && (
+        <section className="lab__caja" aria-labelledby="apodo-titulo">
+          <h2 id="apodo-titulo">Elegí tu apodo científico</h2>
+          <p>No hace falta tu nombre: con el apodo alcanza. Elegilo bien, porque después no se cambia.</p>
+          <ElegirApodo actual={null} colorActual={alumno.color} semilla={alumno.numero} />
+        </section>
+      )}
 
       <section className="lab__caja" aria-labelledby="actividades-titulo">
         <h2 id="actividades-titulo">Tus actividades</h2>

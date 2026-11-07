@@ -77,13 +77,15 @@ export async function salirAlumno(): Promise<void> {
 
 /*
   Apodo y color: se eligen de listas (no se escriben), así ningún chico pone
-  su nombre real. La regla RLS solo le deja cambiar su propia fila.
+  su nombre real. Se eligen UNA vez: con apodo, ya no se cambia (pedido de
+  Sofia, 6/11). La regla RLS solo le deja cambiar su propia fila.
 */
 export type EstadoApodo = { mensaje: string; ok?: boolean };
 
 export async function elegirApodo(_previo: EstadoApodo, datos: FormData): Promise<EstadoApodo> {
   const alumno = await obtenerAlumno();
   if (!alumno) return { mensaje: 'Volvé a entrar con tu tarjeta.' };
+  if (alumno.apodo) return { mensaje: 'Tu apodo ya está elegido.' };
   const apodo = String(datos.get('apodo') ?? '');
   const color = String(datos.get('color') ?? '');
   if (!APODOS.includes(apodo)) return { mensaje: 'Elegí uno de los apodos.' };
