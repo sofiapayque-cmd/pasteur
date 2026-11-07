@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
 import { aulasReales, equipoReal } from '@/lib/supabase/config';
 import { crearClienteServidor } from '@/lib/supabase/servidor';
-import { iniciarSesion, cerrarSesion, abrirSesionConTokens, pedirLinkDeClave } from '@/datos/sesion';
+import { iniciarSesion, cerrarSesion, abrirSesionConTokens, abrirSesionConLink, pedirLinkDeClave, TIPOS_DE_LINK, type TipoDeLink } from '@/datos/sesion';
 import { obtenerDocente } from '@/datos/docente';
 
 /*
@@ -76,11 +76,25 @@ export async function abrirLinkDeMail(datos: { accessToken: unknown; refreshToke
   if (!aulasReales && !equipoReal) redirect('/');
   const { accessToken, refreshToken, tipo } = datos;
   const valido = (v: unknown, max: number): v is string => typeof v === 'string' && v.length > 0 && v.length <= max;
-  const ingreso = equipoReal && !aulasReales ? '/equipo/entrar' : '/maestra/entrar';
-  if (!valido(accessToken, 4096) || !valido(refreshToken, 512)) redirect(`${ingreso}?error=link`);
+  if (!valido(accessToken, 4096) || !valido(refreshToken, 512)) redirect(`${ingresoPorDefecto()}?error=link`);
   const quien = await abrirSesionConTokens(accessToken, refreshToken);
-  if (!quien) redirect(`${ingreso}?error=link`);
-  const paraClave = tipo === 'invite' || tipo === 'recovery';
+  seguirDespuesDelLink(quien, tipo === 'invite' || tipo === 'recovery');
+}
+
+/** Botón "Entrar" de /auth/confirmar: recién acá se usa el link de un solo uso. */
+export async function confirmarLink(datos: FormData): Promise<void> {
+  if (!aulasReales && !equipoReal) redirect('/');
+  const tokenHash = String(datos.get('token_hash') ?? '');
+  const tipo = String(datos.get('type') ?? '');
+  if (!/^[A-Za-z0-9_-]{16,200}$/.test(tokenHash) || !(TIPOS_DE_LINK as readonly string[]).includes(tipo)) redirect(`${ingresoPorDefecto()}?error=link`);
+  const quien = await abrirSesionConLink(tokenHash, tipo as TipoDeLink);
+  seguirDespuesDelLink(quien, tipo === 'invite' || tipo === 'recovery');
+}
+
+const ingresoPorDefecto = () => (equipoReal && !aulasReales ? '/equipo/entrar' : '/maestra/entrar');
+
+function seguirDespuesDelLink(quien: 'maestra' | 'equipo' | null, paraClave: boolean): never {
+  if (!quien) redirect(`${ingresoPorDefecto()}?error=link`);
   // Una invitada del equipo (migración 8) no es maestra: sigue al panel del equipo
   if (quien === 'equipo' && equipoReal) redirect(paraClave ? '/equipo/clave' : '/equipo');
   if (!aulasReales) redirect('/equipo/entrar?error=link');

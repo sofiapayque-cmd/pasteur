@@ -75,12 +75,37 @@ export async function abrirSesionConTokens(accessToken: string, refreshToken: st
   if (!cliente) return null;
   const { data, error } = await cliente.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
   if (error || !data.user) return null;
-  if (data.user.app_metadata?.rol === 'alumno') {
+  return quienEs(cliente, data.user);
+}
+
+/*
+  Abre la sesión con un link de un solo uso que lleva a /auth/confirmar
+  (token_hash + tipo). Se llama recién cuando la persona toca "Entrar": así
+  las vistas previas de WhatsApp o los filtros de mail, que abren el link
+  solos, no lo gastan.
+*/
+export const TIPOS_DE_LINK = ['invite', 'recovery', 'magiclink', 'email'] as const;
+export type TipoDeLink = (typeof TIPOS_DE_LINK)[number];
+
+export async function abrirSesionConLink(tokenHash: string, tipo: TipoDeLink): Promise<'maestra' | 'equipo' | null> {
+  const cliente = await crearClienteServidor();
+  if (!cliente) return null;
+  const { data, error } = await cliente.auth.verifyOtp({ type: tipo, token_hash: tokenHash });
+  if (error || !data.user) {
+    if (error) console.error('[sesion] link de un solo uso:', error.code ?? error.status);
+    return null;
+  }
+  return quienEs(cliente, data.user);
+}
+
+type Cliente = NonNullable<Awaited<ReturnType<typeof crearClienteServidor>>>;
+async function quienEs(cliente: Cliente, user: { id: string; app_metadata?: Record<string, unknown> }): Promise<'maestra' | 'equipo' | null> {
+  if (user.app_metadata?.rol === 'alumno') {
     await cliente.auth.signOut();
     return null;
   }
   // ¿Es del equipo del Pasteur? (migración 8; si la tabla no existe todavía, es maestra)
-  const { data: fila } = await cliente.from('equipo').select('id').eq('id', data.user.id).maybeSingle();
+  const { data: fila } = await cliente.from('equipo').select('id').eq('id', user.id).maybeSingle();
   return fila ? 'equipo' : 'maestra';
 }
 

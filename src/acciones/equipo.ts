@@ -1,5 +1,6 @@
 'use server';
 
+import { linkDeUnSoloUso } from '@/datos/links';
 import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
 import { refresh } from 'next/cache';
@@ -109,8 +110,9 @@ async function generarLink(tipo: 'invite' | 'recovery', email: string, pedidoPor
     email,
     options: { redirectTo: `${await origen()}/equipo/entrar` },
   });
-  if (error || !data?.properties?.action_link) return { error: (error?.code ?? 'sin_link') as string };
-  return { link: data.properties.action_link };
+  if (error || !data?.properties?.hashed_token) return { error: (error?.code ?? 'sin_link') as string };
+  // A /auth/confirmar (botón "Entrar"): las vistas previas de WhatsApp o del mail no gastan el link
+  return { link: await linkDeUnSoloUso(data.properties.hashed_token, data.properties.verification_type) };
 }
 
 export async function invitarMiembro(_previo: Estado, datos: FormData): Promise<Estado> {

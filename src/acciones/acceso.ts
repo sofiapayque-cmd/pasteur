@@ -1,5 +1,6 @@
 'use server';
 
+import { linkDeUnSoloUso } from '@/datos/links';
 import { createHash } from 'node:crypto';
 import { headers } from 'next/headers';
 import { refresh } from 'next/cache';
@@ -79,21 +80,22 @@ async function linkDeMaestra(email: string, nombre: string, pedidoPor: string): 
   const admin = crearClienteAdmin();
   if (!admin) return { error: 'Falta la clave secreta en el servidor (SUPABASE_SECRET_KEY).' };
   console.info(`[acceso] link de invitación de maestra pedido por ${pedidoPor}`);
-  // El link vuelve al inicio: LinkDeMail (layout raíz) lo lee y sigue a /maestra/clave para elegir la contraseña.
+  // El link lleva a /auth/confirmar (botón "Entrar"; las vistas previas de WhatsApp no lo gastan)
+  // y de ahí a /maestra/clave para elegir la contraseña. redirectTo queda por si se usa el link de Supabase.
   // El nombre va en los datos de la cuenta: con eso la base crea la ficha de la maestra (docentes.nombre).
   const { data, error } = await admin.auth.admin.generateLink({
     type: 'invite',
     email,
     options: { redirectTo: `${await origen()}/`, data: nombre ? { nombre } : undefined },
   });
-  if (error || !data?.properties?.action_link) {
+  if (error || !data?.properties?.hashed_token) {
     if (error?.code === 'email_exists' || /already been registered/i.test(error?.message ?? '')) {
       return { error: 'Ese mail ya tiene una cuenta. Puede entrar en /maestra/entrar o recuperar su contraseña desde ahí.' };
     }
     console.error('[acceso] invitar:', error?.code);
     return { error: 'No se pudo generar el link. Probá de nuevo.' };
   }
-  return { link: data.properties.action_link };
+  return { link: await linkDeUnSoloUso(data.properties.hashed_token, data.properties.verification_type) };
 }
 
 export async function invitarDesdeSolicitud(solicitudId: string): Promise<EstadoInvitacion> {

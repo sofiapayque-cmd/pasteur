@@ -212,4 +212,4 @@ En paralelo, sin código:
 | 5 · Prueba piloto | — | — | Necesita una maestra y chicos reales. |
 | 6 · Revisar las experiencias | Propuesta escrita (`docs/REVISION-EXPERIENCIAS.md`) | — | Decide Sofia. |
 | 7 · Calidad visual (opción A, A1) | Placas y muestras hechas (ver `REVISION-EXPERIENCIAS.md` §8) | Pruebas automáticas, pantallas y fluidez | Que Sofia lo mire; validar la firma de cada ambiente. |
-| 8 · Producción | Guía paso a paso (`docs/PRODUCCION.md`) | — | No se ejecutó nada: necesita la autorización de Sofia. |
+| 8 · Producción | Base nueva en São Paulo con las 17 migraciones (7/11, autorizado por Sofia); región y latido diario en `vercel.json`; links de un solo uso con botón "Entrar"; plantillas de mail | Migraciones idénticas (md5), seguridad idéntica a pruebas (1.476 elementos), 31 OK en producción | Pasos de Sofia en `docs/PRODUCCION.md`: mail, ingreso, variables, PR a `main`, dominio, primeras cuentas. |
