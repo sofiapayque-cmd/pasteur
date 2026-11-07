@@ -75,12 +75,17 @@ export async function pedirAcceso(_previo: EstadoAcceso, datos: FormData): Promi
 // ---------------------------------------------------------------------
 // Equipo (admin): invitar o descartar
 // ---------------------------------------------------------------------
-async function linkDeMaestra(email: string, pedidoPor: string): Promise<{ link?: string; error?: string }> {
+async function linkDeMaestra(email: string, nombre: string, pedidoPor: string): Promise<{ link?: string; error?: string }> {
   const admin = crearClienteAdmin();
   if (!admin) return { error: 'Falta la clave secreta en el servidor (SUPABASE_SECRET_KEY).' };
   console.info(`[acceso] link de invitación de maestra pedido por ${pedidoPor}`);
-  // El link vuelve al inicio: LinkDeMail (layout raíz) lo lee y sigue a /maestra/clave para elegir la contraseña
-  const { data, error } = await admin.auth.admin.generateLink({ type: 'invite', email, options: { redirectTo: `${await origen()}/` } });
+  // El link vuelve al inicio: LinkDeMail (layout raíz) lo lee y sigue a /maestra/clave para elegir la contraseña.
+  // El nombre va en los datos de la cuenta: con eso la base crea la ficha de la maestra (docentes.nombre).
+  const { data, error } = await admin.auth.admin.generateLink({
+    type: 'invite',
+    email,
+    options: { redirectTo: `${await origen()}/`, data: nombre ? { nombre } : undefined },
+  });
   if (error || !data?.properties?.action_link) {
     if (error?.code === 'email_exists' || /already been registered/i.test(error?.message ?? '')) {
       return { error: 'Ese mail ya tiene una cuenta. Puede entrar en /maestra/entrar o recuperar su contraseña desde ahí.' };
@@ -98,7 +103,7 @@ export async function invitarDesdeSolicitud(solicitudId: string): Promise<Estado
   const { data: s } = await db.from('solicitudes_acceso').select('id, nombre, email, estado').eq('id', solicitudId).maybeSingle();
   if (!s) return { mensaje: 'No encontramos ese pedido.' };
   if (s.estado !== 'pendiente') return { mensaje: 'Ese pedido ya está resuelto.' };
-  const r = await linkDeMaestra(s.email, yo.id);
+  const r = await linkDeMaestra(s.email, s.nombre, yo.id);
   if (!r.link) return { mensaje: r.error ?? 'No se pudo invitar.' };
   const { error } = await db.from('solicitudes_acceso').update({ estado: 'invitada', resuelta_en: new Date().toISOString(), resuelta_por: yo.id }).eq('id', s.id);
   if (error) console.error('[acceso] marcar invitada:', error.code);
@@ -112,7 +117,7 @@ export async function invitarMaestra(_previo: EstadoInvitacion, datos: FormData)
   const email = String(datos.get('email') ?? '').trim().toLowerCase();
   const nombre = String(datos.get('nombre') ?? '').replace(/\s+/g, ' ').trim().slice(0, 120);
   if (!MAIL.test(email) || email.endsWith('@alumnos.invalid')) return { mensaje: 'Revisá el mail.' };
-  const r = await linkDeMaestra(email, yo.id);
+  const r = await linkDeMaestra(email, nombre, yo.id);
   if (!r.link) return { mensaje: r.error ?? 'No se pudo invitar.' };
   return { ok: true, link: r.link, email, nombre, mensaje: 'Cuenta creada. Mandale este link: sirve una sola vez.' };
 }
