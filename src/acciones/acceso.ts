@@ -1,6 +1,6 @@
 'use server';
 
-import { linkDeUnSoloUso } from '@/datos/links';
+import { linkDeUnSoloUso, reemplazoOtroLink } from '@/datos/links';
 import { createHash } from 'node:crypto';
 import { headers } from 'next/headers';
 import { refresh } from 'next/cache';
@@ -76,7 +76,7 @@ export async function pedirAcceso(_previo: EstadoAcceso, datos: FormData): Promi
 // ---------------------------------------------------------------------
 // Equipo (admin): invitar o descartar
 // ---------------------------------------------------------------------
-async function linkDeMaestra(email: string, nombre: string, pedidoPor: string): Promise<{ link?: string; error?: string }> {
+async function linkDeMaestra(email: string, nombre: string, pedidoPor: string): Promise<{ link?: string; error?: string; reemplazo?: boolean }> {
   const admin = crearClienteAdmin();
   if (!admin) return { error: 'Falta la clave secreta en el servidor (SUPABASE_SECRET_KEY).' };
   console.info(`[acceso] link de invitación de maestra pedido por ${pedidoPor}`);
@@ -95,8 +95,14 @@ async function linkDeMaestra(email: string, nombre: string, pedidoPor: string): 
     console.error('[acceso] invitar:', error?.code);
     return { error: 'No se pudo generar el link. Probá de nuevo.' };
   }
-  return { link: await linkDeUnSoloUso(data.properties.hashed_token, data.properties.verification_type) };
+  return {
+    link: await linkDeUnSoloUso(data.properties.hashed_token, data.properties.verification_type),
+    reemplazo: reemplazoOtroLink(data.user),
+  };
 }
+
+const LISTO = 'Cuenta creada. Mandale este link: sirve una sola vez.';
+const REEMPLAZO = 'Este mail ya tenía un link sin usar: ese dejó de servir. Mandale este, que es el que vale.';
 
 export async function invitarDesdeSolicitud(solicitudId: string): Promise<EstadoInvitacion> {
   const yo = await miembroCon('admin');
@@ -110,7 +116,7 @@ export async function invitarDesdeSolicitud(solicitudId: string): Promise<Estado
   const { error } = await db.from('solicitudes_acceso').update({ estado: 'invitada', resuelta_en: new Date().toISOString(), resuelta_por: yo.id }).eq('id', s.id);
   if (error) console.error('[acceso] marcar invitada:', error.code);
   refresh();
-  return { ok: true, link: r.link, email: s.email, nombre: s.nombre, mensaje: 'Cuenta creada. Mandale este link: sirve una sola vez.' };
+  return { ok: true, link: r.link, email: s.email, nombre: s.nombre, mensaje: r.reemplazo ? REEMPLAZO : LISTO };
 }
 
 export async function invitarMaestra(_previo: EstadoInvitacion, datos: FormData): Promise<EstadoInvitacion> {
@@ -121,7 +127,7 @@ export async function invitarMaestra(_previo: EstadoInvitacion, datos: FormData)
   if (!MAIL.test(email) || email.endsWith('@alumnos.invalid')) return { mensaje: 'Revisá el mail.' };
   const r = await linkDeMaestra(email, nombre, yo.id);
   if (!r.link) return { mensaje: r.error ?? 'No se pudo invitar.' };
-  return { ok: true, link: r.link, email, nombre, mensaje: 'Cuenta creada. Mandale este link: sirve una sola vez.' };
+  return { ok: true, link: r.link, email, nombre, mensaje: r.reemplazo ? REEMPLAZO : LISTO };
 }
 
 export async function descartarSolicitud(solicitudId: string): Promise<void> {

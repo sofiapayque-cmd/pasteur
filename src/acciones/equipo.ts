@@ -1,6 +1,6 @@
 'use server';
 
-import { linkDeUnSoloUso } from '@/datos/links';
+import { linkDeUnSoloUso, reemplazoOtroLink } from '@/datos/links';
 import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
 import { refresh } from 'next/cache';
@@ -112,7 +112,10 @@ async function generarLink(tipo: 'invite' | 'recovery', email: string, pedidoPor
   });
   if (error || !data?.properties?.hashed_token) return { error: (error?.code ?? 'sin_link') as string };
   // A /auth/confirmar (botón "Entrar"): las vistas previas de WhatsApp o del mail no gastan el link
-  return { link: await linkDeUnSoloUso(data.properties.hashed_token, data.properties.verification_type) };
+  return {
+    link: await linkDeUnSoloUso(data.properties.hashed_token, data.properties.verification_type),
+    reemplazo: tipo === 'invite' && reemplazoOtroLink(data.user),
+  };
 }
 
 export async function invitarMiembro(_previo: Estado, datos: FormData): Promise<Estado> {
@@ -137,7 +140,10 @@ export async function invitarMiembro(_previo: Estado, datos: FormData): Promise<
   const invitacion = await generarLink('invite', email, yo.id);
   if ('link' in invitacion) {
     refresh();
-    return { ok: true, email, link: invitacion.link, mensaje: `Invitación lista para ${email}.` };
+    const mensaje = invitacion.reemplazo
+      ? `${email} ya tenía un link sin usar: ese dejó de servir. Mandale este, que es el que vale.`
+      : `Invitación lista para ${email}.`;
+    return { ok: true, email, link: invitacion.link, mensaje };
   }
   if (invitacion.error === 'email_exists') {
     // ¿Ya es del equipo? Entonces solo necesita un link nuevo para entrar

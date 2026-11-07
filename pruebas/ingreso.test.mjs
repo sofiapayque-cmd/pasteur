@@ -5,6 +5,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { leerIngreso, normalizarClave, normalizarCodigo, normalizarNumero } from '../src/lib/aulas/ingreso.ts';
+import { reemplazoOtroLink } from '../src/lib/invitacion.ts';
 
 test('código del aula: mayúsculas y sin espacios ni guiones', () => {
   assert.equal(normalizarCodigo(' k7rm '), 'K7RM');
@@ -38,4 +39,13 @@ test('ingreso completo: arma el usuario o dice qué está mal escrito', () => {
   assert.deepEqual(leerIngreso('K7RM', '', 'sapo-luna-42'), { error: 'numero' });
   assert.deepEqual(leerIngreso('K7RM', '7', 'sapoluna42'), { error: 'clave' });
   assert.deepEqual(leerIngreso('K7RM', '7', 'sapo-luna-05'), { error: 'clave' }, 'los números de clave van de 10 a 99');
+});
+
+// Fechas reales de la base de pruebas (7/11): la misma maestra invitada dos veces, con 20 segundos de diferencia
+test('invitación: avisa cuando el link nuevo reemplaza a uno sin usar', () => {
+  assert.equal(reemplazoOtroLink({ created_at: '2026-11-07T23:24:30.942Z', invited_at: '2026-11-07T23:24:30.990Z' }), false, 'cuenta nueva');
+  assert.equal(reemplazoOtroLink({ created_at: '2026-11-07T23:24:30.942Z', invited_at: '2026-11-07T23:24:50.927Z' }), true, 'segunda invitación');
+  assert.equal(reemplazoOtroLink({ created_at: '2026-11-07 23:24:30.942116+00', invited_at: '2026-11-07 23:24:50.92712+00' }), true, 'formato de Postgres');
+  assert.equal(reemplazoOtroLink(null), false);
+  assert.equal(reemplazoOtroLink({ created_at: '2026-11-07T23:24:30Z' }), false, 'sin fecha de invitación');
 });

@@ -16,3 +16,5 @@ export async function linkDeUnSoloUso(tokenHash: string, tipo: string) {
   const q = new URLSearchParams({ token_hash: tokenHash, type: tipo });
   return `${await origenDelPedido()}/auth/confirmar?${q.toString()}`;
 }
+
+export { reemplazoOtroLink } from '@/lib/invitacion';

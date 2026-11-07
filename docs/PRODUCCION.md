@@ -127,6 +127,8 @@ Las variables de Production que hoy apuntan al proyecto de Ohio se **reemplazan*
 
 Los links que da el panel llevan a la página con el botón **Entrar**, así que se pueden mandar por WhatsApp: la vista previa no los gasta.
 
+**Ojo:** si se invita dos veces al mismo mail antes de que la persona entre, solo sirve el **último** link. El panel lo avisa ("ese dejó de servir").
+
 Las respuestas aprobadas en la base de pruebas no pasan solas a producción. Es un paso aparte, si Sofia quiere.
 
 ## Paso 8 · Prueba completa en producción (Sofia + Claude, 1 hora)
