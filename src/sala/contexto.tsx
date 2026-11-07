@@ -24,6 +24,9 @@ export type Clase = {
   simularAlumno?: () => void;
   /** Solo en la clase real */
   aula?: { id: string; nombre: string };
+  /** Para mirar los resultados de una tarea (sin clase abierta): sin botones de manejar la clase */
+  soloLectura?: boolean;
+  volverA?: string;
   conexion?: Conexion;
   aviso?: string;
 };

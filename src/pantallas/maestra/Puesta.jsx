@@ -70,14 +70,22 @@ export default function Puesta() {
         <button className="btn btn--claro" onClick={() => window.print()}>
           Imprimir resumen de la clase
         </button>
-        {real && clase.volverAlTablero && (
-          <button className="btn btn--secundario" onClick={clase.volverAlTablero}>
-            Volver al tablero
-          </button>
+        {clase.soloLectura ? (
+          <a className="btn btn--primario" href={clase.volverA}>
+            Volver
+          </a>
+        ) : (
+          <>
+            {real && clase.volverAlTablero && (
+              <button className="btn btn--secundario" onClick={clase.volverAlTablero}>
+                Volver al tablero
+              </button>
+            )}
+            <button className="btn btn--primario" onClick={cerrar}>
+              Cerrar la clase
+            </button>
+          </>
         )}
-        <button className="btn btn--primario" onClick={cerrar}>
-          Cerrar la clase
-        </button>
       </aside>
     </main>
   );

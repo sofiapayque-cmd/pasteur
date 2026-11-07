@@ -306,3 +306,20 @@ Sin migraciones: `sesiones` y `progreso` y sus reglas RLS están desde la etapa 
 - la publicación de tiempo real en dev.
 
 **Falta la prueba real en el preview:** una maestra y 2 o 3 chicos en navegadores distintos (ver `docs/PLAN-ENTREGA.md`, bloque 2).
+
+## 17. Bloque 3 · Cuaderno de investigación y lo que encontró la clase (7/11/2026)
+
+Sin migraciones: cada actividad ya guarda lo que hace el chico en `progreso.datos`.
+
+- **Cuaderno de investigación** (`src/actividades/cuaderno.js`). Ordena eso en el mismo formato para A1, A2 y A3: **hipótesis, decisiones, variables, resultados y conclusiones**, en frases, con los mismos textos que ven los chicos.
+  - **A1:** la predicción de los antibióticos; las muestras y temperaturas elegidas; colonias por placa; halos y resistentes; comparaciones; qué antibiótico resistieron más.
+  - **A2:** la hipótesis; la molécula y las partes exploradas; temperatura y pH de cada corrida; qué le pasó y qué observó; si se cumplió.
+  - **A3:** la misión; la muestra; aumentos y luces; fotos y las que hay que repetir; pistas; lo que encontró, con su explicación.
+  - Con datos viejos o raros devuelve el cuaderno vacío, nunca rompe la pantalla.
+- **Maestra, en cada tarea** (`/maestra/aulas/[id]/tareas/[tarea]`): sección "Cuadernos de investigación", con uno desplegable por chico. "Imprimir los cuadernos" los imprime todos abiertos, sin el resto de la pantalla.
+- **Lo que encontró la clase** (`…/tareas/[tarea]/puesta`): la misma pantalla de la puesta en común de la clase en vivo, armada con los avances de la tarea, para proyectar y conversar aunque no haya sido en vivo. Es solo para mirar: tiene "Volver" y no tiene botones de manejar la clase.
+- **Pruebas:** `npm run test:clase` (11).
+  - Cuaderno de A1 con muestras, placas (también en singular), contaminadas, comparación y antibióticos.
+  - A2 y A3.
+  - Datos vacíos, raros o de una actividad desconocida.
+  - La sala de una tarea.

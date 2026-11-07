@@ -439,3 +439,51 @@
   flex-wrap: wrap;
   gap: 10px;
 }
+
+/* Cuadernos de investigación (tarea) */
+.cuadernos__lista {
+  display: grid;
+  gap: 10px;
+}
+.cuaderno {
+  border: 2px solid var(--membrana);
+  border-radius: 18px;
+  background: #fff;
+  padding: 10px 16px;
+}
+.cuaderno summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--nucleo);
+}
+.cuaderno dl {
+  margin: 12px 0 4px;
+  display: grid;
+  gap: 10px;
+}
+.cuaderno dt {
+  font: 500 12px/1.2 var(--font-mono);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--tinta-suave);
+  margin-bottom: 4px;
+}
+.cuaderno dd {
+  margin: 0 0 4px;
+  line-height: 1.45;
+}
+@media print {
+  .aulas .cabecera,
+  .aulas .aula__cabeza,
+  .aulas .aulas__bloque:not(.cuadernos),
+  .cuadernos__botones {
+    display: none !important;
+  }
+  .cuaderno {
+    break-inside: avoid;
+    border-color: #999;
+  }
+}

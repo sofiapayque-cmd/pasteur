@@ -1,11 +1,13 @@
 'use client';
 
+import Link from 'next/link';
 import { useActionState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Cabecera from '@/components/Cabecera';
 import FondoVivo from '@/components/FondoVivo';
 import CuentaDocente from '@/components/CuentaDocente';
 import type { EstadoTareaForm } from '@/acciones/tareas';
+import { SECCIONES } from '@/actividades/secciones';
 import { actividad as datosActividad, dondeVa } from '@/lib/aulas/tareas';
 import './aulas.css';
 
@@ -14,7 +16,7 @@ import './aulas.css';
   cada chico, quién terminó, y los botones para habilitar lo que quedó para
   después o cerrar la tarea. Se actualiza sola cada 20 segundos.
 */
-type Fila = { id: string; numero: number; apodo: string | null; activo: boolean; etapa: string | null; actualizado: string | null; terminada: boolean };
+type Fila = { id: string; numero: number; apodo: string | null; activo: boolean; etapa: string | null; actualizado: string | null; terminada: boolean; cuaderno?: Record<string, string[]> | null };
 type Accion = (previo: EstadoTareaForm, datos: FormData) => Promise<EstadoTareaForm>;
 
 const hora = new Intl.DateTimeFormat('es-UY', { dateStyle: 'short', timeStyle: 'short', timeZone: 'America/Montevideo' });
@@ -141,7 +143,64 @@ export default function ComoVaTarea({
             </table>
           </div>
         </section>
+
+        <Cuadernos filas={filas} puestaUrl={`/maestra/aulas/${aula.id}/tareas/${tarea.id}/puesta`} />
       </div>
     </main>
+  );
+}
+
+/* Cuaderno de investigación de cada chico (hipótesis, decisiones, variables, resultados, conclusiones) */
+function Cuadernos({ filas, puestaUrl }: { filas: Fila[]; puestaUrl: string }) {
+  const conAlgo = filas.filter((f) => f.cuaderno && SECCIONES.some((s) => f.cuaderno?.[s.id]?.length));
+  const imprimir = () => {
+    // Se imprimen abiertos (un <details> cerrado sale cerrado)
+    document.querySelectorAll<HTMLDetailsElement>('details.cuaderno').forEach((d) => (d.open = true));
+    window.print();
+  };
+  return (
+    <section className="aulas__bloque cuadernos" aria-labelledby="titulo-cuadernos">
+      <div className="aula__titulo-fila">
+        <h2 id="titulo-cuadernos">Cuadernos de investigación</h2>
+        <div className="aula__botones cuadernos__botones">
+          <Link className="btn btn--secundario btn--chico" href={puestaUrl}>
+            Lo que encontró la clase
+          </Link>
+          {conAlgo.length > 0 && (
+            <button className="btn btn--claro btn--chico" type="button" onClick={imprimir}>
+              Imprimir los cuadernos
+            </button>
+          )}
+        </div>
+      </div>
+      {conAlgo.length === 0 ? (
+        <p className="aulas__vacio">Cuando empiecen a investigar, acá aparece lo que hizo cada uno: su hipótesis, qué decidió, qué cambió, qué obtuvo y a qué llegó.</p>
+      ) : (
+        <div className="cuadernos__lista">
+          {conAlgo.map((f) => (
+            <details key={f.id} className="cuaderno">
+              <summary>
+                <span>
+                  {String(f.numero).padStart(2, '0')} · {f.apodo ?? 'sin apodo'}
+                </span>
+                <span className="aulas__bajada">{f.terminada ? 'Terminó' : 'En curso'}</span>
+              </summary>
+              <dl>
+                {SECCIONES.map((s) =>
+                  f.cuaderno?.[s.id]?.length ? (
+                    <div key={s.id}>
+                      <dt>{s.nombre}</dt>
+                      {f.cuaderno[s.id].map((t, i) => (
+                        <dd key={i}>{t}</dd>
+                      ))}
+                    </div>
+                  ) : null,
+                )}
+              </dl>
+            </details>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }

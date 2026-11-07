@@ -6,6 +6,7 @@ import { obtenerTareaDeMaestra } from '@/datos/tareas';
 import { cambiarDesbloqueo, cambiarEstadoTarea } from '@/acciones/tareas';
 import { desbloqueosDe } from '@/lib/aulas/tareas';
 import ComoVaTarea from '@/pantallas/maestra/aulas/ComoVaTarea';
+import { cuadernoDe } from '@/actividades/cuaderno';
 
 /* /maestra/aulas/[id]/tareas/[tarea] · Cómo va una tarea del aula (si no es de la maestra: 404). */
 export default async function Page({ params }: { params: Promise<{ id: string; tarea: string }> }) {
@@ -20,7 +21,17 @@ export default async function Page({ params }: { params: Promise<{ id: string; t
   const { tarea, avances } = datos;
   const filas = alumnos.map((a) => {
     const av = avances.find((x) => x.alumno_id === a.id);
-    return { id: a.id, numero: a.numero, apodo: a.apodo, activo: a.activo, etapa: av?.etapa ?? null, actualizado: av?.actualizado_en ?? null, terminada: Boolean(av?.completada_en) };
+    return {
+      id: a.id,
+      numero: a.numero,
+      apodo: a.apodo,
+      activo: a.activo,
+      etapa: av?.etapa ?? null,
+      actualizado: av?.actualizado_en ?? null,
+      terminada: Boolean(av?.completada_en),
+      // El cuaderno de investigación: lo que ya guardó la actividad, ordenado (src/actividades/cuaderno.js)
+      cuaderno: av ? (cuadernoDe(tarea.actividad, av.datos) as Record<string, string[]>) : null,
+    };
   });
   return (
     <ComoVaTarea

@@ -148,3 +148,17 @@ export const esPaso = (p: unknown): p is Paso => typeof p === 'string' && Object
 /** Una clase que quedó abierta de otro día ya no lleva directo a los chicos. */
 export const HORAS_RECIENTE = 4;
 export const esReciente = (iniciadaEn: string, ahora = Date.now()) => ahora - Date.parse(iniciadaEn) < HORAS_RECIENTE * 3600 * 1000;
+
+/**
+ * La sala de una TAREA (sin clase abierta), para mirar lo que encontró la
+ * clase con la misma pantalla de la puesta en común.
+ */
+export function salaDeTarea(
+  aula: Instantanea['aula'],
+  asignacion: AsignacionClase,
+  alumnos: AlumnoClase[],
+  progresos: (Omit<ProgresoClase, 'etapa_desde'> & { etapa_desde?: string })[],
+): SalaReal {
+  const sesion: SesionFila = { id: 'tarea', asignacion_id: asignacion.id, aula_id: aula.id, estado: 'puesta', pausada: false, desbloqueos: {}, iniciada_en: '', cerrada_en: null };
+  return salaDesde({ sesion, asignacion, aula, alumnos, progresos: progresos.map((p) => ({ ...p, etapa_desde: p.etapa_desde ?? p.actualizado_en })) });
+}

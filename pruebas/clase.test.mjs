@@ -1,11 +1,13 @@
 /*
-  Pruebas de la clase en vivo sin red (src/lib/aulas/clase.ts y el
-  formulario de actividad de src/lib/aulas/tareas.ts).
+  Pruebas de la clase en vivo sin red (src/lib/aulas/clase.ts), del
+  formulario de actividad (src/lib/aulas/tareas.ts) y del cuaderno de
+  investigación (src/actividades/cuaderno.js).
   Correr con: npm run test:clase
 */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { aplicarProgreso, aplicarSesion, desbloqueosDeClase, esPaso, esReciente, fusionar, PASOS, salaDesde, ultimoCambio } from '../src/lib/aulas/clase.ts';
+import { aplicarProgreso, aplicarSesion, desbloqueosDeClase, esPaso, esReciente, fusionar, PASOS, salaDeTarea, salaDesde, ultimoCambio } from '../src/lib/aulas/clase.ts';
+import { cuadernoDe, cuadernoVacio, SECCIONES } from '../src/actividades/cuaderno.js';
 import { leerFormularioActividad } from '../src/lib/aulas/tareas.ts';
 
 const T0 = '2026-11-07T13:00:00.000Z';
@@ -115,4 +117,63 @@ test('formulario de actividad: se limpia contra lo que existe', () => {
   const otra = new FormData();
   otra.set('actividad', 'a9');
   assert.deepEqual(leerFormularioActividad(otra), { ok: false, mensaje: 'Elegí una actividad.' });
+});
+
+// ---------------------------------------------------------------------
+// Cuaderno de investigación
+// ---------------------------------------------------------------------
+test('cuaderno A1: muestras, placas, comparación y antibióticos, como frases', () => {
+  const c = cuadernoDe('a1', {
+    muestras: [{ id: 'm1', ambiente: 'antartida-suelo' }, { id: 'm2', ambiente: 'campo-vaca' }],
+    cultivos: [
+      { id: 'p1', muestra: 'm1', ambiente: 'antartida-suelo', temp: 'frio', colonias: 4, tipos: 2, contaminada: false },
+      { id: 'p2', muestra: 'm2', ambiente: 'campo-vaca', temp: 'tibio', colonias: 1, tipos: 1, contaminada: false },
+      { id: 'p3', muestra: 'm2', ambiente: 'campo-vaca', temp: 'tibio', contaminada: true },
+    ],
+    comparaciones: [{ a: 'p1', b: 'p2', mas: 'a', obs: ['colores', 'formas'] }],
+    antibioticos: [{ placa: 'p1', ambiente: 'antartida-suelo', prediccion: 'halos', resultados: [{ id: 'A', halo: 'grande', resistentes: 0 }, { id: 'B', halo: 'nada', resistentes: 1 }], masResistido: 'B' }],
+  });
+  assert.match(c.hipotesis[0], /alrededor de algunos discos no van a crecer/);
+  assert.match(c.decisiones[0], /Tomó 2 muestras: Suelo antártico y /);
+  assert.ok(c.variables.some((v) => /Temperatura de incubación: frío y tibio/.test(v)));
+  assert.ok(c.resultados.some((r) => /4 colonias de 2 tipos/.test(r)));
+  assert.ok(c.resultados.some((r) => /1 colonia de 1 tipo\./.test(r)), 'singular');
+  assert.ok(c.resultados.some((r) => /se contaminó/.test(r)));
+  assert.ok(c.resultados.some((r) => /Antibiótico B: sin halo, 1 resistente[;.]/.test(r)));
+  assert.match(c.conclusiones[0], /Creció más en suelo antártico \(frío\)\. Vio colores distintos y formas distintas\./);
+  assert.ok(c.conclusiones.some((x) => /Antibiótico B resistieron más/.test(x)));
+});
+
+test('cuaderno A2 y A3', () => {
+  const a2 = cuadernoDe('a2', { estructura: 'dengue', vistas: [], hipotesis: { cambio: 'acido', prediccion: 'cambia' }, corridas: [{ t: 37, ph: 5.5, r: 'cambia' }], cumplida: true, marcadas: ['forma'] });
+  assert.equal(a2.hipotesis[0], 'Si la ponemos en ácido, la proteína cambia de forma.');
+  assert.match(a2.variables[0], /37 °C y pH 5,5/);
+  assert.match(a2.resultados[0], /cambió de forma/);
+  assert.equal(a2.conclusiones[0], 'Su hipótesis se cumplió.');
+  const a3 = cuadernoDe('a3', { muestra: 'celulas', mision: 'mitosis', fotos: [{ a: 40, l: 'b' }, { a: 10, l: 'w' }], nFotos: 2, errores: { borrosa: 1 }, logros: [{ m: 'celulas', mi: 'mitosis', n: 1 }] });
+  assert.match(a3.hipotesis[0], /^Misión: /);
+  assert.match(a3.variables[0], /10x y 40x/);
+  assert.ok(a3.variables[1].includes('azul (adn)'));
+  assert.ok(a3.resultados.includes('Fotos para repetir: 1 borrosa.'));
+  assert.match(a3.conclusiones[0], /^Encontró: célula en mitosis/);
+});
+
+test('cuaderno: sin datos, datos raros o actividad desconocida → vacío, nunca rompe', () => {
+  for (const [act, datos] of [['a1', {}], ['a2', null], ['a3', { muestra: 'no-existe', fotos: 'x', errores: 5 }], ['a9', { algo: 1 }], ['a1', { cultivos: [{ id: 'p', temp: 'raro' }] }]]) {
+    const c = cuadernoDe(act, datos);
+    assert.deepEqual(Object.keys(c).sort(), SECCIONES.map((s) => s.id).sort());
+  }
+  assert.ok(cuadernoVacio(cuadernoDe('a1', {})));
+});
+
+test('la sala de una tarea: puesta en común para mirar, con los que hicieron algo', () => {
+  const sala = salaDeTarea(
+    { id: 'U', nombre: '5.º B', codigo: 'Q3V5' },
+    { id: 'A', actividad: 'a2', opciones: {}, desbloqueos: {}, estado: 'activa' },
+    [{ id: 'n1', numero: 1, apodo: 'Pulpo', color: null, activo: true }, { id: 'n2', numero: 2, apodo: null, color: null, activo: true }],
+    [{ alumno_id: 'n1', etapa: 'conclusion', datos: { estructura: 'dengue' }, actualizado_en: T1, completada_en: T1 }],
+  );
+  assert.equal(sala.estado, 'puesta');
+  assert.deepEqual(sala.alumnos.map((a) => a.apodo), ['Pulpo']);
+  assert.equal(sala.alumnos[0].terminada, true);
 });
