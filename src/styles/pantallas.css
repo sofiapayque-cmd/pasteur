@@ -1324,3 +1324,14 @@
   background: #fde8e4;
   color: #a12e1f;
 }
+
+/* Sala de espera con el sistema de aulas: aviso de que la clase en vivo todavía es de prueba */
+.sala__aviso {
+  max-width: 46ch;
+  margin: 0;
+  padding: 12px 16px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.75);
+  font-size: 16px;
+  line-height: 1.4;
+}

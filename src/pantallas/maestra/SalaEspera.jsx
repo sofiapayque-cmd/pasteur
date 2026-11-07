@@ -6,8 +6,15 @@ import FondoVivo from '../../components/FondoVivo';
 import { ACTIVIDADES } from '../../data/contenido';
 import { useSala, empezar, simularAlumno } from '../../sala/sala';
 import { useOrigen } from '@/hooks/navegador';
+import { aulasReales } from '@/lib/supabase/config';
 
-/* SALA DE ESPERA — pensada para proyectar en el pizarrón. */
+/*
+  SALA DE ESPERA — pensada para proyectar en el pizarrón.
+  (La plataforma ya no usa CREA: los chicos entran directo a la página.)
+  Con el sistema de aulas, esta clase en vivo todavía es la de prueba (todo en
+  esta computadora) hasta la etapa 5, parte 2: se avisa y se ofrece mandar la
+  actividad desde el aula, que sí llega a la compu de cada chico.
+*/
 export default function SalaEspera() {
   const sala = useSala();
   const navegar = useNavigate();
@@ -31,7 +38,7 @@ export default function SalaEspera() {
           {act?.numero} · {act?.nombre} · Sala
         </span>
         <p className="sala__instruccion">
-          Entrá desde <b>CREA</b> o en esta página y escribí el código:
+          Entrá a <b>{origen.replace(/^https?:\/\//, '')}/clase</b> y escribí el código:
         </p>
         <p className="sala__clave" aria-label={`Código: ${sala.codigo.split('').join(' ')}`}>
           {sala.codigo}
@@ -39,11 +46,17 @@ export default function SalaEspera() {
         <div className="sala__qr">
           <div className="sala__qr-caja">[QR]</div>
           <p>
-            Link para pegar en CREA:
+            Link para compartir con la clase:
             <br />
             <span className="sala__link">{link}</span>
           </p>
         </div>
+        {aulasReales && (
+          <p className="sala__aviso">
+            Esta clase en vivo todavía es de prueba: los chicos entran desde esta misma computadora. Para que cada uno trabaje desde su Ceibal, mandá la actividad desde{' '}
+            <b>Mis aulas → Mandar una actividad</b>.
+          </p>
+        )}
       </section>
 
       <section className="sala__lista">
