@@ -120,6 +120,59 @@
   font-size: 17px;
   line-height: 1.4;
 }
+/* Pantallas chicas (Ceibal): Moli más chico y el globo se guarda solo (ver GloboMoli.jsx) */
+.globo-moli__boton {
+  position: relative;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  pointer-events: auto;
+  border-radius: 50%;
+}
+.globo-moli__boton:focus-visible {
+  outline: 3px solid var(--nucleo);
+  outline-offset: 4px;
+}
+.globo-moli--guardado .globo-moli__boton::after {
+  content: '…';
+  position: absolute;
+  top: 0;
+  right: -4px;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--membrana);
+  color: var(--nucleo);
+  font: 700 15px/1 var(--font-sans);
+}
+@media (max-width: 1100px), (max-height: 740px) {
+  .globo-moli {
+    right: 14px;
+    bottom: 10px;
+    gap: 6px;
+  }
+  .globo-moli__texto {
+    max-width: 230px;
+    margin-bottom: 52px;
+    padding: 10px 14px;
+    font-size: 15px;
+    transition:
+      opacity 0.35s,
+      transform 0.35s;
+  }
+  .globo-moli--guardado .globo-moli__texto {
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .globo-moli__texto {
+    transition: none;
+  }
+}
 
 /* ---------- 01 Inicio ---------- */
 .inicio {
