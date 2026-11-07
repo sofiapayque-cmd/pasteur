@@ -2,6 +2,8 @@
 
 Hecha el 6/11/2026 sobre la rama `ia/asistente` (último commit 2c35eaf), antes de escribir código nuevo. Se trabaja por bloques: cada uno empieza solo cuando Sofia lo aprueba.
 
+> **Estado actualizado al 7/11:** ver la sección "Estado al 7/11" al final. Las secciones 1 a 5 describen cómo estaba todo el 6/11; varias cosas que figuran como "falta" ya están hechas.
+
 **Agregado por Sofia el 6/11, al aprobar el bloque 1:**
 - **PubMed** como fuente principal (recomendación de Eugenia: es la más conocida y la que usan). Entra en el bloque 1, así las respuestas nuevas ya salen con artículos de PubMed.
 - **Botón "Pedir acceso" en el inicio**, para que una escuela o maestra que nos encuentre pida entrar. Entra en el bloque 4, junto con invitar maestras desde el panel.
