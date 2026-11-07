@@ -50,9 +50,9 @@ La maestra entra a `/maestra/preguntar` (botón arriba a la derecha en todas sus
 
 En el tablero `/equipo/respuestas` aparece "Preguntas de las clases" (si hay): el equipo elige hasta 4 y la IA las redacta y las manda a revisión (quedan "pedidas" y unidas a su ficha), o las descarta. Al aprobar una respuesta, se agrega sola al índice del asistente (y si algo falla ahí, el asistente completa el índice la próxima vez que alguien pregunta).
 
-Necesita la **migración 17** (`20261106160000_asistente_clase.sql`): `buscar_fragmentos`, `cupos_asistente` + `usar_cupo_asistente`, `preguntas_sin_respuesta` + `anotar_pregunta_sin_respuesta`. Todas las funciones son solo del servidor (clave secreta); el equipo ve y marca las preguntas por RLS. **Pendiente de aplicar en dev** (con el OK de Sofia).
+Necesita la **migración 17** (`20261106160000_asistente_clase.sql`): `buscar_fragmentos`, `cupos_asistente` + `usar_cupo_asistente`, `preguntas_sin_respuesta` + `anotar_pregunta_sin_respuesta`. Todas las funciones son solo del servidor (clave secreta); el equipo ve y marca las preguntas por RLS. **Aplicada en dev el 6/11** con el OK de Sofia (idéntica al archivo: mismo md5). Advertencias de Supabase: solo el aviso informativo de `cupos_asistente` sin reglas, que es a propósito (solo el servidor la usa, igual que `intentos_ingreso`).
 
-Pruebas: `11-pruebas-asistente.sql` (36 OK en local) y `12-pruebas-asistente-real.sql` (las mismas, en una transacción que se deshace); `npm run test:asistente` (limpieza y decisión, 6 OK).
+Pruebas: `11-pruebas-asistente.sql` (36 OK en local) y `12-pruebas-asistente-real.sql` (las mismas, en una transacción que se deshace: **36 OK en dev el 6/11**, sin dejar datos); `npm run test:asistente` (limpieza y decisión, 6 OK).
 
 Por calibrar con datos reales: los dos umbrales de parecido.
 

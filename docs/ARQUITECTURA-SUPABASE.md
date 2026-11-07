@@ -1,6 +1,6 @@
 # Aulas persistentes con Supabase — auditoría, esquema y modelo de seguridad
 
-Etapa 2 (en curso). Rama `supabase/aulas`. **Las 7 migraciones están aplicadas solo en el proyecto de desarrollo** (`ciencia-sin-limites-dev`). Producción sigue vacía y sin tocar.
+Etapas 1 a 4 hechas y etapa 5 parte 1 (tareas) hecha, verificadas con cuentas reales en el preview de `ia/asistente` el 6/11/2026. Empezó en la rama `supabase/aulas`; desde el 5/11 se sigue en `ia/asistente`. **Las migraciones de aulas (1 a 7 y 16) están aplicadas solo en el proyecto de desarrollo** (`ciencia-sin-limites-dev`). Producción sigue vacía y sin tocar.
 
 ## 1. Auditoría (1/11/2026)
 
@@ -135,11 +135,11 @@ Más adelante, `progreso.registrar(tipo, valor)` para que cada actividad sume re
 
 | Etapa | Qué | Tus pasos |
 | --- | --- | --- |
-| **1** | **Auditoría, esquema, seguridad, migraciones probadas en local** ← esta | — |
-| 2 | Proyecto de desarrollo; aplicar migraciones ahí; ingreso de la maestra (`/maestra/entrar`, salir, recuperar contraseña) | crear el proyecto dev; clave secreta en Vercel |
-| 3 | Aulas: crear aula, cantidad de alumnos, cuentas y tarjetas imprimibles, regenerar clave ← **programada y probada con Supabase simulado; falta la prueba en el Supabase real** | probar en dev |
-| 4 | Ingreso del alumno del lado del servidor, bloqueo por intentos, prueba de 30 ingresos simultáneos | — |
-| 5 | Asignaciones y sesiones en vivo con Supabase (reemplaza la sala local de a poco) | — |
+| 1 | Auditoría, esquema, seguridad, migraciones probadas en local · hecha | — |
+| 2 | Proyecto de desarrollo; aplicar migraciones ahí; ingreso de la maestra (`/maestra/entrar`, salir, recuperar contraseña) · hecha | crear el proyecto dev; clave secreta en Vercel |
+| 3 | Aulas: crear aula, cantidad de alumnos, cuentas y tarjetas imprimibles, regenerar clave · hecha y verificada en el Supabase real | — |
+| 4 | Ingreso del alumno del lado del servidor, bloqueo por intentos, prueba de 30 ingresos simultáneos · hecha (§14) | — |
+| 5 | Asignaciones y sesiones en vivo con Supabase (reemplaza la sala local de a poco) · parte 1 hecha: tareas con avance guardado (§15); falta la parte 2, clase en vivo | — |
 | 6 | Panel de la maestra con datos reales (tablero en tiempo real, puesta en común) | — |
 | 7 | Progreso guardado y retomado desde otra computadora; resultados | — |
 | 8 | Auditoría de seguridad completa (RLS, asesor de seguridad de Supabase, claves, cabeceras) | — |
@@ -202,7 +202,7 @@ Supabase → Authentication → Users → *Add user* → *Send invitation* → t
 
 **Pantallas** (solo con `NEXT_PUBLIC_AULAS_REALES=1`): `/maestra/aulas` (Mis aulas + Nueva aula) y `/maestra/aulas/[id]` (alumnos, nueva clave, agregar, claves nuevas para el grupo, activar/desactivar, datos, archivar). Botón "Mis aulas" en la cabecera de la maestra.
 
-**Datos del aula:** nombre de la clase, año escolar (`grado`, 1° a 6°), año lectivo (`anio_lectivo`, por defecto el año actual de Uruguay) y cantidad de alumnos (1 a 40 por vez; hasta 60 números por aula).
+**Datos del aula:** nombre de la clase, año escolar (`grado`: 4°, 5° o 6°, pedido de Sofia el 6/11; la base admite 1 a 6), año lectivo (`anio_lectivo`, por defecto el año actual de Uruguay) y cantidad de alumnos (1 a 40 por vez; hasta 60 números por aula).
 
 **Cuentas de alumnos** (`src/datos/cuentas-alumnos.ts`, único lugar que usa la clave secreta):
 - Usuario `CÓDIGO-NN` (ej. `D2QN-07`); mail interno `d2qn-07@alumnos.invalid`; `app_metadata.rol = 'alumno'`.
@@ -222,9 +222,9 @@ Supabase → Authentication → Users → *Add user* → *Send invitation* → t
 - Navegador con Supabase simulado que imita las reglas: **36 OK** (crear, tarjetas, impresión, claves que no vuelven a aparecer, nueva clave, agregar, desactivar, grupo con confirmación, archivar, y 3 trampas de otra maestra cambiando ids ocultos: rechazadas, más 404 para aulas ajenas).
 - Con el interruptor apagado la web no cambia.
 
-**Falta:** prueba con el Supabase real (crear un aula de prueba en el preview y verificar en la base: cuentas, rol, que ninguna sea docente, hash de la clave). Después: ingreso de alumnos (punto 5) y laboratorio personal (punto 6).
+**Prueba con el Supabase real (hecha):** Sofia creó un aula desde el preview el 3/11 y se verificó en la base el 5/11, solo con lecturas: todas las cuentas con `rol = 'alumno'`, ninguna figura como docente, la clave solo como hash de Supabase Auth, mail interno y usuario coinciden con el código del aula, y ninguna tabla tiene columnas de claves.
 
-**Decisión pendiente:** los links de *preview* de Vercel están protegidos (piden entrar a Vercel). Sirve mientras probamos, pero maestras y niños no podrían abrirlos: para el piloto, producción o sacar la protección.
+**Protección de los previews de Vercel:** Sofia la apagó el 6/11 (Vercel Authentication) para que maestras, chicos y la validadora puedan abrir el preview de `ia/asistente`.
 
 ## 14. Etapa 4 · Ingreso de los alumnos (6/11/2026, rama `ia/asistente`)
 
@@ -249,7 +249,7 @@ Se desarrolló en `ia/asistente` (la rama que ya tiene todo configurado en Verce
 - `npm run test:ingreso`: 4 pruebas de cómo se ordena lo que escribe el chico.
 - Pantallas en 1024×600 (Ceibal), 1366×768 y celular, sin desborde; después de un error no se borra lo escrito.
 - **Aplicada en `ciencia-sin-limites-dev` el 6/11** con el OK de Sofia, idéntica al archivo (mismo md5). En dev: **29 OK · 0 FALLAS**, sin dejar nada. Asesor de seguridad: nada nuevo.
-- **Falta:** probar con una tarjeta real en el preview (aula "4 b", código SBZ4).
+- **Probado con una tarjeta real en el preview el 6/11:** el alumno `Q3V5-01` entró, eligió su apodo (una vez elegido no se puede cambiar) y llegó a su laboratorio. A los chicos no les aparece "Vista de la maestra" y no se menciona CREA.
 
 ## 15. Etapa 5, parte 1 · Tareas y avance guardado (6/11/2026, rama `ia/asistente`)
 
@@ -266,4 +266,4 @@ Sin migraciones: las tablas `asignaciones` y `progreso` y sus reglas RLS están 
 
 **Seguridad:** todo con la sesión de quien llama (RLS): la maestra solo manda y ve en SUS aulas; el alumno solo ve las tareas de SU aula (no borradores) y solo guarda SU avance en tareas abiertas. El servidor limpia opciones y habilitaciones contra las de la actividad, valida que la etapa exista y limita los datos a 60 KB.
 
-**Verificado:** tsc, ESLint, `next build` con y sin el sistema de aulas; pantallas con datos de ejemplo en compu, Ceibal (1024×600) y celular, sin desbordes. **Falta probarlo con cuentas reales en el preview.**
+**Verificado:** tsc, ESLint, `next build` con y sin el sistema de aulas; pantallas con datos de ejemplo en compu, Ceibal (1024×600) y celular, sin desbordes. **Probado con cuentas reales en el preview el 6/11:** la maestra mandó A1 al aula "4b" y el avance del alumno quedó guardado en `progreso` (etapa "explorar").
