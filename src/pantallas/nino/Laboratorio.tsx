@@ -13,7 +13,15 @@ import './cuenta.css';
   explorar las actividades y salir. Las tareas de la maestra y el avance
   guardado llegan en las etapas 5 y 7.
 */
-export default function Laboratorio({ alumno, tareas }: { alumno: Alumno; tareas: (Tarea & { avance: Avance | null })[] }) {
+export default function Laboratorio({
+  alumno,
+  tareas,
+  clase = null,
+}: {
+  alumno: Alumno;
+  tareas: (Tarea & { avance: Avance | null })[];
+  clase?: { actividad: string; estado: string } | null;
+}) {
   const aula = alumno.aula.nombre;
   const nombre = alumno.apodo ?? `número ${alumno.numero}`;
   return (
@@ -43,6 +51,23 @@ export default function Laboratorio({ alumno, tareas }: { alumno: Alumno; tareas
           <p>Este es tu laboratorio. Cuando termines, tocá Salir, sobre todo si la computadora es de la escuela.</p>
         </div>
       </section>
+
+      {/* Clase en vivo abierta por la maestra (etapa 5, parte 2) */}
+      {clase && (
+        <section className="lab__caja lab__clase" aria-labelledby="clase-titulo">
+          <span className="lab__placa" style={{ background: datosActividad(clase.actividad)?.placa }} aria-hidden="true" />
+          <div>
+            <h2 id="clase-titulo">Tu maestra abrió una clase en vivo</h2>
+            <p>
+              {datosActividad(clase.actividad)?.numero} · {datosActividad(clase.actividad)?.nombre}.{' '}
+              {clase.estado === 'esperando' ? 'Entrá y esperá a que empiece.' : 'Ya empezó: entrá ahora.'}
+            </p>
+          </div>
+          <Link className="btn btn--primario btn--grande" href="/lab/clase">
+            Entrar a la clase
+          </Link>
+        </section>
+      )}
 
       {/* El apodo se elige una sola vez: después ya no aparece (pedido de Sofia, 6/11) */}
       {!alumno.apodo && (

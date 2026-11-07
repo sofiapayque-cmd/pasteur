@@ -1,6 +1,6 @@
 'use client';
 
-import { startTransition, useActionState, useState, type FormEvent } from 'react';
+import { startTransition, useActionState, useState, type FormEvent, type ReactNode } from 'react';
 import Cabecera from '@/components/Cabecera';
 import FondoVivo from '@/components/FondoVivo';
 import CuentaDocente from '@/components/CuentaDocente';
@@ -12,16 +12,40 @@ import './aulas.css';
   /maestra/aulas/[id]/mandar · Elegir una actividad y sus opciones (las mismas
   de "Preparar la clase") y mandarla al aula. Queda abierta hasta que la
   maestra la cierre; cada chico la ve en su laboratorio.
+  Con modo="clase" es el mismo formulario para abrir una clase en vivo
+  (/maestra/aulas/[id]/en-vivo): la actividad queda también como tarea.
 */
+const TEXTOS = {
+  tarea: {
+    titulo: 'Mandar una actividad',
+    bajada: (aula: string) => `Aparece en el laboratorio de cada chico de ${aula}. Su avance se guarda solo, y vos ves cómo va cada uno.`,
+    despues: 'Lo habilito yo después (desde la tarea)',
+    boton: 'Mandar al aula',
+    enviando: 'Mandando…',
+  },
+  clase: {
+    titulo: 'Empezar una clase en vivo',
+    bajada: (aula: string) =>
+      `Los chicos de ${aula} entran con su tarjeta, cada uno desde su Ceibal, y la hacen juntos. Vos la guiás desde esta compu: los ves en el tablero, pausás para mirar el pizarrón, habilitás lo que sigue y hacen la puesta en común. Lo de cada uno queda guardado.`,
+    despues: 'Lo habilito yo durante la clase',
+    boton: 'Abrir la clase',
+    enviando: 'Abriendo…',
+  },
+};
 export default function MandarActividad({
   aula,
   cuenta,
   accion,
+  modo = 'tarea',
+  extra,
 }: {
   aula: { id: string; nombre: string };
   cuenta: string;
   accion: (previo: EstadoTareaForm, datos: FormData) => Promise<EstadoTareaForm>;
+  modo?: 'tarea' | 'clase';
+  extra?: ReactNode;
 }) {
+  const t = TEXTOS[modo];
   const [estado, mandar, mandando] = useActionState(accion, { mensaje: '' });
   const [act, setAct] = useState(ACTIVIDADES_DISPONIBLES[0]?.id ?? 'a1');
 
@@ -34,12 +58,13 @@ export default function MandarActividad({
   return (
     <main className="pantalla aulas">
       <FondoVivo semilla={9} />
-      <Cabecera volverA={`/maestra/aulas/${aula.id}`} miga={`Inicio › Mis aulas › ${aula.nombre} › Mandar una actividad`} derecha={<CuentaDocente nombre={cuenta} />} />
+      <Cabecera volverA={`/maestra/aulas/${aula.id}`} miga={`Inicio › Mis aulas › ${aula.nombre} › ${t.titulo}`} derecha={<CuentaDocente nombre={cuenta} />} />
       <form className="aulas__cuerpo" onSubmit={enviar}>
         <div>
-          <h1>Mandar una actividad</h1>
-          <p className="aulas__bajada">Aparece en el laboratorio de cada chico de {aula.nombre}. Su avance se guarda solo, y vos ves cómo va cada uno.</p>
+          <h1>{t.titulo}</h1>
+          <p className="aulas__bajada">{t.bajada(aula.nombre)}</p>
         </div>
+        {extra}
 
         <fieldset className="aulas__bloque mandar__grupo">
           <legend>Actividad</legend>
@@ -81,7 +106,7 @@ export default function MandarActividad({
               </label>
               <label className="mandar__item">
                 <input type="radio" name={`des:${d.clave}`} value="despues" />
-                Lo habilito yo después (desde la tarea)
+                {t.despues}
               </label>
             </fieldset>
           ))}
@@ -93,7 +118,7 @@ export default function MandarActividad({
         </p>
         <div>
           <button className="btn btn--primario" type="submit" disabled={mandando}>
-            {mandando ? 'Mandando…' : 'Mandar al aula'}
+            {mandando ? t.enviando : t.boton}
           </button>
         </div>
       </form>

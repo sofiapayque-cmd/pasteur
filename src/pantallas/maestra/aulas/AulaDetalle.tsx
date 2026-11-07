@@ -38,12 +38,15 @@ export default function AulaDetalle({
   aula,
   alumnos,
   tareas = [],
+  claseAbierta = null,
   cuenta,
   anioActual,
 }: {
   aula: Aula;
   alumnos: Alumno[];
   tareas?: TareaConCuentas[];
+  /** Estado de la clase en vivo abierta (o null si no hay) */
+  claseAbierta?: string | null;
   cuenta: string;
   anioActual: number;
 }) {
@@ -97,11 +100,22 @@ export default function AulaDetalle({
           <div className="aula__titulo-fila">
             <h2 id="titulo-tareas">Actividades del aula</h2>
             {!archivada && (
-              <Link className="btn btn--primario" href={`/maestra/aulas/${aula.id}/mandar`}>
-                Mandar una actividad
-              </Link>
+              <div className="aula__botones">
+                <Link className="btn btn--primario" href={`/maestra/aulas/${aula.id}/en-vivo`}>
+                  {claseAbierta ? 'Volver a la clase en vivo' : 'Empezar una clase en vivo'}
+                </Link>
+                <Link className="btn btn--secundario" href={`/maestra/aulas/${aula.id}/mandar`}>
+                  Mandar como tarea
+                </Link>
+              </div>
             )}
           </div>
+          {claseAbierta && (
+            <p className="aulas__mensaje aulas__mensaje--ok" role="status">
+              Hay una clase en vivo abierta ({claseAbierta === 'esperando' ? 'en la sala de espera' : claseAbierta === 'puesta' ? 'en la puesta en común' : 'en curso'}). Cerrala desde la clase
+              cuando terminen.
+            </p>
+          )}
           {tareas.length === 0 ? (
             <p className="aulas__vacio">Todavía no le mandaste ninguna actividad a esta aula. Cuando la mandes, aparece en el laboratorio de cada chico.</p>
           ) : (

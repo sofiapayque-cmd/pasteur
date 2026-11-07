@@ -251,3 +251,26 @@
     justify-self: start;
   }
 }
+
+/* Clase en vivo abierta (aviso arriba del laboratorio) */
+.lab__clase {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  border: 3px solid var(--coral);
+}
+.lab__clase h2 {
+  margin: 0 0 4px;
+}
+.lab__clase p {
+  margin: 0;
+}
+@media (max-width: 640px) {
+  .lab__clase {
+    grid-template-columns: 1fr;
+  }
+  .lab__clase .lab__placa {
+    display: none;
+  }
+}

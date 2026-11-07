@@ -434,3 +434,8 @@
 .tarea__barra--lista > span {
   background: #9cc23a;
 }
+.aula__botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}

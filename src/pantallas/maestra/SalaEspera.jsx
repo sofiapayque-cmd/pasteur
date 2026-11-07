@@ -4,30 +4,35 @@ import { Navigate, useNavigate } from '@/navegacion';
 import GloboMoli from '../../components/GloboMoli';
 import FondoVivo from '../../components/FondoVivo';
 import { ACTIVIDADES } from '../../data/contenido';
-import { useSala, empezar, simularAlumno } from '../../sala/sala';
+import { useClase } from '../../sala/contexto';
 import { useOrigen } from '@/hooks/navegador';
 import { aulasReales } from '@/lib/supabase/config';
 
 /*
   SALA DE ESPERA — pensada para proyectar en el pizarrón.
   (La plataforma ya no usa CREA: los chicos entran directo a la página.)
-  Con el sistema de aulas, esta clase en vivo todavía es la de prueba (todo en
-  esta computadora) hasta la etapa 5, parte 2: se avisa y se ofrece mandar la
-  actividad desde el aula, que sí llega a la compu de cada chico.
+  · Clase real (Mis aulas → Clase en vivo): cada chico entra con su tarjeta
+    desde su Ceibal y aparece acá apenas abre la clase.
+  · Prototipo (Preparar la clase): todo en esta computadora. Con el sistema de
+    aulas prendido, se avisa dónde está la clase de verdad.
 */
 export default function SalaEspera() {
-  const sala = useSala();
+  const clase = useClase();
+  const { sala, real } = clase;
   const navegar = useNavigate();
   const origen = useOrigen();
 
-  if (sala.estado === 'cerrada') return <Navigate to="/maestra" replace />;
+  if (sala.estado === 'cerrada') return real ? null : <Navigate to="/maestra" replace />;
 
   const act = ACTIVIDADES.find((a) => a.id === sala.actividad);
   const link = `${origen}/clase/${sala.codigo}`; // sin # desde la etapa 3
 
   function arrancar() {
-    empezar();
-    navegar(`/maestra/${sala.actividad}/tablero`);
+    clase.empezar();
+    if (!real) navegar(`/maestra/${sala.actividad}/tablero`);
+  }
+  function cancelar() {
+    if (window.confirm('¿Cancelar la clase? Los chicos vuelven a su laboratorio.')) clase.cerrar();
   }
 
   return (
@@ -35,34 +40,37 @@ export default function SalaEspera() {
       <FondoVivo semilla={21} opacidad={0.4} />
       <section className="sala__codigo">
         <span className="etiqueta etiqueta--oscura">
-          {act?.numero} · {act?.nombre} · Sala
+          {act?.numero} · {act?.nombre} · {real ? clase.aula?.nombre : 'Sala'}
         </span>
         <p className="sala__instruccion">
-          Entrá a <b>{origen.replace(/^https?:\/\//, '')}/clase</b> y escribí el código:
+          Entrá a <b>{origen.replace(/^https?:\/\//, '')}/clase</b> {real ? 'con tu tarjeta. El código del aula es:' : 'y escribí el código:'}
         </p>
         <p className="sala__clave" aria-label={`Código: ${sala.codigo.split('').join(' ')}`}>
           {sala.codigo}
         </p>
         <div className="sala__qr">
-          <div className="sala__qr-caja">[QR]</div>
+          {!real && <div className="sala__qr-caja">[QR]</div>}
           <p>
             Link para compartir con la clase:
             <br />
             <span className="sala__link">{link}</span>
           </p>
         </div>
-        {aulasReales && (
+        {aulasReales && !real && (
           <p className="sala__aviso">
-            Esta clase en vivo todavía es de prueba: los chicos entran desde esta misma computadora. Para que cada uno trabaje desde su Ceibal, mandá la actividad desde{' '}
-            <b>Mis aulas → Mandar una actividad</b>.
+            Esta es la clase de prueba: los chicos entran desde esta misma computadora. Para que cada uno trabaje desde su Ceibal, abrí la clase desde{' '}
+            <b>Mis aulas → tu aula → Clase en vivo</b>.
           </p>
         )}
+        {real && clase.aviso && <p className="sala__aviso">{clase.aviso}</p>}
       </section>
 
       <section className="sala__lista">
         <div className="sala__lista-cabeza">
           <h1>En la sala</h1>
-          <span className="etiqueta etiqueta--oscura">{sala.alumnos.length} conectados</span>
+          <span className="etiqueta etiqueta--oscura">
+            {sala.alumnos.length} {real ? (sala.alumnos.length === 1 ? 'entró' : 'entraron') : 'conectados'}
+          </span>
         </div>
         {sala.alumnos.length === 0 && <p className="texto-suave">Todavía no entró nadie.</p>}
         <ul className="chips">
@@ -77,12 +85,20 @@ export default function SalaEspera() {
           <button className="btn btn--experimentar btn--grande" onClick={arrancar} disabled={sala.alumnos.length === 0}>
             Empezar
           </button>
-          <button className="btn btn--secundario" onClick={() => navegar(`/maestra/${sala.actividad}/preparar`)}>
-            Volver a preparar
-          </button>
-          <button className="prototipo" onClick={simularAlumno}>
-            + Simular un alumno (solo prototipo)
-          </button>
+          {real ? (
+            <button className="btn btn--secundario" onClick={cancelar}>
+              Cancelar la clase
+            </button>
+          ) : (
+            <>
+              <button className="btn btn--secundario" onClick={() => navegar(`/maestra/${sala.actividad}/preparar`)}>
+                Volver a preparar
+              </button>
+              <button className="prototipo" onClick={clase.simularAlumno}>
+                + Simular un alumno (solo prototipo)
+              </button>
+            </>
+          )}
         </div>
       </section>
 

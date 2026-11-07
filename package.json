@@ -12,7 +12,8 @@
     "test:ciencia": "node --import ./pruebas/registrar.mjs --test --experimental-strip-types pruebas/ciencia.test.mjs",
     "test:ia": "node --import ./pruebas/registrar.mjs --test --experimental-strip-types pruebas/redaccion.test.mjs",
     "test:ingreso": "node --import ./pruebas/registrar.mjs --test --experimental-strip-types pruebas/ingreso.test.mjs",
-    "test:asistente": "node --import ./pruebas/registrar.mjs --test --experimental-strip-types pruebas/asistente.test.mjs"
+    "test:asistente": "node --import ./pruebas/registrar.mjs --test --experimental-strip-types pruebas/asistente.test.mjs",
+    "test:clase": "node --import ./pruebas/registrar.mjs --test --experimental-strip-types pruebas/clase.test.mjs"
   },
   "dependencies": {
     "@fontsource-variable/bricolage-grotesque": "^5.3.0",

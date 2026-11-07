@@ -48,3 +48,23 @@ export function limpiarOpciones(act: string, pedidas: Record<string, string[]>):
 export function limpiarDesbloqueos(act: string, pedidos: Record<string, boolean>): Record<string, boolean> {
   return Object.fromEntries(desbloqueosDe(act).map((d) => [d.clave, pedidos[d.clave] !== false]));
 }
+
+/**
+ * Lee el formulario "elegir actividad y opciones" (mandar una tarea o abrir
+ * una clase en vivo) y lo limpia contra lo que existe en la actividad.
+ */
+export function leerFormularioActividad(
+  datos: FormData,
+): { ok: true; actividad: IdActividad; opciones: Record<string, string[]>; desbloqueos: Record<string, boolean> } | { ok: false; mensaje: string } {
+  const act = String(datos.get('actividad') ?? '').trim();
+  if (!esActividadDisponible(act)) return { ok: false, mensaje: 'Elegí una actividad.' };
+  const pedidas = Object.fromEntries(opcionesDe(act).map((o) => [o.clave, datos.getAll(`op:${o.clave}`).map(String)]));
+  const opciones = limpiarOpciones(act, pedidas);
+  const vacia = opcionesDe(act).find((o) => opciones[o.clave].length === 0);
+  if (vacia) return { ok: false, mensaje: `Elegí al menos una opción en "${vacia.etiqueta}".` };
+  const desbloqueos = limpiarDesbloqueos(
+    act,
+    Object.fromEntries(desbloqueosDe(act).map((d) => [d.clave, String(datos.get(`des:${d.clave}`) ?? '').trim() !== 'despues'])),
+  );
+  return { ok: true, actividad: act, opciones, desbloqueos };
+}

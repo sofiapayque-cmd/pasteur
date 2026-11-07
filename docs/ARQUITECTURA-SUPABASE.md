@@ -139,7 +139,7 @@ Más adelante, `progreso.registrar(tipo, valor)` para que cada actividad sume re
 | 2 | Proyecto de desarrollo; aplicar migraciones ahí; ingreso de la maestra (`/maestra/entrar`, salir, recuperar contraseña) · hecha | crear el proyecto dev; clave secreta en Vercel |
 | 3 | Aulas: crear aula, cantidad de alumnos, cuentas y tarjetas imprimibles, regenerar clave · hecha y verificada en el Supabase real | — |
 | 4 | Ingreso del alumno del lado del servidor, bloqueo por intentos, prueba de 30 ingresos simultáneos · hecha (§14) | — |
-| 5 | Asignaciones y sesiones en vivo con Supabase (reemplaza la sala local de a poco) · parte 1 hecha: tareas con avance guardado (§15); falta la parte 2, clase en vivo | — |
+| 5 | Asignaciones y sesiones en vivo con Supabase · parte 1: tareas con avance guardado (§15, probada); parte 2: clase en vivo con tiempo real (§16, escrita el 7/11, falta probarla en el preview) | probar con 2 o 3 navegadores |
 | 6 | Panel de la maestra con datos reales (tablero en tiempo real, puesta en común) | — |
 | 7 | Progreso guardado y retomado desde otra computadora; resultados | — |
 | 8 | Auditoría de seguridad completa (RLS, asesor de seguridad de Supabase, claves, cabeceras) | — |
@@ -267,3 +267,42 @@ Sin migraciones: las tablas `asignaciones` y `progreso` y sus reglas RLS están 
 **Seguridad:** todo con la sesión de quien llama (RLS): la maestra solo manda y ve en SUS aulas; el alumno solo ve las tareas de SU aula (no borradores) y solo guarda SU avance en tareas abiertas. El servidor limpia opciones y habilitaciones contra las de la actividad, valida que la etapa exista y limita los datos a 60 KB.
 
 **Verificado:** tsc, ESLint, `next build` con y sin el sistema de aulas; pantallas con datos de ejemplo en compu, Ceibal (1024×600) y celular, sin desbordes. **Probado con cuentas reales en el preview el 6/11:** la maestra mandó A1 al aula "4b" y el avance del alumno quedó guardado en `progreso` (etapa "explorar").
+
+## 16. Etapa 5, parte 2 · Clase en vivo con Supabase Realtime (7/11/2026, rama `ia/asistente`)
+
+Sin migraciones: `sesiones` y `progreso` y sus reglas RLS están desde la etapa 1, y las dos tablas están en la publicación `supabase_realtime` (migración 3, verificado en dev).
+
+**Maestra** (`/maestra/aulas/[id]/en-vivo`; botón "Empezar una clase en vivo" en el aula):
+- **Abrir la clase.** Elige la actividad y sus opciones (el mismo formulario de "Mandar", y la actividad queda también como tarea) o hace en vivo una tarea que ya mandó. Se crea la `sesion` en "esperando". Hay una sola clase abierta por aula (índice único): si ya hay una, se va a esa.
+- **Mismas pantallas del prototipo.** Sala de espera, tablero y puesta en común. Un contexto (`src/sala/contexto.tsx`) les da la sala real en vez de la del navegador; sin el contexto, el prototipo sigue igual.
+  - Qué pantalla se ve depende del estado de la clase, no de la dirección: si recarga o entra desde otra compu, vuelve al mismo punto.
+- **Acciones.**
+  - Empezar, pausar y reanudar ("Mirá el pizarrón" en las Ceibal).
+  - Habilitar lo que la actividad deja para después: queda habilitado también en la tarea.
+  - Puesta en común, volver al tablero, y cerrar o cancelar.
+  - Cada una cambia la pantalla enseguida y se confirma con la base. Solo se puede pasar desde el estado que corresponde (si otra compu ya la cambió, avisa).
+- **Al cerrar.** Resumen (cuántos entraron y terminaron) y un enlace a cómo le fue a cada uno. La actividad sigue abierta como tarea.
+
+**Alumno:**
+- **Aviso en el laboratorio.** En `/lab` aparece "Tu maestra abrió una clase en vivo · Entrar a la clase". Si recién entró con su tarjeta, ya tiene apodo y la clase es de las últimas 4 horas, va directo.
+- **En la clase** (`/lab/clase`):
+  - al entrar se crea su avance, así la maestra lo ve en la sala de espera;
+  - espera con Moli hasta que la maestra empieza, y la actividad se abre sola;
+  - el avance se guarda como en las tareas;
+  - pausa y puesta en común muestran "Mirá el pizarrón", y lo habilitado llega en el momento;
+  - al cerrar, puede seguir desde su laboratorio.
+
+**Tiempo real** (`src/sala/claseEnVivo.ts`):
+- **Qué escucha cada uno.** La maestra escucha su `sesion` y el `progreso` de la actividad; cada chico, solo la `sesion` de su aula. Los canales usan la sesión de quien mira, así que las reglas RLS deciden qué llega: nadie recibe lo que no podría leer.
+- **Respaldo.** Si el tiempo real no conecta en 12 s o se corta (algunas redes de escuela cortan websockets), se pregunta cada 4 s. Con tiempo real, se pregunta igual cada 20 s por si se perdió algo, y nunca con la pestaña oculta. La maestra pide solo los avances que cambiaron desde el último.
+- **Orden.** Los avances que llegan tarde no pisan a los más nuevos (se comparan por `actualizado_en`).
+- **En pantalla.** El tablero muestra "En vivo" o "Se actualiza cada pocos segundos".
+
+**Verificado:**
+- tsc y ESLint;
+- `next build` con y sin el sistema de aulas;
+- `npm run test:clase`: 7 pruebas (sala a partir de la base, cambios fuera de orden, respaldo, pasos, formulario);
+- pantallas con datos de ejemplo (sala de espera, tablero, puesta, fin; espera, pausa y fin del chico) en compu, Ceibal y celular, sin desbordes;
+- la publicación de tiempo real en dev.
+
+**Falta la prueba real en el preview:** una maestra y 2 o 3 chicos en navegadores distintos (ver `docs/PLAN-ENTREGA.md`, bloque 2).

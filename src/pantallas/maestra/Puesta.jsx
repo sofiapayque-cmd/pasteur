@@ -7,22 +7,24 @@ import Cargando from '../../components/Cargando';
 import { ACTIVIDADES } from '../../data/contenido';
 import { INFO_ACTIVIDADES } from '../../actividades/info';
 import { PUESTAS } from '../../actividades/componentes';
-import { useSala, cerrarSala } from '../../sala/sala';
+import { useClase } from '../../sala/contexto';
 
-/* PUESTA EN COMÚN — lo que encontró toda la clase, para conversar. */
+/* PUESTA EN COMÚN — lo que encontró toda la clase, para conversar (clase real o prototipo, ver useClase). */
 export default function Puesta() {
-  const sala = useSala();
+  const clase = useClase();
+  const { sala, real } = clase;
   const navegar = useNavigate();
 
-  if (sala.estado === 'cerrada') return <Navigate to="/maestra" replace />;
+  if (sala.estado === 'cerrada') return real ? null : <Navigate to="/maestra" replace />;
 
   const act = ACTIVIDADES.find((a) => a.id === sala.actividad);
   const info = INFO_ACTIVIDADES[sala.actividad] || {};
   const Especial = PUESTAS[sala.actividad];
 
   function cerrar() {
-    cerrarSala();
-    navegar('/maestra');
+    if (real && !window.confirm('¿Cerrar la clase? Lo que hizo cada chico queda guardado.')) return;
+    clase.cerrar();
+    if (!real) navegar('/maestra');
   }
 
   return (
@@ -68,6 +70,11 @@ export default function Puesta() {
         <button className="btn btn--claro" onClick={() => window.print()}>
           Imprimir resumen de la clase
         </button>
+        {real && clase.volverAlTablero && (
+          <button className="btn btn--secundario" onClick={clase.volverAlTablero}>
+            Volver al tablero
+          </button>
+        )}
         <button className="btn btn--primario" onClick={cerrar}>
           Cerrar la clase
         </button>

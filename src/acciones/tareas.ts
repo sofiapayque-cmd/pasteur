@@ -6,15 +6,7 @@ import { crearClienteServidor } from '@/lib/supabase/servidor';
 import { exigirDocenteActiva } from '@/datos/docente';
 import { esUuid, obtenerAula } from '@/datos/aulas';
 import { obtenerAlumno } from '@/datos/alumno';
-import {
-  desbloqueosDe,
-  esActividadDisponible,
-  esEtapa,
-  esUltimaEtapa,
-  limpiarDesbloqueos,
-  limpiarOpciones,
-  opcionesDe,
-} from '@/lib/aulas/tareas';
+import { desbloqueosDe, esEtapa, esUltimaEtapa, leerFormularioActividad, limpiarDesbloqueos } from '@/lib/aulas/tareas';
 
 /*
   ACCIONES DE TAREAS (etapa 5, parte 1).
@@ -29,7 +21,6 @@ import {
 export type EstadoTareaForm = { mensaje: string; ok?: boolean };
 
 const MAX_DATOS = 60_000; // la base acepta hasta 64 KB
-const leer = (f: FormData, k: string) => String(f.get(k) ?? '').trim();
 
 async function db() {
   return (await crearClienteServidor())!;
@@ -43,17 +34,9 @@ export async function mandarActividad(aulaId: string, _previo: EstadoTareaForm, 
   const aula = await obtenerAula(aulaId); // con su sesión: si no es suya, no vuelve
   if (!aula) return { mensaje: 'No encontramos esa aula.' };
   if (aula.archivada_en) return { mensaje: 'El aula está archivada.' };
-  const act = leer(datos, 'actividad');
-  if (!esActividadDisponible(act)) return { mensaje: 'Elegí una actividad.' };
-
-  const pedidas = Object.fromEntries(opcionesDe(act).map((o) => [o.clave, datos.getAll(`op:${o.clave}`).map(String)]));
-  const opciones = limpiarOpciones(act, pedidas);
-  const vacia = opcionesDe(act).find((o) => opciones[o.clave].length === 0);
-  if (vacia) return { mensaje: `Elegí al menos una opción en "${vacia.etiqueta}".` };
-  const desbloqueos = limpiarDesbloqueos(
-    act,
-    Object.fromEntries(desbloqueosDe(act).map((d) => [d.clave, leer(datos, `des:${d.clave}`) !== 'despues'])),
-  );
+  const form = leerFormularioActividad(datos);
+  if (!form.ok) return { mensaje: form.mensaje };
+  const { actividad: act, opciones, desbloqueos } = form;
 
   const { data, error } = await (await db())
     .from('asignaciones')

@@ -5,13 +5,17 @@ import { Navigate, useNavigate } from '@/navegacion';
 import { ACTIVIDADES } from '../../data/contenido';
 import { INFO_ACTIVIDADES } from '../../actividades/info';
 import { AMBIENTES } from '../../actividades/a1/datos';
-import { useSala, alternarPausa, desbloquear, irAPuesta, simularAlumno } from '../../sala/sala';
+import { useClase } from '../../sala/contexto';
 
 const CINCO_MINUTOS = 5 * 60 * 1000;
 
-/* TABLERO EN VIVO — qué está haciendo cada niño y las acciones de la maestra. */
+/*
+  TABLERO EN VIVO — qué está haciendo cada niño y las acciones de la maestra.
+  La sala sale de useClase(): la clase real (tiempo real) o el prototipo.
+*/
 export default function Tablero() {
-  const sala = useSala();
+  const clase = useClase();
+  const { sala, real } = clase;
   const navegar = useNavigate();
   const [ahora, setAhora] = useState(Date.now());
 
@@ -21,7 +25,7 @@ export default function Tablero() {
     return () => clearInterval(t);
   }, []);
 
-  if (sala.estado === 'cerrada') return <Navigate to="/maestra" replace />;
+  if (sala.estado === 'cerrada') return real ? null : <Navigate to="/maestra" replace />;
 
   const act = ACTIVIDADES.find((a) => a.id === sala.actividad);
   const info = INFO_ACTIVIDADES[sala.actividad] || {};
@@ -32,8 +36,8 @@ export default function Tablero() {
   const trabados = sala.alumnos.filter((a) => a.etapa !== ultima && ahora - a.desde > CINCO_MINUTOS);
 
   function puesta() {
-    irAPuesta();
-    navegar(`/maestra/${sala.actividad}/puesta`);
+    clase.irAPuesta();
+    if (!real) navegar(`/maestra/${sala.actividad}/puesta`);
   }
 
   return (
@@ -42,13 +46,16 @@ export default function Tablero() {
         <div className="cabecera__izq">
           <h1 className="tablero__titulo">Tablero en vivo</h1>
           <span className="etiqueta etiqueta--oscura">
-            {act?.numero} · {act?.nombre} · Sala {sala.codigo}
+            {act?.numero} · {act?.nombre} · {real ? clase.aula?.nombre : `Sala ${sala.codigo}`}
           </span>
         </div>
-        <span className="etiqueta etiqueta--oscura tablero__vivo">
-          <i aria-hidden="true" /> En vivo · {sala.alumnos.length} conectados
+        <span className={`etiqueta etiqueta--oscura tablero__vivo ${real && clase.conexion !== 'en-vivo' ? 'tablero__vivo--respaldo' : ''}`}>
+          <i aria-hidden="true" /> {real && clase.conexion !== 'en-vivo' ? 'Se actualiza cada pocos segundos' : 'En vivo'} · {sala.alumnos.length}{' '}
+          {real ? 'en la clase' : 'conectados'}
         </span>
       </header>
+
+      {real && clase.aviso && <p className="tablero__pausa">{clase.aviso}</p>}
 
       {sala.pausada && <p className="tablero__pausa">Las Ceibal están en pausa: la clase está mirando el pizarrón.</p>}
 
@@ -100,20 +107,22 @@ export default function Tablero() {
       </section>
 
       <section className="tablero__acciones" aria-label="Acciones para la clase">
-        <button className="accion accion--pausa" onClick={alternarPausa} aria-pressed={sala.pausada}>
+        <button className="accion accion--pausa" onClick={clase.alternarPausa} aria-pressed={sala.pausada}>
           {sala.pausada ? 'Reanudar las Ceibal' : 'Pausar y mirar el pizarrón'}
         </button>
         {(info.DESBLOQUEOS || []).map((d) => (
-          <button key={d.clave} className="accion accion--habilitar" onClick={() => desbloquear(d.clave)} disabled={sala.desbloqueos?.[d.clave]}>
+          <button key={d.clave} className="accion accion--habilitar" onClick={() => clase.desbloquear(d.clave)} disabled={sala.desbloqueos?.[d.clave]}>
             {sala.desbloqueos?.[d.clave] ? `${d.etiqueta}: habilitado` : d.accion}
           </button>
         ))}
         <button className="accion accion--puesta" onClick={puesta}>
           Ir a la puesta en común
         </button>
-        <button className="prototipo" onClick={simularAlumno}>
-          + Simular un alumno (solo prototipo)
-        </button>
+        {!real && (
+          <button className="prototipo" onClick={clase.simularAlumno}>
+            + Simular un alumno (solo prototipo)
+          </button>
+        )}
       </section>
     </main>
   );

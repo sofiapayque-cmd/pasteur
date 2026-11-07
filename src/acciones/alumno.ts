@@ -67,7 +67,8 @@ export async function ingresarAlumno(_previo: EstadoIngreso, datos: FormData): P
     admin.from('intentos_ingreso').delete().eq('usuario', leido.usuario),
     admin.from('alumnos').update({ ultimo_ingreso: new Date().toISOString() }).eq('id', ingreso.id),
   ]);
-  redirect('/lab');
+  // ?recien=1: si su maestra tiene una clase en vivo abierta hoy, el laboratorio lo lleva directo
+  redirect('/lab?recien=1');
 }
 
 export async function salirAlumno(): Promise<void> {
