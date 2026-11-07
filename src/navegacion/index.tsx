@@ -40,8 +40,8 @@ export function Navigate({ to, replace = false }: { to: string; replace?: boolea
   return null;
 }
 
-/* Solo se aceptan rutas internas de la maestra: un ?desde= armado a mano no puede mandar a otro sitio. */
-const DESDE_VALIDO = /^\/maestra\/a[1-4]\/preparar$/;
+/* Solo se aceptan rutas internas de la maestra (su panel o "Preparar la clase"): un ?desde= armado a mano no puede mandar a otro sitio. */
+const DESDE_VALIDO = /^\/maestra(\/a[1-4]\/preparar)?$/;
 
 export function useDesde(): string | undefined {
   const desde = useSearchParams()?.get('desde');

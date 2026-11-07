@@ -1,6 +1,6 @@
 'use client';
 
-import { useNavigate } from '@/navegacion';
+import { conDesde, useNavigate } from '@/navegacion';
 import Cabecera from '../../components/Cabecera';
 import Moli from '../../components/Moli';
 import FondoVivo from '../../components/FondoVivo';
@@ -39,7 +39,7 @@ export default function Panel({ cuenta = null }) {
                 <button className="btn btn--primario" onClick={() => navegar(`/maestra/${a.id}/preparar`)}>
                   Preparar la clase
                 </button>
-                <button className="enlace enlace--centro" onClick={() => navegar(`/explorar/${a.id}`)}>
+                <button className="enlace enlace--centro" onClick={() => navegar(conDesde(`/explorar/${a.id}`, '/maestra'))}>
                   Probarla yo
                 </button>
               </>

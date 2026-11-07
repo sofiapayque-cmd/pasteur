@@ -26,7 +26,7 @@ export default function MarcoActividad({ actividadId, progreso, children }) {
         <div className="cabecera__izq">
           {!progreso.enClase && (
             <button className="btn btn--claro cabecera__volver" onClick={() => navegar(desde || '/explorar')}>
-              {desde ? 'Volver a preparar la clase' : 'Salir'}
+              {desde === '/maestra' ? 'Volver a mi panel' : desde ? 'Volver a preparar la clase' : 'Salir'}
             </button>
           )}
           <span className="etiqueta etiqueta--oscura">
