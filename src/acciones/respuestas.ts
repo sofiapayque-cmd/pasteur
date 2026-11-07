@@ -92,3 +92,52 @@ export async function ideasDePreguntas(_previo: EstadoIdeas, datos: FormData): P
   if (!r.preguntas.length) return { mensaje: 'No salieron ideas nuevas. Probá con otro enfoque.' };
   return { ok: true, preguntas: r.preguntas, mensaje: 'Elegí las que te sirvan y agregalas a la lista.' };
 }
+
+// ---------------------------------------------------------------------
+// Preguntas de las clases sin respuesta (las anota el asistente)
+// ---------------------------------------------------------------------
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** La IA redacta las elegidas (hasta 4) y quedan "pedidas", unidas a su ficha. */
+export async function redactarPendientes(_previo: EstadoPedido, datos: FormData): Promise<EstadoPedido> {
+  const yo = await miembroCon();
+  if (!yo) return SIN_PERMISO;
+  if (!iaConfigurada()) return { mensaje: 'Falta la clave de OpenAI en el servidor (OPENAI_API_KEY).' };
+  const admin = crearClienteAdmin();
+  if (!admin) return { mensaje: 'Falta la clave secreta de Supabase en el servidor (SUPABASE_SECRET_KEY).' };
+  const ids = [...new Set(datos.getAll('id').map(String).filter((x) => UUID.test(x)))].slice(0, POR_VEZ);
+  if (!ids.length) return { mensaje: 'Elegí al menos una pregunta.' };
+  const hoy = await pedidasHoy(yo.id);
+  if (hoy + ids.length > POR_DIA) return { mensaje: `Ya pediste ${hoy} respuestas en las últimas 24 horas (el máximo es ${POR_DIA}). Probá mañana.` };
+
+  const db = (await crearClienteServidor())!;
+  const { data: filas } = await db.from('preguntas_sin_respuesta').select('id, texto, actividad').in('id', ids).eq('estado', 'pendiente');
+  if (!filas?.length) return { mensaje: 'Esas preguntas ya no están pendientes.' };
+  console.info(`[ia] ${yo.id} pidió ${filas.length} respuesta(s) de preguntas de clases`);
+  type Fila = { id: string; texto: string; actividad: string | null };
+  const resultados = await deADos<Fila, Resultado>(filas as Fila[], async (f) => {
+    try {
+      const r = await responderPregunta({ db, admin, actorId: yo.id, actividad: f.actividad }, f.texto);
+      if (r.fichaId) await db.from('preguntas_sin_respuesta').update({ estado: 'pedida', ficha_id: r.fichaId }).eq('id', f.id);
+      return r;
+    } catch (e) {
+      console.error('[ia] error inesperado:', e instanceof Error ? e.message : e);
+      return { pregunta: f.texto, ok: false, mensaje: 'Algo falló sin aviso. Probá de nuevo con esta pregunta.' } satisfies Resultado;
+    }
+  });
+  refresh();
+  const listas = resultados.filter((r) => r.enRevision).length;
+  return {
+    ok: listas > 0,
+    resultados,
+    mensaje: listas === resultados.length ? 'Listo: están esperando revisión.' : `${listas} de ${resultados.length} quedaron esperando revisión. Abajo está qué pasó con cada una.`,
+  };
+}
+
+export async function descartarPregunta(id: string): Promise<void> {
+  const yo = await miembroCon();
+  if (!yo || !UUID.test(id)) return;
+  const db = (await crearClienteServidor())!;
+  await db.from('preguntas_sin_respuesta').update({ estado: 'descartada' }).eq('id', id);
+  refresh();
+}

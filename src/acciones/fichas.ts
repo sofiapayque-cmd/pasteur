@@ -1,6 +1,8 @@
 'use server';
 
 import { redirect } from 'next/navigation';
+import { crearClienteAdmin } from '@/lib/supabase/admin';
+import { indexarVersion } from '@/lib/ia/indice';
 import { refresh } from 'next/cache';
 import { crearClienteServidor } from '@/lib/supabase/servidor';
 import { miembroCon } from '@/datos/equipo';
@@ -273,6 +275,11 @@ export async function revisarVersion(versionId: string, _p: Estado, datos: FormD
   if (error) return { mensaje: mensajeDeError(error) };
 
   const { data: v } = await db.from('ficha_versiones').select('ficha_id, asistida_por_ia').eq('id', versionId).maybeSingle();
+  // Aprobada: entra al índice del asistente (si falla, el asistente la completa la próxima vez que busque)
+  if (decision === 'aprobar') {
+    const admin = crearClienteAdmin();
+    if (admin) await indexarVersion(admin, versionId).catch((e) => console.error('[ia] índice al aprobar:', e instanceof Error ? e.message : e));
+  }
   // Una respuesta de la IA rechazada: sus artículos que nadie más cita salen de la fila de revisión
   if (decision === 'rechazar' && v?.asistida_por_ia) await devolverArticulosSueltos(versionId);
   const volver = leer(datos, 'volver');

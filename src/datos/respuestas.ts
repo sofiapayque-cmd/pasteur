@@ -151,3 +151,17 @@ export async function pedidasHoy(autorId: string): Promise<number> {
     .gte('creada_en', new Date(Date.now() - 24 * 3600 * 1000).toISOString());
   return count ?? 0;
 }
+
+/** Preguntas de las clases que el asistente no pudo responder (las ve el equipo, RLS). */
+export type PreguntaSinRespuesta = { id: string; texto: string; actividad: string | null; veces: number; ultima_vez: string };
+export async function listarPreguntasSinRespuesta(): Promise<PreguntaSinRespuesta[]> {
+  const db = (await crearClienteServidor())!;
+  const { data } = await db
+    .from('preguntas_sin_respuesta')
+    .select('id, texto, actividad, veces, ultima_vez')
+    .eq('estado', 'pendiente')
+    .order('veces', { ascending: false })
+    .order('ultima_vez', { ascending: false })
+    .limit(50);
+  return (data ?? []) as PreguntaSinRespuesta[];
+}

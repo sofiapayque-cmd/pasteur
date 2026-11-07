@@ -95,3 +95,50 @@ export async function pedirJson<T>(p: Pedido): Promise<RespuestaIA<T>> {
     return { ok: false, error: 'OpenAI devolvió un JSON roto' };
   }
 }
+
+// ---------------------------------------------------------------------
+// Embeddings y moderación (asistente para la clase)
+// ---------------------------------------------------------------------
+export const MODELO_EMBEDDINGS = process.env.OPENAI_MODELO_EMBEDDINGS || 'text-embedding-3-small'; // 1536 números, como la columna
+const MODELO_MODERACION = 'omni-moderation-latest'; // gratis
+
+async function postOpenAI(ruta: string, cuerpo: unknown, segundos = 20): Promise<unknown | null> {
+  const clave = process.env.OPENAI_API_KEY;
+  if (!clave) return null;
+  try {
+    const r = await fetch(`https://api.openai.com/v1/${ruta}`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${clave}`, 'Content-Type': 'application/json' },
+      cache: 'no-store',
+      signal: AbortSignal.timeout(segundos * 1000),
+      body: JSON.stringify(cuerpo),
+    });
+    if (!r.ok) {
+      console.error(`[ia] OpenAI ${ruta}:`, r.status);
+      return null;
+    }
+    return await r.json();
+  } catch (e) {
+    console.error(`[ia] OpenAI ${ruta}:`, e instanceof Error ? e.name : 'error');
+    return null;
+  }
+}
+
+/** Un vector de 1536 números por texto (mismo orden), o null si OpenAI no contestó. */
+export async function embeber(textos: string[]): Promise<number[][] | null> {
+  if (!textos.length) return [];
+  const r = (await postOpenAI('embeddings', { model: MODELO_EMBEDDINGS, input: textos.map((t) => t.slice(0, 4000)) })) as {
+    data?: { index: number; embedding: number[] }[];
+  } | null;
+  const datos = r?.data;
+  if (!Array.isArray(datos) || datos.length !== textos.length) return null;
+  const ordenados = [...datos].sort((a, b) => a.index - b.index).map((d) => d.embedding);
+  return ordenados.every((v) => Array.isArray(v) && v.length === 1536) ? ordenados : null;
+}
+
+/** ¿El texto toca algo delicado (lastimarse, abuso, violencia…)? null si no se pudo saber. */
+export async function moderar(texto: string): Promise<{ marcada: boolean } | null> {
+  const r = (await postOpenAI('moderations', { model: MODELO_MODERACION, input: texto }, 10)) as { results?: { flagged?: boolean }[] } | null;
+  const primero = r?.results?.[0];
+  return primero ? { marcada: Boolean(primero.flagged) } : null;
+}

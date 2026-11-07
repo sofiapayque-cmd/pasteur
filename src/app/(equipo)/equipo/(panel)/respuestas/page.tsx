@@ -1,10 +1,11 @@
 import Link from 'next/link';
 import { exigirMiembro } from '@/datos/equipo';
 import { nombresDelEquipo } from '@/datos/fichas';
-import { listarRespuestas, NOMBRE_GRUPO, type Grupo } from '@/datos/respuestas';
+import { listarPreguntasSinRespuesta, listarRespuestas, NOMBRE_GRUPO, type Grupo } from '@/datos/respuestas';
 import { iaConfigurada } from '@/lib/ia/openai';
 import { ACTIVIDADES } from '@/lib/equipo/comun';
 import PedirRespuestas from '@/pantallas/equipo/PedirRespuestas';
+import PreguntasDeClases from '@/pantallas/equipo/PreguntasDeClases';
 import Tarjeta from '@/pantallas/equipo/TarjetaRespuesta';
 
 /*
@@ -22,7 +23,7 @@ const DECISION: Record<string, string> = { aprobar: 'aprobaste', pedir_cambios: 
 export default async function Page({ searchParams }: { searchParams: Promise<{ ver?: string; actividad?: string; origen?: string; revisada?: string }> }) {
   const yo = await exigirMiembro();
   const sp = await searchParams;
-  const [todas, nombres] = await Promise.all([listarRespuestas(), nombresDelEquipo()]);
+  const [todas, nombres, deClases] = await Promise.all([listarRespuestas(), nombresDelEquipo(), listarPreguntasSinRespuesta().catch(() => [])]);
   const validadora = yo.rol === 'validador';
 
   const cuenta = (g: Grupo) => todas.filter((r) => r.grupo === g).length;
@@ -44,7 +45,10 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ v
     return q ? `/equipo/respuestas?${q}` : '/equipo/respuestas';
   };
   const pedir = iaConfigurada() ? (
-    <PedirRespuestas />
+    <>
+      {deClases.length > 0 && <PreguntasDeClases preguntas={deClases} />}
+      <PedirRespuestas />
+    </>
   ) : (
     <p className="eq-caja eq-caja--aviso">Para pedir respuestas a la IA falta cargar la clave de OpenAI en el servidor (OPENAI_API_KEY).</p>
   );

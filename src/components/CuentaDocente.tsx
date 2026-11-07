@@ -3,10 +3,13 @@
 import Link from 'next/link';
 import { salir } from '@/acciones/maestra';
 
-/* Arriba a la derecha de las pantallas de la maestra: sus aulas, quién entró y el botón para salir. */
+/* Arriba a la derecha de las pantallas de la maestra: el asistente, sus aulas, quién entró y el botón para salir. */
 export default function CuentaDocente({ nombre }: { nombre: string }) {
   return (
     <form action={salir} className="cuenta-docente">
+      <Link className="btn btn--claro cuenta-docente__aulas" href="/maestra/preguntar">
+        Preguntale al Pasteur
+      </Link>
       <Link className="btn btn--secundario cuenta-docente__aulas" href="/maestra/aulas">
         Mis aulas
       </Link>
