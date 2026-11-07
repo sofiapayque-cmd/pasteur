@@ -210,6 +210,7 @@ export default function Microscopio({ progreso, muestra, mision, vivo }) {
 
   return (
     <section className="a3-micro">
+      <h1 className="solo-lector">Microscopio: {muestra.nombre}</h1>
       {/* Izquierda: caso, objetivos y luces */}
       <aside className="a3-micro__lado">
         <TarjetaCaso mision={mision} pistas={pistas} onPista={otraPista} />
