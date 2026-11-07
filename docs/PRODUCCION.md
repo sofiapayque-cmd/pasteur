@@ -19,7 +19,7 @@ Escrita el 7/11/2026 y actualizada el mismo día con las decisiones de Sofia.
 | 3 · Configurar el ingreso en Supabase | Sofia | Pendiente |
 | 4 · Variables de Vercel | Sofia | Pendiente |
 | 5 · Llevar la rama a `main` | Claude prepara, Sofia aprueba | Pendiente |
-| 6 · Dominio | Sofia | **En curso (7/11):** registrado en HostingMontevideo, agregado en Vercel, DNS pasados a Vercel. Falta que propague |
+| 6 · Dominio | Sofia | **Hecho:** registrado el 2/11 en HostingMontevideo, DNS en Vercel, certificado SSL emitido. Falta solo publicar la versión nueva (paso 5) |
 | 7 · Primeras cuentas | Claude + Sofia | Pendiente |
 | 8 · Prueba completa | Sofia + Claude | Pendiente |
 
@@ -117,7 +117,8 @@ El dominio está registrado en **HostingMontevideo** (clientes.hostingmontevideo
 
 1. Vercel → Settings → Domains → agregar `cienciasinlimites.uy`. Vercel suma `www.cienciasinlimites.uy` como **dirección principal** y el dominio sin `www` redirige ahí (308). Así quedó el 7/11: funciona igual escribiendo cualquiera de las dos.
 2. En HostingMontevideo → Servidores de nombres → personalizados: `ns1.vercel-dns.com` y `ns2.vercel-dns.com`. Con eso, **todos** los registros del dominio (web y mail) se manejan desde Vercel → Domains.
-3. Esperar **Valid Configuration** (hasta 24 horas).
+3. Esperar **Valid Configuration** (hasta 24 horas). Comprobado el 7/11: los dos nombres apuntan a Vercel y los DNS del dominio son los de Vercel.
+   - Ojo al comprobar: algunos servidores de `.uy` están atrasados y por un rato pueden decir que el dominio "no existe" aunque ya funcione.
 4. En Supabase de producción, *Site URL*: `https://www.cienciasinlimites.uy` (paso 3.2).
 
 Mientras no se pase la rama a `main` (paso 5), Vercel muestra "No Deployment": la última publicación de la versión vieja de `main` falló. Se resuelve sola con el paso 5.
