@@ -13,7 +13,8 @@ import './aulas.css';
 
 /* /maestra/aulas · Mis aulas: la lista y el formulario para crear una nueva. */
 
-const GRADOS = [1, 2, 3, 4, 5, 6];
+// La plataforma es para chicos de 10 a 12 años: 4°, 5° y 6° de escuela (decidido por Sofia el 6/11)
+const GRADOS = [4, 5, 6];
 
 export function CamposAula({ valores, anioActual }: { valores?: Record<string, string>; anioActual: number }) {
   return (

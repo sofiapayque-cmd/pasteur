@@ -18,7 +18,8 @@ export type VersionEditable = {
   nota_interna: string;
 };
 
-const GRADOS = [1, 2, 3, 4, 5, 6];
+// Chicos de 10 a 12 años: 4°, 5° y 6° (la base acepta de 1° a 6°)
+const GRADOS = [4, 5, 6];
 
 export default function EditorVersion({ v, formato, enRevision }: { v: VersionEditable; formato: Formato; enRevision: boolean }) {
   return (

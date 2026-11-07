@@ -68,7 +68,7 @@ export async function guardarVersion(versionId: string, _previo: Estado, datos: 
   if (variantes.some((v) => v.length > 300)) return { mensaje: 'Cada forma de preguntar puede tener hasta 300 letras.' };
   const gradoMin = Number(leer(datos, 'grado_min'));
   const gradoMax = Number(leer(datos, 'grado_max'));
-  if (![gradoMin, gradoMax].every((g) => Number.isInteger(g) && g >= 1 && g <= 6) || gradoMin > gradoMax) return { mensaje: 'Revisá los años escolares (de 1° a 6°).' };
+  if (![gradoMin, gradoMax].every((g) => Number.isInteger(g) && g >= 4 && g <= 6) || gradoMin > gradoMax) return { mensaje: 'Revisá los años escolares (de 4° a 6°).' };
 
   const cambios = {
     pregunta: texto(datos, 'pregunta', 300),

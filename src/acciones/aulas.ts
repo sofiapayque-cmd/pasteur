@@ -44,7 +44,8 @@ function datosDelAula(f: FormData) {
   const grado = gradoTexto === '' ? null : Number(gradoTexto);
   const anio = anioTexto === '' ? anioActual() : Number(anioTexto);
   if (nombre.length < 1 || nombre.length > 80) return { error: 'Poné un nombre para la clase (hasta 80 letras), por ejemplo "4° B".' };
-  if (grado !== null && !(Number.isInteger(grado) && grado >= 1 && grado <= 6)) return { error: 'El año escolar va de 1° a 6°.' };
+  // 4°, 5° o 6°: la plataforma es para chicos de 10 a 12 años (la base acepta de 1° a 6°)
+  if (grado !== null && !(Number.isInteger(grado) && grado >= 4 && grado <= 6)) return { error: 'El año escolar puede ser 4°, 5° o 6°.' };
   if (!(Number.isInteger(anio) && anio >= 2024 && anio <= 2100)) return { error: 'Revisá el año lectivo.' };
   return { nombre, grado, anio };
 }
