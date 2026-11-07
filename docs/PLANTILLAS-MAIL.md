@@ -52,6 +52,6 @@ Si algún día se usan, sus links tienen que ir también a `/auth/confirmar?toke
 ## Cómo probar
 
 1. En Supabase de producción: Authentication → Users → **Invite user**, con un mail propio.
-2. Tiene que llegar desde `no-responder@cienciasinlimites.uy`, en español y con el botón.
+2. Tiene que llegar desde `no-responder@mail.cienciasinlimites.uy`, en español y con el botón.
 3. Tocarlo → página "¡Te damos la bienvenida!" → **Entrar** → elegir contraseña.
 4. Desde `/maestra/recuperar`, pedir el link de contraseña nueva y repetir.

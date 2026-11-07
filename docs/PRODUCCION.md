@@ -14,7 +14,7 @@ Escrita el 7/11/2026 y actualizada el mismo día con las decisiones de Sofia.
 
 | Paso | Quién | Estado |
 | --- | --- | --- |
-| 1 · Mail propio (Resend + DNS) | Sofia | Pendiente |
+| 1 · Mail propio (Resend + DNS) | Sofia | **Hecho el 2/11:** `mail.cienciasinlimites.uy` verificado en Resend |
 | 2 · Base de producción | Claude | **Hecho el 7/11** |
 | 3 · Configurar el ingreso en Supabase | Sofia | Pendiente |
 | 4 · Variables de Vercel | Sofia | Pendiente |
@@ -40,14 +40,12 @@ Escrita el 7/11/2026 y actualizada el mismo día con las decisiones de Sofia.
 
 ---
 
-## Paso 1 · Mail propio con Resend (Sofia, 20 min + espera del DNS)
+## Paso 1 · Mail propio con Resend (hecho por Sofia el 2/11)
 
-Conviene hacerlo primero, porque el DNS puede tardar horas.
-
-1. Crear la cuenta en Resend y agregar el dominio `cienciasinlimites.uy`.
-2. Cargar en el panel del dominio los registros DNS que muestra Resend.
-3. Esperar a que diga **Verified**.
-4. Crear una clave de API de Resend. **No pegarla en el chat**: va solo en Supabase (paso 3).
+- En Resend está el subdominio **`mail.cienciasinlimites.uy`**, verificado. Los mails salen desde ahí (por ejemplo `no-responder@mail.cienciasinlimites.uy`). Es lo que recomiendan Resend y Supabase: un subdominio solo para mails automáticos cuida la reputación del dominio principal.
+- Sus registros están en Vercel → Domains → `cienciasinlimites.uy` (`send.mail`, `_dmarc` y los de la firma). No hay que tocarlos.
+- El plan gratis de Resend admite un solo dominio: es este.
+- Falta solo la clave para Supabase (paso 3.3).
 
 ## Paso 2 · Base de producción (hecho por Claude el 7/11)
 
@@ -68,10 +66,20 @@ En el panel del proyecto **`ciencia-sin-limites-produccion`** (mirar el nombre a
 2. **Authentication → URL Configuration:**
    - *Site URL*: `https://www.cienciasinlimites.uy` (la dirección principal en Vercel). Hasta que el dominio funcione, la dirección de Production de Vercel.
    - *Redirect URLs*: `https://cienciasinlimites.uy/**` y `https://www.cienciasinlimites.uy/**`.
-3. **Authentication → SMTP (custom):**
-   - los datos que muestra Resend en su pantalla de SMTP;
-   - como contraseña, la clave de Resend;
-   - remitente: `no-responder@cienciasinlimites.uy`, nombre "La ciencia sin límites".
+3. **Mail propio (SMTP).** Primero, en Resend → **API keys** → *Create API key*: nombre `supabase-produccion`, permiso **Sending access**, dominio `mail.cienciasinlimites.uy`. Se muestra una sola vez: va directo a Supabase, **no al chat**.
+
+   Después, en Supabase → Authentication → **SMTP Settings** (`supabase.com/dashboard/project/qgijjbgfuqyylrsiyzps/auth/smtp`) → *Enable custom SMTP*:
+
+   | Campo | Valor |
+   | --- | --- |
+   | Sender email | `no-responder@mail.cienciasinlimites.uy` |
+   | Sender name | `La ciencia sin límites` |
+   | Host | `smtp.resend.com` |
+   | Port | `465` |
+   | Username | `resend` |
+   | Password | la clave de Resend recién creada |
+
+   Con SMTP propio, Supabase deja mandar 30 mails por hora: alcanza para el piloto. Se cambia en Authentication → Rate Limits.
 4. **Authentication → Emails → Templates:** pegar las de `docs/PLANTILLAS-MAIL.md` (invitación y contraseña nueva). Los links ya llevan a la página con el botón **Entrar**.
 5. **Project Settings → API Keys:** copiar la *publishable key* (pública) y la *secret key*. La secret va **solo** en Vercel, marcada Sensitive.
 
