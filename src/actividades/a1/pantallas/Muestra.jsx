@@ -25,7 +25,8 @@ const MAL_INSTRUMENTO = {
   },
 };
 
-export const colorMuestra = (amb) => (amb.tipo === 'animal' ? (amb.paisaje === 'antartida' ? '#D9A3A8' : '#6E5238') : amb.paisaje === 'antartida' ? '#5E6B85' : '#6E5238');
+// Color de la muestra en el instrumento y en el tubo: el mismo que en el primer plano
+export const colorMuestra = (amb) => (amb.tipo === 'animal' ? (amb.paisaje === 'antartida' ? '#D58B95' : '#5A4A2E') : amb.paisaje === 'antartida' ? '#6E675B' : '#4E3B2B');
 
 function Dibujo({ id, cargado, color }) {
   if (id === 'espatula') return <Espatula alto={150} cargado={cargado} color={color} />;

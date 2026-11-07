@@ -211,4 +211,5 @@ En paralelo, sin código:
 | 4 · Pedir acceso, invitar, preguntas en actividades, historial, borrar apodo | Hecho (ver `ARQUITECTURA-SUPABASE.md` §18) | Migración 20 aplicada en dev; base en local y en dev (31 y 31), unitarias, pantallas | Pedir acceso de prueba e invitar desde `/equipo/maestras`. |
 | 5 · Prueba piloto | — | — | Necesita una maestra y chicos reales. |
 | 6 · Revisar las experiencias | Propuesta escrita (`docs/REVISION-EXPERIENCIAS.md`) | — | Decide Sofia. |
+| 7 · Calidad visual (opción A, A1) | Placas y muestras hechas (ver `REVISION-EXPERIENCIAS.md` §8) | Pruebas automáticas, pantallas y fluidez | Que Sofia lo mire; validar la firma de cada ambiente. |
 | 8 · Producción | Guía paso a paso (`docs/PRODUCCION.md`) | — | No se ejecutó nada: necesita la autorización de Sofia. |

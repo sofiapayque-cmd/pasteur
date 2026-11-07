@@ -4,6 +4,7 @@ import { ambientePorId } from '../datos';
 import { temperaturaPorId } from '../laboratorio';
 import { Cabeza, AvisoCapa } from '../piezas/comunes';
 import Placa from '../piezas/Placa';
+import { firma } from '../colonias';
 
 const OBSERVACIONES = [
   { id: 'colores', nombre: 'Colores distintos' },
@@ -27,7 +28,12 @@ function comentario(a, b) {
   if (a.ambiente === b.ambiente && a.temp !== b.temp)
     partes.push(`Las dos son de ${ambA.nombre.toLowerCase()}: lo único que cambió fue la temperatura. Por eso podemos decir que la temperatura cambió lo que creció.`);
   else if (a.ambiente !== b.ambiente && a.temp === b.temp)
-    partes.push(`Misma temperatura, distinto lugar: en ${ambA.nombre.toLowerCase()} y en ${ambB.nombre.toLowerCase()} viven microorganismos distintos.`);
+    partes.push(
+      `Misma temperatura, distinto lugar: en ${ambA.nombre.toLowerCase()} y en ${ambB.nombre.toLowerCase()} viven microorganismos distintos.`,
+      firma(a.ambiente)[0].id === firma(b.ambiente)[0].id
+        ? `Mirá las colonias: en los dos lugares la más común es ${firma(a.ambiente)[0].nombre}. Fijate si aparece alguna distinta.`
+        : `Mirá las colonias: en ${ambA.nombre.toLowerCase()} la más común es ${firma(a.ambiente)[0].nombre}; en ${ambB.nombre.toLowerCase()}, ${firma(b.ambiente)[0].nombre}.`,
+    );
   else if (a.ambiente !== b.ambiente)
     partes.push('Cambiaron dos cosas a la vez: el lugar y la temperatura. Para saber cuál causó la diferencia, los científicos cambian una sola cosa por vez.');
   else partes.push('Mismo lugar y misma temperatura: por eso se parecen. ¡Repetir un experimento también es ciencia!');

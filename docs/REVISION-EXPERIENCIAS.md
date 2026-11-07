@@ -142,3 +142,45 @@ El documento de continuación pide React Three Fiber, GSAP, modelos GLB, Blender
 2. OK o no a la propuesta de pantallas compactas de la sección 4.
 3. Mirar el cambio de Moli en una pantalla chica (sección 2.1). Si no convence, se vuelve atrás con un solo commit.
 4. Pedirle al Instituto imágenes de microscopía (para C) y quién valida A1 y A2.
+
+## 8. Bloque 7 · Opción A: placas y muestras de A1 (elegida por Sofia el 7/11)
+
+### Hecho
+
+- **Placas** (`src/actividades/a1/colonias.js` y `piezas/Placa.jsx`):
+  - el agar es un gel ámbar translúcido, con su borde contra el vidrio;
+  - cada colonia tiene forma, borde, relieve, sombra y brillo o arrugas según su tipo;
+  - las colonias crecen más a la temperatura que les gusta.
+- **La firma de cada ambiente** (tres tipos de colonia; el primero es el más común):
+
+  | Ambiente | Tipos de colonia |
+  | --- | --- |
+  | Suelo antártico | anaranjadas y amarillas brillantes, y chiquitas transparentes |
+  | Pingüino | cremosas y lisas, chiquitas grisáceas, mucosas |
+  | Campo natural | grandes, secas y arrugadas; "como de tiza", con pigmento marrón; amarillas mate |
+  | Vaca | cremosas y lisas, chiquitas grisáceas, grandes y arrugadas |
+
+  Las fuentes están en el archivo. Para el campo natural se usa el estudio del propio Instituto (pastizales con *Bacillus* y *Streptomyces*). Son **tipos de colonia, no especies**, y todo está marcado `VALIDAR`.
+- **Antibióticos:** el césped de bacterias es una capa pareja y mate del color del ambiente. Los halos tienen el borde nítido, y las colonias resistentes se dibujan igual que las demás.
+- **Muestras:** los cuatro primeros planos, con colores naturales:
+  - **Suelo antártico:** grava con escarcha, líquenes anaranjados y negros, musgo.
+  - **Pingüino:** caca rosada por el krill y un nido de piedritas.
+  - **Campo:** tierra oscura con grumos, raíces y una lombriz.
+  - **Vaca:** bosta con costra y fibras, y un escarabajo estercolero.
+  - El color de cada muestra en el tubo coincide con su primer plano.
+- **Comparar:** al comparar dos lugares a la misma temperatura, el comentario final dice cuál es la colonia más común de cada uno.
+
+### Probado
+
+- **Placas guardadas:** quedan con las colonias en el mismo lugar que antes. Una prueba lo compara con la versión anterior y detecta si se rompe.
+- **Pruebas automáticas:** `npm run test:placas` (8).
+- **Pantallas:** muestra (los 4 ambientes), mesa, comparar y cuaderno, a 1366×768 y 1024×600, sin errores.
+- **Fluidez** con el procesador frenado 6 veces, como una Ceibal:
+  - una placa grande creciendo va a 60 cuadros por segundo, igual que antes;
+  - 30 placas chicas creciendo a la vez van a 17 contra 22 de antes, pero en la actividad eso no pasa (la puesta en común las muestra quietas).
+
+### Falta
+
+- **Que Sofia lo mire.**
+- **Validar la firma de cada ambiente con Genómica Microbiana.**
+- **Fuera de la opción A, sin tocar:** el descenso de paisaje a microscopio (`Niveles.jsx`) y la mesa del laboratorio. Si Sofia quiere, son el paso siguiente.
