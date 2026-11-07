@@ -198,3 +198,15 @@ En paralelo, sin código:
 - La tabla de resultados queda guardada en `docs/`.
 
 **Estimado:** 1,5 jornadas, más el tiempo de revisión de Eugenia.
+
+## Estado al 7/11 (trabajo de la noche del 6 al 7)
+
+| Bloque | Código | Probado | Falta |
+| --- | --- | --- | --- |
+| 1 · Preguntale al Pasteur + PubMed | Hecho (commits 71bdd08, 11f5094, 81876ec) | Base en dev (32 pruebas), unitarias, pantallas | Pedirle a la IA las respuestas de A3 que faltan, que Eugenia las apruebe y correr la prueba en `/equipo/asistente`. Que Sofia lo pruebe con su cuenta. |
+| 2 · Clase en vivo con Realtime | Hecho (afc44d5) | Unitarias, pantallas con datos de ejemplo, publicación de tiempo real en dev | Prueba real: una maestra y 2 o 3 chicos en navegadores distintos. |
+| 3 · Cuaderno + lo que encontró la clase | Hecho (8eeb062) | Unitarias, pantallas | Mirarlo con una tarea real hecha por chicos. |
+| 4 · Pedir acceso, invitar, preguntas en actividades, historial, borrar apodo | Hecho (ver `ARQUITECTURA-SUPABASE.md` §18) | Migración 20 aplicada en dev; base en local y en dev (31 y 31), unitarias, pantallas | Pedir acceso de prueba e invitar desde `/equipo/maestras`. |
+| 5 · Prueba piloto | — | — | Necesita una maestra y chicos reales. |
+| 6 · Revisar las experiencias | Propuesta escrita (`docs/REVISION-EXPERIENCIAS.md`) | — | Decide Sofia. |
+| 8 · Producción | Guía paso a paso (`docs/PRODUCCION.md`) | — | No se ejecutó nada: necesita la autorización de Sofia. |

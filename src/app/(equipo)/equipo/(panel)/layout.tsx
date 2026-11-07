@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { exigirMiembro, nombreDe } from '@/datos/equipo';
 import { crearClienteServidor } from '@/lib/supabase/servidor';
 import Barra from '@/pantallas/equipo/Barra';
+import { solicitudesPendientes } from '@/datos/solicitudes';
 import '@/pantallas/equipo/equipo.css';
 
 export const metadata: Metadata = { title: 'Panel del equipo · La ciencia sin límites', robots: { index: false, follow: false } };
@@ -16,6 +17,7 @@ export default async function LayoutEquipo({ children }: { children: ReactNode }
   const yo = await exigirMiembro();
   let pendientes = 0;
   let respuestas = 0;
+  const solicitudes = yo.rol === 'admin' ? await solicitudesPendientes().catch(() => 0) : 0;
   if (yo.rol === 'validador') {
     const db = await crearClienteServidor();
     const [v, p] = await Promise.all([
@@ -27,7 +29,7 @@ export default async function LayoutEquipo({ children }: { children: ReactNode }
   }
   return (
     <div className="eq">
-      <Barra nombre={nombreDe(yo)} rol={yo.rol} pendientes={pendientes} respuestas={respuestas} />
+      <Barra nombre={nombreDe(yo)} rol={yo.rol} pendientes={pendientes} respuestas={respuestas} solicitudes={solicitudes} />
       {children}
     </div>
   );

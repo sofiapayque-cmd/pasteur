@@ -165,3 +165,25 @@ export async function listarPreguntasSinRespuesta(): Promise<PreguntaSinRespuest
     .limit(50);
   return (data ?? []) as PreguntaSinRespuesta[];
 }
+
+/** Las respuestas aprobadas que más se mostraron en los últimos días (historial anónimo, migración 20). */
+export type MasVista = { fichaId: string; pregunta: string; asistente: number; actividad: number };
+export async function masVistas(dias = 30, cuantas = 8): Promise<MasVista[]> {
+  const db = (await crearClienteServidor())!;
+  const desde = new Date(Date.now() - dias * 86400_000).toISOString().slice(0, 10);
+  const { data, error } = await db.from('vistas_respuestas').select('ficha_id, origen, veces').gte('dia', desde).limit(5000);
+  if (error || !data?.length) return [];
+  const suma = new Map<string, { asistente: number; actividad: number }>();
+  for (const v of data as { ficha_id: string; origen: 'asistente' | 'actividad'; veces: number }[]) {
+    const s = suma.get(v.ficha_id) ?? { asistente: 0, actividad: 0 };
+    s[v.origen] += v.veces;
+    suma.set(v.ficha_id, s);
+  }
+  const top = [...suma.entries()].sort((a, b) => b[1].asistente + b[1].actividad - (a[1].asistente + a[1].actividad)).slice(0, cuantas);
+  const { data: fichas } = await db.from('fichas_validadas').select('ficha_id, pregunta').in(
+    'ficha_id',
+    top.map(([id]) => id),
+  );
+  const pregunta = new Map(((fichas ?? []) as { ficha_id: string; pregunta: string }[]).map((f) => [f.ficha_id, f.pregunta]));
+  return top.filter(([id]) => pregunta.has(id)).map(([id, s]) => ({ fichaId: id, pregunta: pregunta.get(id)!, ...s }));
+}

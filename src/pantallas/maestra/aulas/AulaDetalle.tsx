@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Cabecera from '@/components/Cabecera';
 import FondoVivo from '@/components/FondoVivo';
 import CuentaDocente from '@/components/CuentaDocente';
-import { agregarAlumnos, archivarAula, cambiarActivo, guardarAula, nuevaClave, nuevasClavesDelGrupo, type EstadoAula } from '@/acciones/aulas';
+import { agregarAlumnos, archivarAula, borrarApodo, cambiarActivo, guardarAula, nuevaClave, nuevasClavesDelGrupo, type EstadoAula } from '@/acciones/aulas';
 import type { Alumno, Aula } from '@/datos/aulas';
 import type { TareaConCuentas } from '@/datos/tareas';
 import { actividad as datosActividad } from '@/lib/aulas/tareas';
@@ -175,6 +175,19 @@ export default function AulaDetalle({
                               <input type="hidden" name="alumno" value={a.id} />
                               <button className="btn btn--secundario btn--chico" type="submit" disabled={trabajando}>
                                 Nueva clave
+                              </button>
+                            </form>
+                          )}
+                          {!archivada && a.apodo && (
+                            <form
+                              action={borrarApodo}
+                              onSubmit={(e) => {
+                                if (!window.confirm(`¿Borrar el apodo "${a.apodo}"? La próxima vez que entre, elige otro.`)) e.preventDefault();
+                              }}
+                            >
+                              <input type="hidden" name="alumno" value={a.id} />
+                              <button className="btn btn--claro btn--chico" type="submit">
+                                Borrar apodo
                               </button>
                             </form>
                           )}

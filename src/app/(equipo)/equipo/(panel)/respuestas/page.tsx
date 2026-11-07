@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { exigirMiembro } from '@/datos/equipo';
 import { nombresDelEquipo } from '@/datos/fichas';
-import { listarPreguntasSinRespuesta, listarRespuestas, NOMBRE_GRUPO, type Grupo } from '@/datos/respuestas';
+import { listarPreguntasSinRespuesta, listarRespuestas, masVistas, NOMBRE_GRUPO, type Grupo } from '@/datos/respuestas';
 import { iaConfigurada } from '@/lib/ia/openai';
 import { ACTIVIDADES } from '@/lib/equipo/comun';
 import PedirRespuestas from '@/pantallas/equipo/PedirRespuestas';
@@ -23,7 +23,7 @@ const DECISION: Record<string, string> = { aprobar: 'aprobaste', pedir_cambios: 
 export default async function Page({ searchParams }: { searchParams: Promise<{ ver?: string; actividad?: string; origen?: string; revisada?: string }> }) {
   const yo = await exigirMiembro();
   const sp = await searchParams;
-  const [todas, nombres, deClases] = await Promise.all([listarRespuestas(), nombresDelEquipo(), listarPreguntasSinRespuesta().catch(() => [])]);
+  const [todas, nombres, deClases, vistas] = await Promise.all([listarRespuestas(), nombresDelEquipo(), listarPreguntasSinRespuesta().catch(() => []), masVistas().catch(() => [])]);
   const validadora = yo.rol === 'validador';
 
   const cuenta = (g: Grupo) => todas.filter((r) => r.grupo === g).length;
@@ -136,6 +136,20 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ v
           </ul>
         )}
       </section>
+
+      {vistas.length > 0 && (
+        <details className="eq-caja eq-detalles">
+          <summary>Las más vistas (últimos 30 días)</summary>
+          <p className="eq-ayuda">Cuántas veces se mostró cada respuesta aprobada: en el asistente de las maestras y en &ldquo;Preguntas del Pasteur&rdquo; dentro de las actividades. Sin datos de quién la vio.</p>
+          <ol className="eq-lista">
+            {vistas.map((v) => (
+              <li key={v.fichaId} className="eq-tabla__chico">
+                <strong>{v.pregunta}</strong> · {v.asistente} en clase · {v.actividad} en las actividades
+              </li>
+            ))}
+          </ol>
+        </details>
+      )}
 
       {validadora && (
         <details className="eq-caja eq-detalles">

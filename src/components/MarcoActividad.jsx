@@ -6,6 +6,8 @@ import Moli from './Moli';
 import FondoVivo from './FondoVivo';
 import { ACTIVIDADES } from '../data/contenido';
 import { INFO_ACTIVIDADES } from '../actividades/info';
+import PreguntasDelPasteur from './PreguntasDelPasteur';
+import { equipoReal } from '@/lib/supabase/config';
 
 /*
   Marco común de todas las actividades: fondo vivo, cabecera, progreso
@@ -50,6 +52,7 @@ export default function MarcoActividad({ actividadId, progreso, children }) {
           {progreso.tarea && <EstadoGuardado estado={progreso.guardado} />}
         </div>
         <div className="cabecera__der">
+          {equipoReal && <PreguntasDelPasteur actividadId={actividadId} />}
           {!progreso.enClase && !progreso.tarea && (
             <button className="enlace" onClick={progreso.reiniciar}>
               Empezar de nuevo

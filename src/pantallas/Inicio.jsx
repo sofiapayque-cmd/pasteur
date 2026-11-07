@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from '@/navegacion';
 import { TEXTO_INICIO } from '../data/contenido';
 import FondoVivo from '../components/FondoVivo';
+import { aulasReales } from '@/lib/supabase/config';
 
 /*
   01 · INICIO
@@ -31,6 +32,12 @@ export default function Inicio() {
         <div className="logo-pendiente inicio__logo">[Logo Institut Pasteur]</div>
         <h1 className="inicio__titulo">La ciencia sin límites</h1>
         <p className="inicio__texto">{TEXTO_INICIO}</p>
+        {/* Para escuelas o maestras que nos encuentran (pedido de Sofia, 6/11) */}
+        {aulasReales && (
+          <a className="inicio__acceso" href="/pedir-acceso">
+            ¿Sos maestra o trabajás en una escuela? <b>Pedí acceso</b>
+          </a>
+        )}
       </div>
       <div className="inicio__circulo-zona">
         <span className="inicio__anillo" aria-hidden="true" />

@@ -177,3 +177,32 @@ test('la sala de una tarea: puesta en común para mirar, con los que hicieron al
   assert.deepEqual(sala.alumnos.map((a) => a.apodo), ['Pulpo']);
   assert.equal(sala.alumnos[0].terminada, true);
 });
+
+// ---------------------------------------------------------------------
+// Pedir acceso (src/lib/aulas/acceso.ts)
+// ---------------------------------------------------------------------
+import { leerSolicitud } from '../src/lib/aulas/acceso.ts';
+
+const formulario = (extra = {}) => {
+  const f = new FormData();
+  const base = { nombre: '  Ana   Pérez ', email: 'Ana.Perez@Escuela.edu.uy', escuela: 'Escuela 123', departamento: 'Montevideo', cargo: 'maestra', mensaje: 'Hola,\nqueremos usarla.', ...extra };
+  for (const [k, v] of Object.entries(base)) if (v !== undefined) f.set(k, v);
+  return f;
+};
+
+test('pedir acceso: limpia y valida', () => {
+  const f = formulario();
+  f.append('grados', '6');
+  f.append('grados', '5');
+  f.append('grados', '9');
+  const r = leerSolicitud(f);
+  assert.equal(r.ok, true);
+  assert.deepEqual(r.solicitud, { nombre: 'Ana Pérez', email: 'ana.perez@escuela.edu.uy', escuela: 'Escuela 123', departamento: 'Montevideo', cargo: 'maestra', grados: '5, 6', mensaje: 'Hola,\nqueremos usarla.' });
+  assert.equal(leerSolicitud(formulario({ email: 'sin-arroba' })).campo, 'email');
+  assert.equal(leerSolicitud(formulario({ email: 'k7rm-01@alumnos.invalid' })).campo, 'email');
+  assert.equal(leerSolicitud(formulario({ departamento: 'Narnia' })).campo, 'departamento');
+  assert.equal(leerSolicitud(formulario({ cargo: 'admin' })).campo, 'cargo');
+  assert.equal(leerSolicitud(formulario({ nombre: ' ' })).campo, 'nombre');
+  assert.deepEqual(leerSolicitud(formulario({ sitio: 'http://spam' })), { ok: false, mensaje: 'trampa' });
+  assert.equal(leerSolicitud(formulario({ mensaje: 'x'.repeat(5000) })).solicitud.mensaje.length, 1000);
+});

@@ -186,3 +186,16 @@ export async function cambiarActivo(datos: FormData): Promise<void> {
   revalidatePath(`/maestra/aulas/${alumno.aula_id}`);
 }
 
+
+/**
+ * Borrar el apodo de un alumno (por ejemplo, si eligió uno que no corresponde).
+ * La próxima vez que entre, vuelve a elegir. Con la sesión de la maestra (RLS).
+ */
+export async function borrarApodo(datos: FormData): Promise<void> {
+  if (!aulasReales) return;
+  const alumno = await obtenerAlumno(datos.get('alumno'));
+  if (!alumno) return;
+  const supabase = await crearClienteServidor();
+  await supabase!.from('alumnos').update({ apodo: null, color: null }).eq('id', alumno.id);
+  revalidatePath(`/maestra/aulas/${alumno.aula_id}`);
+}

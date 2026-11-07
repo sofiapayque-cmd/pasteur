@@ -35,6 +35,12 @@ export type Resultado =
   | { tipo: 'cuidado' };
 export type EstadoAsistente = { mensaje?: string; pregunta?: string; resultado?: Resultado };
 
+/** Historial anónimo (migración 20): solo la ficha y el día. Si falla, no importa. */
+async function contarVista(admin: SupabaseClient, fichaId: string) {
+  const { error } = await admin.rpc('contar_vista_respuesta', { p_ficha: fichaId, p_origen: 'asistente' });
+  if (error) console.error('[asistente] vista:', error.code);
+}
+
 async function tarjeta(admin: SupabaseClient, fichaId: string): Promise<Respuesta | null> {
   const { data: f } = await admin
     .from('fichas_validadas')
@@ -96,7 +102,10 @@ export async function preguntarAlPasteur(_previo: EstadoAsistente, datos: FormDa
   }
   if (decision.tipo === 'respuesta') {
     const respuesta = await tarjeta(admin, decision.fichaId);
-    if (respuesta) return { pregunta, resultado: { tipo: 'respuesta', respuesta } };
+    if (respuesta) {
+      await contarVista(admin, respuesta.fichaId);
+      return { pregunta, resultado: { tipo: 'respuesta', respuesta } };
+    }
     return { pregunta, resultado: { tipo: 'nada' } };
   }
   if (decision.tipo === 'parecidas') {
@@ -115,5 +124,6 @@ export async function verRespuesta(fichaId: string): Promise<EstadoAsistente> {
   const admin = crearClienteAdmin();
   if (!admin || !esUuid(fichaId)) return { mensaje: 'No se encontró esa respuesta.' };
   const respuesta = await tarjeta(admin, fichaId);
+  if (respuesta) await contarVista(admin, respuesta.fichaId);
   return respuesta ? { pregunta: respuesta.pregunta, resultado: { tipo: 'respuesta', respuesta } } : { mensaje: 'Esa respuesta ya no está disponible.' };
 }

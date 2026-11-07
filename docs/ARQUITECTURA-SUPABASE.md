@@ -323,3 +323,52 @@ Sin migraciones: cada actividad ya guarda lo que hace el chico en `progreso.dato
   - A2 y A3.
   - Datos vacíos, raros o de una actividad desconocida.
   - La sala de una tarea.
+
+## 18. Bloque 4 · Pedir acceso, invitar maestras, preguntas en las actividades, historial y borrar apodo (7/11/2026)
+
+Migración 20 (`20261107130000_acceso_e_historial.sql`). Solo agrega: no cambia ni borra nada existente. **Aplicada en dev el 7/11** (idéntica al archivo, comprobado con md5); producción sin tocar.
+
+### Pedir acceso (pedido de Sofia, 6/11)
+
+- **En el inicio**, arriba a la derecha (abajo en el celular): "¿Sos maestra o trabajás en una escuela? Pedí acceso". Solo aparece con el sistema de aulas prendido. También está en la pantalla de ingreso de la maestra.
+- **Formulario** `/pedir-acceso`: nombre, mail, escuela, departamento (los 19 y "Fuera de Uruguay"), qué hace en la escuela, con qué clases y un mensaje opcional. Dice para qué se usan los datos.
+- **Lo guarda solo el servidor** (`registrar_solicitud_acceso`, solo `service_role`), con controles contra el spam:
+  - un campo escondido que solo llenan los robots (al robot se le dice que salió bien y no se guarda nada);
+  - hasta 3 pedidos por hora desde la misma conexión y 20 por hora en total;
+  - un solo pedido pendiente por mail.
+- **De la conexión no se guarda la IP**, solo una huella (SHA-256 con una clave del servidor, `ACCESO_SAL` o, si no está, la clave secreta de Supabase). No se puede volver a la IP.
+- **Los pedidos resueltos se borran a los 180 días** (al abrir la lista).
+
+### Invitar maestras desde el panel del equipo
+
+- `/equipo/maestras`, **solo la admin**. En la barra aparece "Maestras" con el número de pedidos pendientes.
+- Por cada pedido: **Invitar** (crea la cuenta de maestra y genera un link de un solo uso) o **Descartar**.
+- También se puede **invitar directo** a una maestra, sin pedido.
+- Hasta que haya un servidor de mail propio, el panel muestra el link y un mensaje listo para **copiar y mandar a mano** (el mail de Supabase manda solo 2 por hora).
+
+### Preguntas del Pasteur dentro de las actividades
+
+- En cada actividad, un botón **"Preguntas del Pasteur"** abre la lista de respuestas aprobadas de esa actividad. Los chicos **eligen de la lista, no escriben**: así no hay texto libre de chicos ni moderación.
+- Solo respuestas publicadas, con sus fuentes. Si todavía no hay, lo dice y sugiere preguntarle a la maestra.
+- Solo aparece con el asistente prendido (`NEXT_PUBLIC_ASISTENTE=1`).
+
+### Historial anónimo
+
+- `vistas_respuestas`: **cuántas veces se mostró cada respuesta aprobada, por día y por lugar** (asistente de la maestra o actividad). Sin maestra, sin aula y sin chico.
+- Suma una vista solo el servidor (`contar_vista_respuesta`, solo respuestas publicadas). Lo ve el equipo.
+- En el tablero del equipo: **"Las más vistas (últimos 30 días)"**, para elegir próximas respuestas y curiosidades.
+
+### Borrar apodo
+
+- En el aula, la maestra puede **borrar el apodo** de un chico (por ejemplo, si eligió uno que no corresponde). El chico vuelve a elegir uno la próxima vez que entra.
+
+### Pruebas
+
+- **Base** (`15-pruebas-acceso.sql`): 31 OK en local y **31 OK en dev** (`16-pruebas-acceso-real.sql`, sin dejar datos). Revisan que:
+  - nadie de afuera ni maestras ni validadoras ven ni tocan los pedidos;
+  - la admin los ve y solo cambia estado, fecha y quién resolvió;
+  - límites por conexión y total, un pendiente por mail, mails y datos inválidos;
+  - las vistas solo se suman para respuestas publicadas y nadie de afuera las ve.
+  - Una versión adrede rota de la función fue detectada por las pruebas.
+- **Unitarias:** `npm run test:clase` (12; incluye leer el formulario de pedido).
+- **Pantallas:** inicio, formulario y botón en la actividad, en compu (1280), Ceibal (1024) y celular (390), sin desbordes.

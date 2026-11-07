@@ -26,6 +26,9 @@ export default function Ingreso({ aviso }: { aviso?: string }) {
         <a className="enlace" href="/maestra/recuperar">
           Olvidé mi contraseña
         </a>
+        <a className="enlace" href="/pedir-acceso">
+          ¿Todavía no tenés cuenta? Pedí acceso
+        </a>
       </form>
     </MarcoAcceso>
   );
