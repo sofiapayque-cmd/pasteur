@@ -248,4 +248,5 @@ Se desarrolló en `ia/asistente` (la rama que ya tiene todo configurado en Verce
 - `carrera-ingreso.sh`: 30 conexiones a la vez → mismo usuario: pasan 5 y queda bloqueado; 30 alumnos distintos: pasan los 30. Sin el bloqueo de fila pasan 6: la prueba lo detecta.
 - `npm run test:ingreso`: 4 pruebas de cómo se ordena lo que escribe el chico.
 - Pantallas en 1024×600 (Ceibal), 1366×768 y celular, sin desborde; después de un error no se borra lo escrito.
-- **Falta:** aplicar la 16 en dev (con el OK de Sofia) y probar con una tarjeta real en el preview.
+- **Aplicada en `ciencia-sin-limites-dev` el 6/11** con el OK de Sofia, idéntica al archivo (mismo md5). En dev: **29 OK · 0 FALLAS**, sin dejar nada. Asesor de seguridad: nada nuevo.
+- **Falta:** probar con una tarjeta real en el preview (aula "4 b", código SBZ4).
