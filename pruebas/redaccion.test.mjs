@@ -166,3 +166,15 @@ test('preguntas pegadas: una por renglón, sin viñetas ni repetidas, con tope',
   assert.deepEqual(preguntas, ['¿Qué es una célula?', '¿Por qué brillan las medusas?', '¿Uno?', '¿Dos más?']);
   assert.equal(sobran, 2);
 });
+
+test('elige artículos: usa el resumen de PubMed si está y le da más peso a lo que está en PubMed', () => {
+  const RESUMEN_PUBMED = RESUMEN.replace('Cells divide', 'Cells really divide');
+  const oa = registro({ identificadores: { openalex: 'W1', doi: '10.1/a' } });
+  const pm = registro({ proveedor: 'pubmed', id_externo: '123', identificadores: { pmid: '123', doi: '10.1/a' }, resumen: RESUMEN_PUBMED });
+  const sinPubmed = registro({ id_externo: 'W2', identificadores: { openalex: 'W2', doi: '10.1/b' }, titulo: 'Otro' });
+  const cs = elegirArticulos([[sinPubmed, oa], [pm]]);
+  assert.equal(cs.length, 2);
+  assert.equal(cs[0].resumen, RESUMEN_PUBMED, 'el resumen que se cita es el de PubMed');
+  assert.deepEqual(cs[0].registros.map((r) => r.proveedor).sort(), ['openalex', 'pubmed']);
+  assert.ok(cs[0].puntaje > cs[1].puntaje, 'estar en PubMed suma');
+});

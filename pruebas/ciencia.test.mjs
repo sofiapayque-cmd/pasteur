@@ -1,11 +1,11 @@
 /*
-  Pruebas de la traducción de OpenAlex y Europe PMC (src/lib/ciencia/normalizar.ts).
-  Sin red: registros de ejemplo con la forma que devuelven las dos APIs.
+  Pruebas de la traducción de PubMed, OpenAlex y Europe PMC (src/lib/ciencia/normalizar.ts).
+  Sin red: registros de ejemplo con la forma que devuelven las tres APIs.
   Correr con: npm run test:ciencia
 */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { claveDe, deEuropePmc, deOpenAlex, limpiarTexto, normalizarDoi, reconstruirResumen } from '../src/lib/ciencia/normalizar.ts';
+import { agrupar, articulosPubMed, claveDe, deEuropePmc, deOpenAlex, dePubMed, limpiarTexto, normalizarDoi, reconstruirResumen } from '../src/lib/ciencia/normalizar.ts';
 
 const OPENALEX = {
   id: 'https://openalex.org/W2741809807',
@@ -132,4 +132,87 @@ test('Europe PMC: preprint, revisión, retractado', () => {
 test('el mismo trabajo en las dos fuentes tiene la misma clave (DOI)', () => {
   assert.equal(claveDe(deOpenAlex(OPENALEX)), claveDe(deEuropePmc(EUROPEPMC)));
   assert.notEqual(claveDe(deOpenAlex({ ...OPENALEX, doi: null, ids: {} })), claveDe(deEuropePmc({ ...EUROPEPMC, doi: null })));
+});
+
+// ---------------------------------------------------------------------
+// PubMed (efetch, retmode=xml): forma real del PubmedArticleSet
+// ---------------------------------------------------------------------
+const PUBMED_XML = `<?xml version="1.0" ?>
+<!DOCTYPE PubmedArticleSet PUBLIC "-//NLM//DTD PubMedArticle, 1st January 2025//EN" "https://dtd.nlm.nih.gov/ncbi/pubmed/out/pubmed_250101.dtd">
+<PubmedArticleSet>
+<PubmedArticle><MedlineCitation Status="MEDLINE" Owner="NLM"><PMID Version="1">31234567</PMID>
+<Article PubModel="Print-Electronic"><Journal><ISSN IssnType="Electronic">1943-0264</ISSN><JournalIssue CitedMedium="Internet"><Volume>11</Volume><Issue>5</Issue><PubDate><Year>2019</Year><Month>May</Month></PubDate></JournalIssue><Title>Cold Spring Harbor perspectives in biology</Title><ISOAbbreviation>Cold Spring Harb Perspect Biol</ISOAbbreviation></Journal>
+<ArticleTitle>Transport between the cell <i>nucleus</i> and the cytoplasm.</ArticleTitle>
+<ELocationID EIdType="pii" ValidYN="Y">a034567</ELocationID><ELocationID EIdType="doi" ValidYN="Y">10.1101/CSHPERSPECT.A034567</ELocationID>
+<Abstract><AbstractText Label="BACKGROUND" NlmCategory="BACKGROUND">The nucleus stores DNA &amp; is surrounded by a double membrane.</AbstractText><AbstractText Label="RESULTS" NlmCategory="RESULTS">Pores control what goes in and out (&lt;10 nm).</AbstractText><CopyrightInformation>© 2019 CSHL Press.</CopyrightInformation></Abstract>
+<AuthorList CompleteYN="Y"><Author ValidYN="Y"><LastName>Paz</LastName><ForeName>Ana María</ForeName><Initials>AM</Initials><Identifier Source="ORCID">https://orcid.org/0000-0002-1825-0097</Identifier><AffiliationInfo><Affiliation>Institut Pasteur de Montevideo, Montevideo, Uruguay.</Affiliation></AffiliationInfo></Author><Author ValidYN="Y"><CollectiveName>Nuclear Pore Consortium</CollectiveName></Author></AuthorList>
+<Language>eng</Language>
+<PublicationTypeList><PublicationType UI="D016428">Journal Article</PublicationType><PublicationType UI="D016454">Review</PublicationType></PublicationTypeList>
+</Article>
+<MeshHeadingList><MeshHeading><DescriptorName UI="D002467" MajorTopicYN="N">Cell Nucleus</DescriptorName><QualifierName UI="Q000378" MajorTopicYN="Y">metabolism</QualifierName></MeshHeading><MeshHeading><DescriptorName UI="D004247" MajorTopicYN="N">DNA</DescriptorName></MeshHeading></MeshHeadingList>
+<KeywordList Owner="NOTNLM"><Keyword MajorTopicYN="N">nuclear pore</Keyword></KeywordList>
+</MedlineCitation>
+<PubmedData><ArticleIdList><ArticleId IdType="pubmed">31234567</ArticleId><ArticleId IdType="pmc">PMC6496331</ArticleId><ArticleId IdType="doi">10.1101/cshperspect.a034567</ArticleId></ArticleIdList>
+<ReferenceList><Reference><Citation>Otro trabajo.</Citation><ArticleIdList><ArticleId IdType="doi">10.9999/otro</ArticleId><ArticleId IdType="pmc">PMC1</ArticleId></ArticleIdList></Reference></ReferenceList></PubmedData>
+</PubmedArticle>
+<PubmedArticle><MedlineCitation Status="MEDLINE" Owner="NLM"><PMID Version="1">20000002</PMID>
+<Article PubModel="Print"><Journal><JournalIssue><PubDate><MedlineDate>2010 Jan-Feb</MedlineDate></PubDate></JournalIssue><Title>Fake results</Title></Journal>
+<ArticleTitle>A study that was retracted.</ArticleTitle>
+<Abstract><AbstractText>Unstructured abstract.</AbstractText></Abstract>
+<PublicationTypeList><PublicationType UI="D016428">Journal Article</PublicationType></PublicationTypeList></Article>
+<CommentsCorrectionsList><CommentsCorrections RefType="RetractionIn"><RefSource>Fake results. 2012</RefSource><PMID Version="1">22222222</PMID></CommentsCorrections></CommentsCorrectionsList>
+</MedlineCitation><PubmedData><ArticleIdList><ArticleId IdType="pubmed">20000002</ArticleId></ArticleIdList></PubmedData></PubmedArticle>
+<PubmedBookArticle><BookDocument><PMID Version="1">20301295</PMID><ArticleTitle>Un libro</ArticleTitle></BookDocument></PubmedBookArticle>
+</PubmedArticleSet>`;
+
+test('PubMed → registro común (resumen con partes, DOI del artículo, PMC, ORCID, Instituto, MeSH)', () => {
+  const arts = articulosPubMed(PUBMED_XML);
+  assert.equal(arts.length, 2, 'los libros se ignoran');
+  const r = dePubMed(arts[0]);
+  assert.equal(r.proveedor, 'pubmed');
+  assert.equal(r.id_externo, '31234567');
+  assert.deepEqual(r.identificadores, { pmid: '31234567', doi: '10.1101/cshperspect.a034567', pmcid: 'PMC6496331' });
+  assert.equal(r.titulo, 'Transport between the cell nucleus and the cytoplasm.');
+  assert.equal(r.resumen, 'Background: The nucleus stores DNA & is surrounded by a double membrane. Results: Pores control what goes in and out (<10 nm).');
+  assert.equal(r.anio, 2019);
+  assert.equal(r.tipo, 'revision');
+  assert.equal(r.revista, 'Cold Spring Harbor perspectives in biology');
+  assert.equal(r.idioma, 'eng');
+  assert.deepEqual(r.autores, [
+    { nombre: 'Ana María Paz', apellido: 'Paz', orcid: '0000-0002-1825-0097' },
+    { nombre: 'Nuclear Pore Consortium', apellido: 'Consortium' },
+  ]);
+  assert.equal(r.del_instituto, true);
+  assert.deepEqual(r.mesh, ['Cell Nucleus', 'DNA']);
+  assert.deepEqual(r.temas, ['nuclear pore']);
+  assert.equal(r.retractada, false);
+  assert.equal(r.licencia, '', 'PubMed no informa licencias');
+  assert.deepEqual(r.accesos.map((a) => a.url), ['https://pubmed.ncbi.nlm.nih.gov/31234567/', 'https://pmc.ncbi.nlm.nih.gov/articles/PMC6496331/']);
+});
+
+test('PubMed: retractado, año de MedlineDate, sin DOI; y la lista de referencias no se mezcla', () => {
+  const r = dePubMed(articulosPubMed(PUBMED_XML)[1]);
+  assert.equal(r.retractada, true);
+  assert.equal(r.anio, 2010);
+  assert.equal(r.tipo, 'articulo');
+  assert.deepEqual(r.identificadores, { pmid: '20000002' });
+  assert.equal(r.resumen, 'Unstructured abstract.');
+  assert.equal(dePubMed('<MedlineCitation><PMID>abc</PMID></MedlineCitation>'), null);
+  // Un DOI mal escrito en el artículo no tapa el de la lista de ids de PubMed
+  const malDoi = articulosPubMed(PUBMED_XML)[0].replace('10.1101/CSHPERSPECT.A034567', '10.1101/a b');
+  assert.equal(dePubMed(malDoi).identificadores.doi, '10.1101/cshperspect.a034567');
+  assert.equal(dePubMed(''), null);
+  const sinRefs = dePubMed(articulosPubMed(PUBMED_XML)[0]);
+  assert.ok(!JSON.stringify(sinRefs).includes('10.9999/otro'));
+});
+
+test('el mismo trabajo en las tres fuentes se junta aunque una no traiga DOI', () => {
+  const pubmed = dePubMed(articulosPubMed(PUBMED_XML)[0]);
+  const openalex = { ...deOpenAlex(OPENALEX), identificadores: { openalex: 'W1', doi: '10.1101/cshperspect.a034567' } };
+  const epmc = { ...deEuropePmc(EUROPEPMC), identificadores: { europepmc: 'MED:31234567', pmid: '31234567' } };
+  const otro = deEuropePmc({ ...EUROPEPMC, id: '999', pmid: '999', doi: '10.5555/otro' });
+  const grupos = agrupar([openalex, otro, epmc, pubmed].map((registro) => ({ registro })));
+  assert.equal(grupos.length, 2);
+  assert.deepEqual(grupos[0].map((x) => x.registro.proveedor), ['openalex', 'europepmc', 'pubmed']);
+  assert.equal(claveDe(pubmed), 'doi:10.1101/cshperspect.a034567');
 });

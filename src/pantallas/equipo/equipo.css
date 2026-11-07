@@ -490,3 +490,43 @@
 .eq-clases__fila .eq-check input {
   margin-top: 4px;
 }
+
+/* Prueba del asistente (/equipo/asistente) */
+.eq-prueba__chequeos > li {
+  padding: 6px 0;
+  line-height: 1.45;
+}
+.eq-prueba__chequeos ul {
+  margin: 6px 0 0;
+  padding-left: 1.2em;
+}
+.eq-prueba__tabla {
+  overflow-x: auto;
+  margin-top: 8px;
+}
+.eq-prueba__tabla table {
+  min-width: 720px;
+}
+.eq-prueba--mal td {
+  background: #fde8e4;
+}
+.eq-prueba--falta td {
+  background: #fff6dc;
+}
+.eq-prueba__tabla details summary {
+  cursor: pointer;
+  color: var(--nucleo);
+}
+.eq-prueba,
+.eq-prueba > * {
+  min-width: 0;
+}
+.eq-prueba__chico {
+  color: var(--tinta-suave);
+  font-size: 0.85rem;
+}
+@media (max-width: 640px) {
+  .eq-prueba .eq-tablero {
+    grid-template-columns: 1fr;
+  }
+}

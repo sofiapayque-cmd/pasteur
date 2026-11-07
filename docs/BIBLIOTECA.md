@@ -1,4 +1,4 @@
-# Biblioteca científica (OpenAlex y Europe PMC) — estado
+# Biblioteca científica (PubMed, OpenAlex y Europe PMC) — estado
 
 Diseño completo: documento "Biblioteca científica curada · OpenAlex y Europe PMC" (claude.ai) y `claude/biblioteca-cientifica.md` del proyecto.
 Rama: `ia/asistente`. Complementa `docs/ASISTENTE-IA.md`.
@@ -26,6 +26,35 @@ Reglas que impone la base:
 - La consulta guardada de cada búsqueda no puede contener la clave de la API.
 
 Queda para después (B-3 a B-5): fusionar duplicados confirmados, búsqueda híbrida sobre los resúmenes, vencimiento y purga automáticos (pg_cron), búsquedas semanales y chequeo mensual de licencias.
+
+## PubMed (7/11, migración 18)
+
+Pedido de Sofia, por recomendación de la validadora: PubMed es la base que usan las investigadoras del Instituto.
+
+- **Cómo se consulta:** con las E-utilities de NCBI (`esearch` ordenado por relevancia + `efetch` en XML). Solo metadatos y resumen, nunca texto completo.
+  - Sin clave: 3 pedidos por segundo. Todos los pedidos del servidor pasan por una fila que los espacia, y si NCBI contesta 429 se reintenta una vez.
+  - `NCBI_API_KEY` (opcional, solo servidor) sube el límite a 10 por segundo. Nunca va a la bitácora.
+  - Se identifica con `tool=ciencia-sin-limites`. `NCBI_EMAIL` es opcional.
+- **Qué se lee del XML** (`dePubMed` en `src/lib/ciencia/normalizar.ts`):
+  - PMID, título y resumen (los estructurados con su etiqueta: "Background: …");
+  - DOI (del artículo, o de la lista de ids si el del artículo está mal escrito) y PMC;
+  - revista, año (también de MedlineDate), idioma, autores con ORCID, MeSH y palabras clave;
+  - si es revisión o preprint, si está retractado, y si hay autores del Institut Pasteur de Montevideo.
+  - La lista de referencias se descarta antes de leer, porque trae ids de otros trabajos.
+- **El mismo trabajo** que llega de varias fuentes se junta si comparte DOI, PMID o PMC (`agrupar`), aunque una de ellas no traiga DOI.
+- **Qué fuente manda en cada dato** (`guardar_registro`, migración 18):
+  - PubMed manda en el resumen y en los MeSH, como Europe PMC.
+  - OpenAlex sigue mandando en título, año, tipo, revista, autores y citas.
+  - El servidor guarda en este orden: OpenAlex → Europe PMC → PubMed. Así queda el resumen de PubMed cuando está, que es el que lee la IA que redacta.
+- **Licencias:** PubMed no informa licencias. Las siguen dando OpenAlex y Europe PMC; sin ninguna, la cita va con ubicación y paráfrasis.
+- **En pantalla:**
+  - Búsqueda: PubMed, OpenAlex y Europe PMC a la vez, y "Ver en PubMed" en cada resultado.
+  - Ficha del artículo: de qué fuente viene el resumen.
+- **La IA que redacta:**
+  - busca en las tres fuentes, con la primera búsqueda también solo entre revisiones;
+  - le da +1 a lo que está en PubMed (revistas biomédicas indexadas), además de las revisiones;
+  - usa el resumen de PubMed si está.
+- **Sin probar contra la API real desde acá:** este entorno no llega a NCBI. Las pruebas usan un XML con la forma real del `PubmedArticleSet`. La primera búsqueda real es en el preview.
 
 ## Pruebas
 

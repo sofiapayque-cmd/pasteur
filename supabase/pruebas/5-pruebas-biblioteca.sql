@@ -55,7 +55,7 @@ select t5.ok('preparación: equipo de cuatro y una maestra', (select count(*) fr
 -- Catálogo y normalización
 -- =====================================================================
 set role authenticated; select set_config('request.jwt.claim.sub', :BRED, false);
-select t5.ok('catálogo: OpenAlex y Europe PMC', t5.filas('select 1 from proveedores_cientificos') = 2);
+select t5.ok('catálogo: PubMed, OpenAlex y Europe PMC (PubMed desde la migración 18)', t5.filas('select 1 from proveedores_cientificos') = 3);
 select t5.ok('catálogo: cinco tipos de identificador', t5.filas('select 1 from tipos_identificador') = 5);
 select t5.ok('licencias: diez en la política inicial', t5.filas('select 1 from licencias') = 10);
 select t5.ok('licencias: las no comerciales piden paráfrasis hasta que confirme el Instituto', (select pasaje from licencias where codigo = 'cc-by-nc') = 'solo_ubicacion');
@@ -126,9 +126,13 @@ select :'r5'::jsonb ->> 'publicacion_id' as p5 \gset
 select guardar_registro($j${"proveedor":"openalex","id_externo":"W300","identificadores":{"openalex":"W300","doi":"10.1000/abc.1","europepmc":"PPR:PPR123"},"titulo":"Dengue virus envelope protein dynamics","crudo":{"id":"W300"}}$j$::jsonb)::text as r4 \gset
 reset role;
 select t5.ok('otro título: sin sugerencias de duplicado', jsonb_array_length(:'r5'::jsonb -> 'posibles_duplicados') = 0);
-select t5.ok('identificadores de dos publicaciones: no las fusiona sola', (:'r4'::jsonb ->> 'publicacion_id') = :'p1' and (:'r4'::jsonb -> 'posibles_duplicados') ? :'p3');
+-- Va a la más antigua (y, si se crearon en el mismo instante, como pasa dentro de una transacción, a la de id menor)
+select t5.ok('identificadores de dos publicaciones: no las fusiona sola', (:'r4'::jsonb ->> 'publicacion_id') in (:'p1', :'p3')
+  and (:'r4'::jsonb -> 'posibles_duplicados') ? (case when (:'r4'::jsonb ->> 'publicacion_id') = :'p1' then :'p3' else :'p1' end)
+  and (:'r4'::jsonb ->> 'publicacion_id') = (select id::text from publicaciones where id in (:'p1'::uuid, :'p3'::uuid) order by creada_en, id limit 1));
 select t5.ok('identificadores de dos publicaciones: cada uno sigue en la suya', (select publicacion_id from publicacion_identificadores where tipo = 'europepmc' and valor = 'PPR:PPR123') = :'p3'::uuid
-  and (select publicacion_id from publicacion_identificadores where tipo = 'openalex' and valor = 'W300') = :'p1'::uuid);
+  and (select publicacion_id from publicacion_identificadores where tipo = 'doi' and valor = '10.1000/abc.1') = :'p1'::uuid
+  and (select publicacion_id from publicacion_identificadores where tipo = 'openalex' and valor = 'W300')::text = (:'r4'::jsonb ->> 'publicacion_id'));
 select t5.ok('identificadores de dos publicaciones: no aparece una tercera', (select count(*) from publicaciones where titulo_normalizado = 'dengue virus envelope protein dynamics') = 2);
 
 set role service_role;

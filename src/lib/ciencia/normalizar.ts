@@ -1,5 +1,5 @@
 /*
-  Traducción de los registros de OpenAlex y Europe PMC a un formato común
+  Traducción de los registros de PubMed, OpenAlex y Europe PMC a un formato común
   (el que recibe public.guardar_registro, migración 13).
 
   Sin red y sin dependencias: se puede probar con node --test.
@@ -8,7 +8,10 @@
   se limpian acá y, además, la base los recorta y saca caracteres de control.
 */
 
-export type Proveedor = 'openalex' | 'europepmc';
+export type Proveedor = 'pubmed' | 'openalex' | 'europepmc';
+export const NOMBRE_PROVEEDOR: Record<Proveedor, string> = { pubmed: 'PubMed', openalex: 'OpenAlex', europepmc: 'Europe PMC' };
+/** Con qué tipo de identificador queda guardado el id de cada fuente (tipos_identificador, migración 13). */
+export const TIPO_ID: Record<Proveedor, 'pmid' | 'openalex' | 'europepmc'> = { pubmed: 'pmid', openalex: 'openalex', europepmc: 'europepmc' };
 
 export type Registro = {
   proveedor: Proveedor;
@@ -246,5 +249,140 @@ export function deEuropePmc(r: unknown): Registro | null {
   };
 }
 
-/** Clave para juntar en pantalla el mismo trabajo que llega de las dos fuentes. */
-export const claveDe = (r: Registro) => (r.identificadores.doi ? `doi:${r.identificadores.doi}` : `${r.proveedor}:${r.id_externo}`);
+// ---------------------------------------------------------------------
+// PubMed (E-utilities: https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=xml)
+// El XML de PubMed es estable y bien formado: se lee con expresiones simples,
+// sin dependencias. Solo se usa lo de ESTE artículo (la lista de referencias
+// trae identificadores de otros trabajos y se descarta antes de buscar).
+// ---------------------------------------------------------------------
+const ETIQUETA = (tag: string) => new RegExp(`<${tag}(\\s[^>]*)?>([\\s\\S]*?)</${tag}>`, 'g');
+
+/** Todas las apariciones de <tag …>…</tag>: atributos y contenido. */
+export function etiquetas(xml: string, tag: string): { attrs: string; texto: string }[] {
+  return [...xml.matchAll(ETIQUETA(tag))].map((m) => ({ attrs: m[1] ?? '', texto: m[2] ?? '' }));
+}
+const primera = (xml: string, tag: string) => etiquetas(xml, tag)[0]?.texto ?? '';
+const atributo = (attrs: string, nombre: string) => attrs.match(new RegExp(`${nombre}="([^"]*)"`))?.[1] ?? '';
+
+/** Separa un efetch (PubmedArticleSet) en artículos. Los libros (PubmedBookArticle) se ignoran. */
+export const articulosPubMed = (xml: string) => etiquetas(str(xml), 'PubmedArticle').map((a) => a.texto);
+
+export function dePubMed(articulo: string): Registro | null {
+  const xml = str(articulo).replace(/<ReferenceList[\s\S]*?<\/ReferenceList>/g, '');
+  const cita = primera(xml, 'MedlineCitation') || xml;
+  const pmid = limpiarTexto(primera(cita, 'PMID'));
+  const art = primera(cita, 'Article');
+  const titulo = limpiarTexto(primera(art, 'ArticleTitle')) || limpiarTexto(primera(art, 'VernacularTitle'));
+  if (!/^[1-9]\d{0,9}$/.test(pmid) || !titulo) return null;
+
+  // Resumen: los estructurados vienen en partes con etiqueta (BACKGROUND, METHODS…)
+  const partes = etiquetas(primera(art, 'Abstract'), 'AbstractText')
+    .map((p) => {
+      const texto = limpiarTexto(p.texto);
+      const etiqueta = limpiarTexto(atributo(p.attrs, 'Label'));
+      if (!texto) return '';
+      return etiqueta ? `${etiqueta[0].toUpperCase()}${etiqueta.slice(1).toLowerCase()}: ${texto}` : texto;
+    })
+    .filter(Boolean);
+  const resumen = partes.join(' ').trim();
+
+  const tiposPub = etiquetas(primera(art, 'PublicationTypeList'), 'PublicationType').map((t) => limpiarTexto(t.texto).toLowerCase());
+  const tipo: Registro['tipo'] = tiposPub.some((t) => t.includes('preprint'))
+    ? 'preprint'
+    : tiposPub.some((t) => t.includes('review') || t === 'meta-analysis')
+      ? 'revision'
+      : tiposPub.length
+        ? 'articulo'
+        : 'otro';
+  const retractada =
+    tiposPub.includes('retracted publication') ||
+    etiquetas(primera(cita, 'CommentsCorrectionsList'), 'CommentsCorrections').some((c) => atributo(c.attrs, 'RefType') === 'RetractionIn');
+
+  const autoresCrudos = etiquetas(primera(art, 'AuthorList'), 'Author');
+  const autores = autoresCrudos.slice(0, 50).map((a) => {
+    const apellido = limpiarTexto(primera(a.texto, 'LastName'));
+    const nombre = limpiarTexto([primera(a.texto, 'ForeName') || primera(a.texto, 'Initials'), apellido].filter(Boolean).join(' ')) || limpiarTexto(primera(a.texto, 'CollectiveName'));
+    const orcid = etiquetas(a.texto, 'Identifier')
+      .filter((i) => atributo(i.attrs, 'Source') === 'ORCID')
+      .map((i) => limpiarTexto(i.texto).match(/\d{4}-\d{4}-\d{4}-\d{3}[\dX]$/)?.[0])
+      .find(Boolean);
+    return { nombre, apellido: apellido || ultimaPalabra(nombre), ...(orcid ? { orcid } : {}) };
+  }).filter((a) => a.nombre);
+  const afiliaciones = autoresCrudos.flatMap((a) => etiquetas(a.texto, 'Affiliation').map((x) => limpiarTexto(x.texto))).join(' | ').toLowerCase();
+  const delInstituto = /pasteur\s+(de\s+)?montevideo/.test(afiliaciones.normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
+
+  // DOI y PMC: del artículo (ELocationID) o de la lista de ids de PubMed
+  const ids = etiquetas(primera(xml, 'PubmedData'), 'ArticleId');
+  const idDe = (tipoId: string) => limpiarTexto(ids.find((i) => atributo(i.attrs, 'IdType') === tipoId)?.texto ?? '');
+  const doi = normalizarDoi(limpiarTexto(etiquetas(art, 'ELocationID').find((e) => atributo(e.attrs, 'EIdType') === 'doi')?.texto ?? '')) || normalizarDoi(idDe('doi'));
+  const pmcid = idDe('pmc').match(/^PMC\d+$/i)?.[0]?.toUpperCase() ?? '';
+
+  const revista = primera(art, 'Journal');
+  const fecha = primera(revista, 'PubDate');
+  const anio = Number(limpiarTexto(primera(fecha, 'Year')) || limpiarTexto(primera(fecha, 'MedlineDate')).match(/\d{4}/)?.[0] || limpiarTexto(primera(primera(art, 'ArticleDate'), 'Year')));
+
+  const accesos: Registro['accesos'] = [{ tipo: 'pagina', url: `https://pubmed.ncbi.nlm.nih.gov/${pmid}/` }];
+  if (pmcid) accesos.push({ tipo: 'pagina', url: `https://pmc.ncbi.nlm.nih.gov/articles/${pmcid}/`, es_oa: true });
+
+  return {
+    proveedor: 'pubmed',
+    id_externo: pmid,
+    identificadores: { pmid, ...(doi ? { doi } : {}), ...(pmcid ? { pmcid } : {}) },
+    titulo: hasta(titulo, 1000),
+    anio: Number.isInteger(anio) && anio >= 1800 && anio <= 2100 ? anio : null,
+    tipo,
+    revista: hasta(limpiarTexto(primera(revista, 'Title')) || limpiarTexto(primera(revista, 'ISOAbbreviation')), 300),
+    idioma: hasta(limpiarTexto(primera(art, 'Language')), 10),
+    autores,
+    temas: etiquetas(primera(cita, 'KeywordList'), 'Keyword').slice(0, 10).map((k) => limpiarTexto(k.texto)).filter(Boolean),
+    mesh: etiquetas(primera(cita, 'MeshHeadingList'), 'DescriptorName').slice(0, 60).map((m) => limpiarTexto(m.texto)).filter(Boolean),
+    citas: null,
+    oa_estado: '',
+    resumen: resumen || null,
+    retractada,
+    del_instituto: delInstituto,
+    accesos,
+    licencia: '',
+    crudo: { pmid, doi: doi || null, pmcid: pmcid || null, tipos: tiposPub, anio: Number.isFinite(anio) ? anio : null },
+  };
+}
+
+// ---------------------------------------------------------------------
+// El mismo trabajo desde varias fuentes
+// ---------------------------------------------------------------------
+/** Todas las claves con las que se puede reconocer un trabajo (DOI, PMID, PMC, id de la fuente). */
+export function clavesDe(r: Registro): string[] {
+  const i = r.identificadores;
+  return [i.doi && `doi:${i.doi}`, i.pmid && `pmid:${i.pmid}`, i.pmcid && `pmcid:${i.pmcid}`, `${r.proveedor}:${r.id_externo}`].filter((k): k is string => Boolean(k));
+}
+/** Clave principal para mostrar (la primera que tenga). */
+export const claveDe = (r: Registro) => clavesDe(r)[0];
+
+/**
+ * Junta los registros que son el mismo trabajo: alcanza con que compartan
+ * cualquier identificador (uno trae DOI y PMID, otro solo PMID, etc.).
+ * Respeta el orden en que aparece cada trabajo por primera vez.
+ */
+export function agrupar<T extends { registro: Registro }>(items: T[]): T[][] {
+  const grupos: T[][] = [];
+  const duenio = new Map<string, number>();
+  for (const it of items) {
+    const claves = clavesDe(it.registro);
+    const encontrados = [...new Set(claves.map((k) => duenio.get(k)).filter((g): g is number => g !== undefined))].sort((a, b) => a - b);
+    let g: number;
+    if (!encontrados.length) {
+      g = grupos.push([]) - 1;
+    } else {
+      g = encontrados[0];
+      // Si este registro une dos grupos que estaban separados, se juntan en el primero
+      for (const otro of encontrados.slice(1)) {
+        grupos[g].push(...grupos[otro]);
+        for (const it2 of grupos[otro]) for (const k of clavesDe(it2.registro)) duenio.set(k, g);
+        grupos[otro] = [];
+      }
+    }
+    grupos[g].push(it);
+    for (const k of claves) duenio.set(k, g);
+  }
+  return grupos.filter((x) => x.length > 0);
+}

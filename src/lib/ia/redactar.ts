@@ -2,7 +2,7 @@ import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { slugDe } from '@/lib/equipo/comun';
 import { mensajeDeError } from '@/datos/errores';
-import { buscarEuropePmc, buscarOpenAlex } from '@/lib/ciencia/proveedores';
+import { buscarEuropePmc, buscarOpenAlex, buscarPubMed, ORDEN_GUARDADO } from '@/lib/ciencia/proveedores';
 import type { Registro } from '@/lib/ciencia/normalizar';
 import { MODELO_RAPIDO, MODELO_REDACCION, pedirJson, type Uso } from './openai';
 import {
@@ -26,7 +26,8 @@ import {
 /*
   REDACTORA AUTOMÁTICA (solo servidor). Para cada pregunta:
     1. arma búsquedas en inglés (modelo rápido);
-    2. busca en OpenAlex y Europe PMC y elige hasta 6 artículos con resumen;
+    2. busca en PubMed (la fuente principal), OpenAlex y Europe PMC y elige
+       hasta 8 artículos con resumen;
     3. redacta la respuesta citando oraciones numeradas (modelo de redacción),
        con un reintento si se pasa de palabras o las citas no sirven;
     4. guarda los artículos en la biblioteca (clave secreta, como el botón
@@ -64,12 +65,13 @@ async function consultasPara(pregunta: string, actividad: string | null) {
 }
 
 async function buscar(consultas: string[]) {
-  // Cada consulta en las dos fuentes, y la primera (el concepto central) también solo entre revisiones,
-  // que son las que explican lo básico. Las revisiones van primero: elegirArticulos les da más peso.
+  // Cada consulta en las tres fuentes, y la primera (el concepto central) también solo entre revisiones,
+  // que son las que explican lo básico. elegirArticulos les da más peso a las revisiones y a lo que está en PubMed.
   const pedidos = [
+    buscarPubMed({ texto: consultas[0], max: 8, soloRevisiones: true }),
     buscarOpenAlex({ texto: consultas[0], max: 8, soloRevisiones: true }),
     buscarEuropePmc({ texto: consultas[0], max: 8, soloRevisiones: true }),
-    ...consultas.flatMap((texto) => [buscarOpenAlex({ texto, max: 8 }), buscarEuropePmc({ texto, max: 8 })]),
+    ...consultas.flatMap((texto) => [buscarPubMed({ texto, max: 8 }), buscarOpenAlex({ texto, max: 8 }), buscarEuropePmc({ texto, max: 8 })]),
   ];
   const respuestas = await Promise.all(pedidos);
   return elegirArticulos(respuestas.map((r) => r.registros));
@@ -104,8 +106,9 @@ type Guardada = { id: string; estado: string; resumen_interno: string | null; li
 /** Guarda el artículo en la biblioteca (o lo encuentra si ya estaba) y lo deja listo para citar. */
 async function guardarArticulo(c: Contexto, registros: Registro[]): Promise<{ pub?: Guardada; error?: string }> {
   let id: string | null = null;
-  // OpenAlex primero y Europe PMC después: así queda el resumen de Europe PMC, el que vio el modelo
-  for (const r of [...registros].sort((a, b) => (a.proveedor === 'openalex' ? -1 : 1) - (b.proveedor === 'openalex' ? -1 : 1))) {
+  // OpenAlex primero, Europe PMC y PubMed al final: así queda guardado el resumen que vio el modelo
+  // (el de PubMed si está; si no, el de Europe PMC; si no, el de OpenAlex)
+  for (const r of [...registros].sort((a, b) => ORDEN_GUARDADO[a.proveedor] - ORDEN_GUARDADO[b.proveedor])) {
     const { data, error } = await c.admin.rpc('guardar_registro', { p_registro: r, p_ejecucion: null, p_actor: c.actorId });
     if (error) return { error: mensajeDeError(error, 'no se pudo guardar un artículo') };
     id ??= (data as { publicacion_id?: string })?.publicacion_id ?? null;

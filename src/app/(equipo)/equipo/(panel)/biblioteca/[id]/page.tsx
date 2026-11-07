@@ -5,6 +5,7 @@ import { listarLicencias, obtenerPublicacion } from '@/datos/biblioteca';
 import { nombresDelEquipo } from '@/datos/fichas';
 import { enviarPublicacion, fijarLicencia, resolverRelacion, retirarPublicacion, revisarPublicacion, sacarDeRevision } from '@/acciones/biblioteca';
 import { NOMBRE_ESTADO, POLITICA_PASAJE, fecha, fechaHora } from '@/lib/equipo/comun';
+import { NOMBRE_PROVEEDOR, type Proveedor } from '@/lib/ciencia/normalizar';
 import Forma from '@/pantallas/equipo/Forma';
 import Revisar from '@/pantallas/equipo/Revisar';
 
@@ -13,7 +14,7 @@ const TIPO: Record<string, string> = { articulo: 'Artículo', revision: 'Revisi�
 const ENLACE_ID: Record<string, (v: string) => string> = {
   doi: (v) => `https://doi.org/${v}`,
   pmid: (v) => `https://pubmed.ncbi.nlm.nih.gov/${v}/`,
-  pmcid: (v) => `https://www.ncbi.nlm.nih.gov/pmc/articles/${v}/`,
+  pmcid: (v) => `https://pmc.ncbi.nlm.nih.gov/articles/${v}/`,
   openalex: (v) => `https://openalex.org/${v}`,
   europepmc: (v) => `https://europepmc.org/article/${v.replace(':', '/')}`,
 };
@@ -68,9 +69,9 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
           <section className="eq-caja">
             <h2>Resumen</h2>
             <p style={{ lineHeight: 1.55, margin: 0 }}>{p.resumen_interno ?? 'Las fuentes no traen resumen. Leelo en la página de la revista.'}</p>
-            {p.resumen_interno && <p className="eq-ayuda">Viene de {p.resumen_origen === 'europepmc' ? 'Europe PMC' : 'OpenAlex'}. Solo lo ve el equipo.</p>}
+            {p.resumen_interno && <p className="eq-ayuda">Viene de {NOMBRE_PROVEEDOR[p.resumen_origen as Proveedor] ?? p.resumen_origen}. Solo lo ve el equipo.</p>}
             {p.mesh.length > 0 && <p className="eq-ayuda">Términos MeSH: {p.mesh.join(' · ')}</p>}
-            {p.temas_externos.length > 0 && <p className="eq-ayuda">Temas (OpenAlex): {p.temas_externos.join(' · ')}</p>}
+            {p.temas_externos.length > 0 && <p className="eq-ayuda">Temas: {p.temas_externos.join(' · ')}</p>}
           </section>
           <section className="eq-caja">
             <h2>Dónde leerlo</h2>
@@ -190,7 +191,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
               ))}
               {procedencias.map((x) => (
                 <li key={x.id} className="eq-tabla__chico">
-                  {fechaHora(x.obtenida_en)} · datos de {x.proveedor === 'openalex' ? 'OpenAlex' : 'Europe PMC'} ({x.id_externo})
+                  {fechaHora(x.obtenida_en)} · datos de {NOMBRE_PROVEEDOR[x.proveedor as Proveedor] ?? x.proveedor} ({x.id_externo})
                   {x.campos_aportados.length ? `: ${x.campos_aportados.join(', ')}` : ''}
                 </li>
               ))}

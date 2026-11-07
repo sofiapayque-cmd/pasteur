@@ -7,17 +7,17 @@ import { crearClienteAdmin } from '@/lib/supabase/admin';
 import { miembroCon } from '@/datos/equipo';
 import { mensajeDeError } from '@/datos/errores';
 import { yaEnBiblioteca } from '@/datos/biblioteca';
-import { claveDe, type Proveedor, type Registro } from '@/lib/ciencia/normalizar';
-import { buscarEuropePmc, buscarOpenAlex, obtener, porDoiEnLaOtra, type Consulta, type Respuesta } from '@/lib/ciencia/proveedores';
+import { agrupar, claveDe, NOMBRE_PROVEEDOR, TIPO_ID, type Proveedor, type Registro } from '@/lib/ciencia/normalizar';
+import { buscarEuropePmc, buscarOpenAlex, buscarPubMed, enLasOtras, obtener, ORDEN_GUARDADO, type Consulta, type Respuesta } from '@/lib/ciencia/proveedores';
 
 /*
   ACCIONES DE LA BIBLIOTECA CIENTÍFICA (Server Actions del equipo).
 
-  · Buscar NO guarda: consulta OpenAlex y Europe PMC en vivo y solo anota la
-    consulta en la bitácora (ejecuciones_busqueda, sin la clave).
+  · Buscar NO guarda: consulta PubMed, OpenAlex y Europe PMC en vivo y solo
+    anota la consulta en la bitácora (ejecuciones_busqueda, sin la clave).
   · Agregar: el navegador manda solo la fuente y el id. El servidor vuelve a
     pedir el registro a la fuente (no se confía en lo que muestra la
-    pantalla), lo completa con la otra fuente por DOI y lo guarda con
+    pantalla), lo completa con las otras fuentes por DOI y lo guarda con
     guardar_registro() y registrar_licencia(), que solo puede llamar el
     servidor (clave secreta) y siempre con el miembro que lo pidió.
   · El resto (mandar a revisión, revisar, retirar, relaciones, temas) va con
@@ -33,6 +33,7 @@ export type Resultado = {
   autores: string;
   tipo: Registro['tipo'];
   doi: string;
+  pmid: string;
   fuentes: { proveedor: Proveedor; id_externo: string }[];
   abierto: boolean;
   licencia: string;
@@ -47,7 +48,6 @@ const SIN_PERMISO: Estado = { mensaje: 'No tenés permiso para hacer eso.' };
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const leer = (f: FormData, k: string) => String(f.get(k) ?? '').trim();
 const supabase = async () => (await crearClienteServidor())!;
-const NOMBRE_FUENTE: Record<Proveedor, string> = { openalex: 'OpenAlex', europepmc: 'Europe PMC' };
 
 // ---------------------------------------------------------------------
 // Buscar en vivo
@@ -63,53 +63,48 @@ export async function buscarPublicaciones(_p: EstadoBusqueda, datos: FormData): 
   for (const a of [desde, hasta]) if (a !== undefined && !(Number.isInteger(a) && a >= 1800 && a <= 2100)) return { mensaje: 'Revisá los años.', consulta };
 
   const c: Consulta = { texto, desde, hasta, soloAbierto: consulta.abierto === 'on', soloInstituto: consulta.instituto === 'on', max: 15 };
-  const respuestas = await Promise.all([buscarOpenAlex(c), buscarEuropePmc(c)]);
+  // PubMed primero: es la fuente que usan las investigadoras; las otras completan
+  const respuestas = await Promise.all([buscarPubMed(c), buscarOpenAlex(c), buscarEuropePmc(c)]);
   await anotarEjecuciones(respuestas, yo.id);
 
-  // Juntar el mismo trabajo de las dos fuentes (por DOI)
-  const porClave = new Map<string, Resultado>();
-  for (const r of respuestas.flatMap((x) => x.registros)) {
-    const clave = claveDe(r);
-    const ya = porClave.get(clave);
-    if (ya) {
-      ya.fuentes.push({ proveedor: r.proveedor, id_externo: r.id_externo });
-      ya.abierto ||= r.oa_estado !== '' && r.oa_estado !== 'closed';
-      ya.licencia ||= r.licencia;
-      ya.retractada ||= r.retractada;
-      ya.del_instituto ||= r.del_instituto;
-      if (!ya.resumen && r.resumen) ya.resumen = r.resumen.slice(0, 600);
-      continue;
-    }
-    porClave.set(clave, {
-      clave,
+  // Juntar el mismo trabajo de las tres fuentes (por DOI, PMID o PMC). El resumen, el de PubMed si está.
+  const grupos = agrupar(respuestas.flatMap((x) => x.registros.map((registro) => ({ registro }))));
+  const resultados: Resultado[] = grupos.map((g) => {
+    const rs = g.map((x) => x.registro);
+    const r = rs.find((x) => x.proveedor === 'pubmed') ?? rs[0];
+    const conResumen = rs.find((x) => x.proveedor === 'pubmed' && x.resumen) ?? rs.find((x) => x.resumen);
+    return {
+      clave: claveDe(r),
       titulo: r.titulo,
-      anio: r.anio,
-      revista: r.revista,
+      anio: rs.find((x) => x.anio)?.anio ?? null,
+      revista: r.revista || (rs.find((x) => x.revista)?.revista ?? ''),
       autores: r.autores.slice(0, 3).map((a) => a.nombre).join(', ') + (r.autores.length > 3 ? ' y otros' : ''),
-      tipo: r.tipo,
-      doi: r.identificadores.doi ?? '',
-      fuentes: [{ proveedor: r.proveedor, id_externo: r.id_externo }],
-      abierto: r.oa_estado !== '' && r.oa_estado !== 'closed',
-      licencia: r.licencia,
-      retractada: r.retractada,
-      del_instituto: r.del_instituto,
-      resumen: (r.resumen ?? '').slice(0, 600),
+      tipo: rs.find((x) => x.tipo !== 'articulo' && x.tipo !== 'otro')?.tipo ?? r.tipo,
+      doi: rs.find((x) => x.identificadores.doi)?.identificadores.doi ?? '',
+      pmid: rs.find((x) => x.identificadores.pmid)?.identificadores.pmid ?? '',
+      fuentes: rs.filter((x, i) => rs.findIndex((y) => y.proveedor === x.proveedor) === i).map((x) => ({ proveedor: x.proveedor, id_externo: x.id_externo })),
+      abierto: rs.some((x) => x.oa_estado !== '' && x.oa_estado !== 'closed'),
+      licencia: rs.find((x) => x.licencia)?.licencia ?? '',
+      retractada: rs.some((x) => x.retractada),
+      del_instituto: rs.some((x) => x.del_instituto),
+      resumen: (conResumen?.resumen ?? '').slice(0, 600),
       enBiblioteca: null,
-    });
-  }
-  const resultados = [...porClave.values()];
+    };
+  });
 
   // Marcar lo que ya está en la biblioteca
   const pares = resultados.flatMap((r) => [
     ...(r.doi ? [{ tipo: 'doi', valor: r.doi }] : []),
-    ...r.fuentes.map((f) => ({ tipo: f.proveedor, valor: f.id_externo })),
+    ...(r.pmid ? [{ tipo: 'pmid', valor: r.pmid }] : []),
+    ...r.fuentes.map((f) => ({ tipo: TIPO_ID[f.proveedor], valor: f.id_externo })),
   ]);
   const ya = await yaEnBiblioteca(pares);
   for (const r of resultados) {
-    r.enBiblioteca = (r.doi && ya.get(`doi:${r.doi}`)) || r.fuentes.map((f) => ya.get(`${f.proveedor}:${f.id_externo}`)).find(Boolean) || null;
+    r.enBiblioteca =
+      (r.doi && ya.get(`doi:${r.doi}`)) || (r.pmid && ya.get(`pmid:${r.pmid}`)) || r.fuentes.map((f) => ya.get(`${TIPO_ID[f.proveedor]}:${f.id_externo}`)).find(Boolean) || null;
   }
 
-  const avisos = respuestas.filter((x) => x.error).map((x) => `${NOMBRE_FUENTE[x.proveedor]} no respondió (${x.error}).`);
+  const avisos = respuestas.filter((x) => x.error).map((x) => `${NOMBRE_PROVEEDOR[x.proveedor]} no respondió (${x.error}).`);
   return {
     mensaje: resultados.length ? '' : 'No apareció nada. Probá con otras palabras, en inglés.',
     ok: true,
@@ -144,26 +139,25 @@ async function anotarEjecuciones(respuestas: Respuesta[], miembroId: string) {
 export async function agregarPublicacion(proveedor: string, idExterno: string): Promise<Estado> {
   const yo = await miembroCon();
   if (!yo) return SIN_PERMISO;
-  if (proveedor !== 'openalex' && proveedor !== 'europepmc') return { mensaje: 'Fuente desconocida.' };
+  if (proveedor !== 'pubmed' && proveedor !== 'openalex' && proveedor !== 'europepmc') return { mensaje: 'Fuente desconocida.' };
   const admin = crearClienteAdmin();
   if (!admin) return { mensaje: 'Falta la clave secreta en el servidor (SUPABASE_SECRET_KEY).' };
 
   // Se vuelve a pedir a la fuente: no se guarda lo que manda el navegador
   const principal = await obtener(proveedor, idExterno);
-  if (!principal) return { mensaje: `${NOMBRE_FUENTE[proveedor]} no devolvió ese trabajo. Probá de nuevo en un rato.` };
-  const otra = principal.identificadores.doi ? await porDoiEnLaOtra(proveedor, principal.identificadores.doi) : null;
+  if (!principal) return { mensaje: `${NOMBRE_PROVEEDOR[proveedor]} no devolvió ese trabajo. Probá de nuevo en un rato.` };
+  const otras = principal.identificadores.doi ? await enLasOtras(proveedor, principal.identificadores.doi) : [];
+  const registros = [principal, ...otras].sort((a, b) => ORDEN_GUARDADO[a.proveedor] - ORDEN_GUARDADO[b.proveedor]);
 
   let publicacionId: string | null = null;
-  for (const registro of [principal, otra].filter((r): r is Registro => r !== null)) {
+  for (const registro of registros) {
     const { data, error } = await admin.rpc('guardar_registro', { p_registro: registro, p_ejecucion: null, p_actor: yo.id });
     if (error) return { mensaje: mensajeDeError(error, 'No se pudo guardar la publicación.') };
     publicacionId ??= (data as { publicacion_id?: string })?.publicacion_id ?? null;
   }
   if (!publicacionId) return { mensaje: 'No se pudo guardar la publicación.' };
 
-  const senales = [principal, otra]
-    .filter((r): r is Registro => r !== null && r.licencia !== '')
-    .map((r) => ({ origen: r.proveedor, texto: r.licencia }));
+  const senales = registros.filter((r: Registro) => r.licencia !== '').map((r) => ({ origen: r.proveedor, texto: r.licencia }));
   const { error: errorLicencia } = await admin.rpc('registrar_licencia', { p_publicacion: publicacionId, p_senales: senales, p_actor: yo.id });
   if (errorLicencia) console.error('[biblioteca] licencia:', errorLicencia.code);
   redirect(`/equipo/biblioteca/${publicacionId}`);

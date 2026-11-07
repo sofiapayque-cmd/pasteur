@@ -7,8 +7,9 @@ import 'server-only';
 
   · La clave es OPENAI_API_KEY (variable del servidor, sin NEXT_PUBLIC_).
   · store: false → OpenAI no guarda la conversación para mostrarla después.
-  · Lo que se manda son preguntas del equipo y resúmenes de artículos: nada
-    de chicos ni de maestras.
+  · Lo que se manda son preguntas del equipo, resúmenes de artículos y las
+    preguntas de clase que escribe la maestra en el asistente (limpias de
+    mails, links y teléfonos). Nada que identifique a chicos ni a maestras.
   · Modelos: OPENAI_MODELO_REDACCION (por defecto gpt-6.1-sol) para redactar
     y OPENAI_MODELO_RAPIDO (por defecto gpt-6-luna) para armar búsquedas y
     proponer preguntas. Se pueden cambiar en Vercel sin tocar el código.

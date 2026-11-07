@@ -5,9 +5,10 @@ import Link from 'next/link';
 import Forma from './Forma';
 import { agregarPublicacion, buscarPublicaciones, type EstadoBusqueda } from '@/acciones/biblioteca';
 import { NOMBRE_ESTADO } from '@/lib/equipo/comun';
+import { NOMBRE_PROVEEDOR } from '@/lib/ciencia/normalizar';
 
 /*
-  Búsqueda en vivo en OpenAlex y Europe PMC. Buscar no guarda nada: solo
+  Búsqueda en vivo en PubMed, OpenAlex y Europe PMC. Buscar no guarda nada: solo
   "Agregar" crea una candidata (el servidor vuelve a pedir el registro a la
   fuente). El mismo trabajo que aparece en las dos fuentes se muestra una vez.
 */
@@ -44,7 +45,7 @@ export default function Buscador() {
             {buscando ? 'Buscando…' : 'Buscar'}
           </button>
         </div>
-        <p className="eq-ayuda">Casi todo está en inglés: buscá en inglés. La búsqueda va a OpenAlex y Europe PMC a la vez y no se guarda nada hasta que tocás “Agregar”.</p>
+        <p className="eq-ayuda">Casi todo está en inglés: buscá en inglés. La búsqueda va a PubMed, OpenAlex y Europe PMC a la vez y no se guarda nada hasta que tocás “Agregar”.</p>
       </form>
 
       {estado.mensaje && <p className={`eq-mensaje ${estado.ok ? '' : 'eq-mensaje--error'}`}>{estado.mensaje}</p>}
@@ -55,7 +56,7 @@ export default function Buscador() {
       ))}
       {estado.resultados && estado.resultados.length > 0 && (
         <p className="eq-ayuda">
-          {estado.resultados.length} resultados (OpenAlex encontró {estado.totales?.openalex ?? 0}; Europe PMC, {estado.totales?.europepmc ?? 0}). Se muestran los más relevantes.
+          {estado.resultados.length} resultados (PubMed encontró {estado.totales?.pubmed ?? 0}; OpenAlex, {estado.totales?.openalex ?? 0}; Europe PMC, {estado.totales?.europepmc ?? 0}). Se muestran los más relevantes.
         </p>
       )}
       <ul className="eq-lista">
@@ -69,7 +70,7 @@ export default function Buscador() {
               {r.licencia && <span>Licencia: {r.licencia}</span>}
               {r.del_instituto && <span className="eq-estado eq-estado--aprobada">Institut Pasteur de Montevideo</span>}
               {r.retractada && <span className="eq-estado eq-estado--retirada">Retractado</span>}
-              <span>Fuente: {r.fuentes.map((f) => (f.proveedor === 'openalex' ? 'OpenAlex' : 'Europe PMC')).join(' + ')}</span>
+              <span>Fuente: {r.fuentes.map((f) => NOMBRE_PROVEEDOR[f.proveedor]).join(' + ')}</span>
             </div>
             {r.autores && <p className="eq-ayuda">{r.autores}</p>}
             {r.resumen && (
@@ -79,6 +80,11 @@ export default function Buscador() {
               </details>
             )}
             <div className="eq-botones">
+              {r.pmid && (
+                <a className="enlace" href={`https://pubmed.ncbi.nlm.nih.gov/${r.pmid}/`} target="_blank" rel="noreferrer noopener">
+                  Ver en PubMed
+                </a>
+              )}
               {r.doi && (
                 <a className="enlace" href={`https://doi.org/${r.doi}`} target="_blank" rel="noreferrer noopener">
                   Ver en la revista

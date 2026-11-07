@@ -14,6 +14,7 @@ export default function Barra({ nombre, rol, pendientes, respuestas }: { nombre:
     { href: '/equipo/fichas', texto: 'Fichas' },
     ...(rol === 'validador' ? [{ href: '/equipo/revisar', texto: 'Para revisar', cuenta: pendientes }] : []),
     { href: '/equipo/biblioteca', texto: 'Biblioteca' },
+    { href: '/equipo/asistente', texto: 'Prueba del asistente' },
     ...(rol === 'admin' ? [{ href: '/equipo/miembros', texto: 'Equipo' }] : []),
   ];
   return (

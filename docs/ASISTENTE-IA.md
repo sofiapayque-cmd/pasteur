@@ -54,7 +54,21 @@ Necesita la **migración 17** (`20261106160000_asistente_clase.sql`): `buscar_fr
 
 Pruebas: `11-pruebas-asistente.sql` (36 OK en local) y `12-pruebas-asistente-real.sql` (las mismas, en una transacción que se deshace: **36 OK en dev el 6/11**, sin dejar datos); `npm run test:asistente` (limpieza y decisión, 6 OK).
 
-Por calibrar con datos reales: los dos umbrales de parecido.
+Por calibrar con datos reales: los umbrales de parecido.
+
+### Bloque 1 del plan de entrega (7/11): doble control, prueba de calidad y PubMed
+
+- **Doble control** (`src/lib/ia/buscarRespuesta.ts`, usado por la maestra y por la prueba): la búsqueda trae hasta 4 candidatas (parecido ≥ 0,5, `ASISTENTE_PISO`). Un modelo chico (`gpt-6-luna`) lee la pregunta de la clase y el **texto** de cada candidata, y elige la que la contesta de verdad o ninguna. Solo la elegida se muestra como "la misma". Si elige ninguna, no responde o duda, se ofrecen como parecidas las que pasan 0,68 (`ASISTENTE_PARECIDA`). Así una pregunta con faltas puede encontrar su respuesta aunque el parecido sea bajo, y una del mismo tema con otra respuesta (¿las bacterias tienen núcleo?) no se confunde.
+- **Prueba de calidad** en `/equipo/asistente` (cualquier miembro del equipo):
+  - 69 preguntas (`src/lib/ia/pruebaAsistente.ts`): 42 formas de preguntar (con faltas, sin tildes, en voseo, cortas), 19 trampas del mismo tema y 8 de otros temas.
+  - Corre la misma búsqueda que ve la maestra, sin gastar cupos ni anotar en "Preguntas de las clases".
+  - Guarda cada resultado en `pruebas_asistente` (**migración 19**).
+  - Mide si mostró una respuesta equivocada (tiene que ser 0) y cuántas encontró (meta: 80 %).
+  - Chequea que el índice solo tenga respuestas aprobadas y vigentes, que estén todas, y que cada una muestre las fuentes de su versión aprobada, todas aprobadas.
+  - Tiene un botón para pedirle a la IA las 8 respuestas de A3 que la prueba necesita.
+- **PubMed** (pedido de Sofia por recomendación de la validadora): fuente principal de la biblioteca y de la IA que redacta. Detalle en `docs/BIBLIOTECA.md`. **Migración 18.**
+- Pruebas: `13-pruebas-pubmed.sql` (32 OK, migraciones 18 y 19; `14-…-real` probada en local: 32 OK, nada queda). `test:asistente` 9 OK, `test:ciencia` 11 OK, `test:ia` 10 OK. Con la 18 sin el cambio del resumen o la 19 dejando escribir al equipo, fallan las pruebas que las cuidan.
+- Arreglo en `5-pruebas-biblioteca.sql`: dos pruebas suponían que "la más antigua" era siempre la primera creada, pero dentro de una transacción (como en el proyecto real) se crean en el mismo instante y gana el id menor. Ahora no dependen de eso. `6-…-real` regenerada (130 OK en local).
 
 ## Pruebas
 

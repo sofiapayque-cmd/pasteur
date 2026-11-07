@@ -9,10 +9,8 @@
   Lo que la IA sí puede hacer mal —decir que una oración respalda algo que
   no respalda— es justo lo que la validadora revisa, con la oración al lado.
 */
-import type { Registro } from '../ciencia/normalizar';
+import { agrupar, type Registro } from '../ciencia/normalizar';
 
-// Igual que claveDe() de normalizar.ts (repetida acá para que este archivo no dependa de nada al probarlo)
-const claveDe = (r: Registro) => (r.identificadores.doi ? `doi:${r.identificadores.doi}` : `${r.proveedor}:${r.id_externo}`);
 
 export const LIMITE_INFANTIL = 90; // migración 9 (formato pregunta)
 const MAX_ARTICULOS = 8;
@@ -62,29 +60,25 @@ export type Candidato = { registros: Registro[]; principal: Registro; resumen: s
 
 /**
  * Junta los resultados de varias búsquedas (cada lista viene ordenada por
- * relevancia), une los que son el mismo trabajo y elige los mejores que
- * tengan resumen. El resumen que se usa es el que va a quedar guardado:
- * el de Europe PMC si está, si no el de OpenAlex (así manda guardar_registro).
+ * relevancia), une los que son el mismo trabajo (comparten DOI, PMID o PMC)
+ * y elige los mejores que tengan resumen. El resumen que se usa es el que va
+ * a quedar guardado: el de PubMed si está, si no el de Europe PMC, si no el
+ * de OpenAlex (así lo guardan guardar_registro y ORDEN_GUARDADO).
  */
 export function elegirArticulos(listas: Registro[][], max = MAX_ARTICULOS): Candidato[] {
-  const grupos = new Map<string, { registros: Registro[]; mejorPuesto: number; apariciones: number }>();
-  for (const lista of listas) {
-    lista.forEach((r, puesto) => {
-      const k = claveDe(r);
-      const g = grupos.get(k);
-      if (g) {
-        if (!g.registros.some((x) => x.proveedor === r.proveedor)) g.registros.push(r);
-        g.mejorPuesto = Math.min(g.mejorPuesto, puesto);
-        g.apariciones += 1;
-      } else grupos.set(k, { registros: [r], mejorPuesto: puesto, apariciones: 1 });
-    });
-  }
+  const todos = listas.flatMap((lista) => lista.map((registro, puesto) => ({ registro, puesto })));
+  const grupos = agrupar(todos).map((g) => ({
+    registros: g.map((x) => x.registro).filter((r, i, rs) => rs.findIndex((y) => y.proveedor === r.proveedor) === i),
+    mejorPuesto: Math.min(...g.map((x) => x.puesto)),
+    apariciones: g.length,
+  }));
   const candidatos: Candidato[] = [];
-  for (const g of grupos.values()) {
+  for (const g of grupos) {
     if (g.registros.some((r) => r.retractada)) continue;
+    const pubmed = g.registros.find((r) => r.proveedor === 'pubmed' && r.resumen);
     const epmc = g.registros.find((r) => r.proveedor === 'europepmc' && r.resumen);
     const oa = g.registros.find((r) => r.proveedor === 'openalex' && r.resumen);
-    const resumen = (epmc ?? oa)?.resumen ?? '';
+    const resumen = (pubmed ?? epmc ?? oa)?.resumen ?? '';
     if (palabras(resumen) < 40) continue;
     const principal = g.registros.find((r) => r.proveedor === 'openalex') ?? g.registros[0];
     const tipo = g.registros.find((r) => r.tipo !== 'articulo')?.tipo ?? principal.tipo;
@@ -94,6 +88,8 @@ export function elegirArticulos(listas: Registro[][], max = MAX_ARTICULOS): Cand
     if (tipo === 'revision') puntaje += 3;
     if (tipo === 'preprint') puntaje -= 3;
     if (g.registros.some((r) => r.del_instituto)) puntaje += 1;
+    // Está en PubMed: revista biomédica indexada (la referencia de las investigadoras del Instituto)
+    if (g.registros.some((r) => r.proveedor === 'pubmed' || r.identificadores.pmid)) puntaje += 1;
     if (anio && anio >= 2012) puntaje += 1;
     if (g.registros.some((r) => r.oa_estado && r.oa_estado !== 'closed')) puntaje += 0.5;
     candidatos.push({ registros: g.registros, principal, resumen, oraciones: dividirOraciones(resumen), puntaje });
@@ -168,7 +164,7 @@ export const ESQUEMA_PREGUNTAS = {
   properties: { preguntas: { type: 'array', items: { type: 'string' } } },
 } as const;
 
-export const INSTRUCCIONES_CONSULTAS = `Convertís la pregunta de un chico de 10 a 12 años en búsquedas para bases de artículos científicos (OpenAlex y Europe PMC).
+export const INSTRUCCIONES_CONSULTAS = `Convertís la pregunta de un chico de 10 a 12 años en búsquedas para bases de artículos científicos (PubMed, OpenAlex y Europe PMC).
 Devolvé 3 consultas EN INGLÉS, de 2 a 6 palabras cada una, con términos científicos y sin operadores ni comillas.
 Las preguntas de chicos suelen ser sobre conceptos básicos, que los artículos de investigación casi nunca explican: los explican los artículos de revisión.
 - La primera: el concepto central, como lo nombraría una revisión (por ejemplo "cell nucleus function", "antibiotic resistance mechanisms").

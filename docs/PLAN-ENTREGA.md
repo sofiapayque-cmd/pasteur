@@ -2,6 +2,10 @@
 
 Hecha el 6/11/2026 sobre la rama `ia/asistente` (último commit 2c35eaf), antes de escribir código nuevo. Se trabaja por bloques: cada uno empieza solo cuando Sofia lo aprueba.
 
+**Agregado por Sofia el 6/11, al aprobar el bloque 1:**
+- **PubMed** como fuente principal (recomendación de Eugenia: es la más conocida y la que usan). Entra en el bloque 1, así las respuestas nuevas ya salen con artículos de PubMed.
+- **Botón "Pedir acceso" en el inicio**, para que una escuela o maestra que nos encuentre pida entrar. Entra en el bloque 4, junto con invitar maestras desde el panel.
+
 ## 1. Completo y probado con cuentas reales
 
 - **Maestras:** invitación, elegir contraseña, entrar y salir (1/11).
@@ -91,6 +95,7 @@ Hecha el 6/11/2026 sobre la rama `ia/asistente` (último commit 2c35eaf), antes 
   - Se puede hacer leyendo lo que ya se guarda, sin migración.
 - **"Preguntas del Pasteur" dentro de cada actividad:** lista de respuestas aprobadas de esa actividad.
 - **Historial anónimo.** Hoy solo se cuentan las preguntas sin respuesta. Falta contar también cuántas veces se pidió cada respuesta aprobada, para elegir fun facts y las próximas respuestas.
+- **"Pedir acceso" desde el inicio** (pedido de Sofia): una escuela o maestra completa un formulario corto. El pedido llega al panel del equipo, que con un clic la invita o lo descarta. Lleva protección contra spam y un aviso de para qué se usan sus datos.
 - **Invitar maestras desde el panel del equipo** (hoy se hace desde Supabase).
 - **Borrar el apodo de un chico:** que la maestra pueda hacerlo.
 
@@ -126,14 +131,14 @@ Hecha el 6/11/2026 sobre la rama `ia/asistente` (último commit 2c35eaf), antes 
 | 1 | Cerrar "Preguntale al Pasteur" | 1,5 | 7–8/11 |
 | 2 | Clase en vivo con Realtime | 5 | 9–13/11 |
 | 3 | Cuaderno de investigación + vista de la maestra | 3 | 14–16/11 |
-| 4 | Preguntas en las actividades, historial, invitar maestras, borrar apodo | 2 | 17–18/11 |
+| 4 | "Pedir acceso" desde el inicio + invitar maestras desde el panel, preguntas en las actividades, historial, borrar apodo | 2,5 | 17–18/11 |
 | 5 | Prueba piloto en el preview: una maestra, algunos chicos, una Ceibal real, y arreglos | 1,5 | 19–20/11 |
 | 6 | Revisar las 3 experiencias y decidir | 1 | 21/11 |
 | 7 | Una experiencia a calidad visual alta | 4 | 22–25/11 |
 | 8 | Producción: `main`, migraciones, dominio, mail, región, permisos y costos | 3 | 26–28/11 |
 | 9 | Pruebas finales y versión de entrega | 1,5 | 29–30/11 |
 
-**Total: 23 jornadas en 24 días, sin margen.** Si se pierde tiempo, lo primero que se achica es el bloque 7 (pulido 2D en vez de 3D).
+**Total: unas 24 jornadas en 24 días, sin margen** (PubMed y "Pedir acceso" suman cerca de una jornada). Si se pierde tiempo, lo primero que se achica es el bloque 7 (pulido 2D en vez de 3D).
 
 En paralelo, sin código:
 
@@ -161,9 +166,11 @@ En paralelo, sin código:
   - fun facts automáticos;
   - plan pago de Supabase.
 
-## Bloque 1 · Cerrar "Preguntale al Pasteur" (propuesto, esperando OK)
+## Bloque 1 · Cerrar "Preguntale al Pasteur" (aprobado por Sofia el 6/11)
 
 ### Qué incluye
+
+0. **PubMed** como fuente principal de la biblioteca y de la IA que redacta (con Europe PMC y OpenAlex de respaldo). Cada artículo con su enlace a PubMed.
 
 1. **Pantalla de prueba solo para el equipo** (`/equipo/asistente`). Corre un set de preguntas contra la búsqueda real y muestra, para cada una:
    - qué respondería;

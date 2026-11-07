@@ -4,9 +4,10 @@ import { aulasReales } from '@/lib/supabase/config';
 import { crearClienteAdmin } from '@/lib/supabase/admin';
 import { exigirDocenteActiva } from '@/datos/docente';
 import { esUuid } from '@/datos/aulas';
-import { embeber, iaConfigurada, moderar } from '@/lib/ia/openai';
+import { iaConfigurada, moderar } from '@/lib/ia/openai';
 import { indexarPendientes } from '@/lib/ia/indice';
-import { decidir, limpiarPregunta, normalizarPregunta, type Encontrado } from '@/lib/ia/asistente';
+import { limpiarPregunta, normalizarPregunta } from '@/lib/ia/asistente';
+import { buscarRespuesta } from '@/lib/ia/buscarRespuesta';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 /*
@@ -14,9 +15,10 @@ import type { SupabaseClient } from '@supabase/supabase-js';
   1. Maestra activa, cupo del día (40) y pregunta limpia (sin mails, links ni teléfonos).
   2. Moderación de OpenAI: si toca algo delicado, no se busca ni se guarda nada,
      y se sugiere conversarlo en clase.
-  3. Se busca entre las respuestas APROBADAS (embeddings): si es la misma
-     pregunta, se muestra tal cual, con el sello y sus fuentes; si hay parecidas,
-     se ofrecen; si no hay nada, se dice que todavía no la tenemos.
+  3. Se busca entre las respuestas APROBADAS (embeddings) y un segundo modelo
+     confirma cuál la responde de verdad (src/lib/ia/buscarRespuesta.ts). Si
+     la confirma, se muestra tal cual, con el sello y sus fuentes; si no, se
+     ofrecen las parecidas; si no hay nada, se dice que todavía no la tenemos.
   4. Si no fue "la misma", la pregunta se anota para el equipo del Pasteur
      (sin maestra, sin aula, sin hora). Nunca se inventa una respuesta.
   Usa la clave secreta (lee la vista del sello y el índice), siempre después
@@ -79,15 +81,10 @@ export async function preguntarAlPasteur(_previo: EstadoAsistente, datos: FormDa
   } catch (e) {
     console.error('[asistente] índice:', e instanceof Error ? e.message : e);
   }
-  const vector = await embeber([pregunta]);
-  if (!vector) return { pregunta, mensaje: 'No se pudo buscar ahora. Probá de nuevo en un ratito.' };
-  const { data: filas, error } = await admin.rpc('buscar_fragmentos', { p_embedding: vector[0], p_limite: 8 });
-  if (error) {
-    console.error('[asistente] buscar:', error.code);
-    return { pregunta, mensaje: 'No se pudo buscar ahora. Probá de nuevo en un ratito.' };
-  }
-  const decision = decidir((filas ?? []) as Encontrado[]);
-  console.info(`[asistente] ${decision.tipo}`);
+  const busqueda = await buscarRespuesta(admin, pregunta);
+  if (busqueda.error) return { pregunta, mensaje: 'No se pudo buscar ahora. Probá de nuevo en un ratito.' };
+  const { decision } = busqueda;
+  console.info(`[asistente] ${decision.tipo} (control: ${busqueda.eleccion ?? 'sin respuesta'})`);
 
   if (decision.tipo !== 'respuesta') {
     const { error: errorAnotar } = await admin.rpc('anotar_pregunta_sin_respuesta', {
@@ -103,16 +100,10 @@ export async function preguntarAlPasteur(_previo: EstadoAsistente, datos: FormDa
     return { pregunta, resultado: { tipo: 'nada' } };
   }
   if (decision.tipo === 'parecidas') {
-    const { data: fichas } = await admin
-      .from('fichas_validadas')
-      .select('ficha_id, pregunta')
-      .in(
-        'ficha_id',
-        decision.fichas.map((f) => f.fichaId),
-      );
     const opciones = decision.fichas
-      .map((f) => ({ fichaId: f.fichaId, pregunta: (fichas ?? []).find((x) => x.ficha_id === f.fichaId)?.pregunta as string | undefined }))
-      .filter((o): o is { fichaId: string; pregunta: string } => Boolean(o.pregunta));
+      .map((f) => busqueda.candidatas.find((c) => c.fichaId === f.fichaId))
+      .filter((c): c is NonNullable<typeof c> => Boolean(c))
+      .map((c) => ({ fichaId: c.fichaId, pregunta: c.pregunta }));
     if (opciones.length) return { pregunta, resultado: { tipo: 'parecidas', opciones } };
   }
   return { pregunta, resultado: { tipo: 'nada' } };

@@ -1,10 +1,16 @@
 import 'server-only';
-import { deEuropePmc, deOpenAlex, normalizarDoi, PASTEUR_OPENALEX, type Proveedor, type Registro } from './normalizar';
+import { articulosPubMed, deEuropePmc, deOpenAlex, dePubMed, normalizarDoi, PASTEUR_OPENALEX, type Proveedor, type Registro } from './normalizar';
 
 /*
-  Consultas a OpenAlex y Europe PMC (solo servidor).
+  Consultas a PubMed, OpenAlex y Europe PMC (solo servidor).
   Contrato común: buscar, obtener por id y obtener por DOI. Ninguno trae
   texto completo, a propósito.
+
+  · PubMed (NCBI E-utilities) es la fuente principal: la que usan las
+    investigadoras del Instituto. Sin clave admite 3 pedidos por segundo
+    (10 con NCBI_API_KEY, variable del servidor): todos los pedidos a NCBI
+    de este servidor pasan por una fila que los espacia. Se identifica con
+    tool=ciencia-sin-limites; NCBI_EMAIL es opcional (contacto para NCBI).
 
   · OpenAlex funciona sin clave; con OPENALEX_API_KEY (variable del servidor,
     sin NEXT_PUBLIC_) tiene más presupuesto. La clave nunca se guarda en la
@@ -17,6 +23,7 @@ export type Consulta = { texto: string; desde?: number; hasta?: number; soloAbie
 export type Respuesta = { proveedor: Proveedor; registros: Registro[]; total: number; consultaEnviada: string; costoUsd: number | null; error?: string };
 
 const AGENTE = 'LaCienciaSinLimites/0.2 (proyecto educativo con el Institut Pasteur de Montevideo)';
+const NCBI = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils';
 const OPENALEX = 'https://api.openalex.org';
 const EUROPEPMC = 'https://www.ebi.ac.uk/europepmc/webservices/rest';
 const CAMPOS_OPENALEX =
@@ -32,11 +39,105 @@ async function pedirJson(url: string): Promise<{ json: unknown; error?: string }
   }
 }
 
+async function pedirTexto(url: string): Promise<{ texto: string; error?: string; estado?: number }> {
+  try {
+    const r = await fetch(url, { headers: { 'User-Agent': AGENTE }, cache: 'no-store', signal: AbortSignal.timeout(10_000) });
+    if (!r.ok) return { texto: '', error: `HTTP ${r.status}`, estado: r.status };
+    return { texto: await r.text() };
+  } catch (e) {
+    return { texto: '', error: e instanceof Error && e.name === 'TimeoutError' ? 'tardó demasiado' : 'sin conexión' };
+  }
+}
+
 const limpiarConsulta = (t: string) => t.replace(/[\u0000-\u001f\u007f]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 300);
 const conClave = (url: string) => {
   const clave = process.env.OPENALEX_API_KEY;
   return clave ? `${url}${url.includes('?') ? '&' : '?'}api_key=${encodeURIComponent(clave)}` : url;
 };
+
+// ---------------------------------------------------------------------
+// PubMed (NCBI E-utilities)
+// ---------------------------------------------------------------------
+let proximoTurnoNcbi = 0;
+/** Espera su turno: nunca más de 3 pedidos por segundo a NCBI (10 con clave). */
+async function turnoNcbi() {
+  const intervalo = process.env.NCBI_API_KEY ? 110 : 360;
+  const ahora = Date.now();
+  const mio = Math.max(ahora, proximoTurnoNcbi);
+  proximoTurnoNcbi = mio + intervalo;
+  if (mio > ahora) await new Promise((r) => setTimeout(r, mio - ahora));
+}
+/** La dirección sin la clave (es la que se anota en la bitácora) y la que se pide de verdad. */
+function urlNcbi(utilidad: 'esearch' | 'efetch', params: Record<string, string>) {
+  const p = new URLSearchParams({ db: 'pubmed', ...params, tool: 'ciencia-sin-limites' });
+  if (process.env.NCBI_EMAIL) p.set('email', process.env.NCBI_EMAIL);
+  const sinClave = `${NCBI}/${utilidad}.fcgi?${p}`;
+  const clave = process.env.NCBI_API_KEY;
+  return { sinClave, real: clave ? `${sinClave}&api_key=${encodeURIComponent(clave)}` : sinClave };
+}
+async function pedirNcbi(url: string) {
+  await turnoNcbi();
+  let r = await pedirTexto(url);
+  if (r.estado === 429) {
+    // Se pasó del límite (otro pedido al mismo tiempo): una sola vez más, un segundo después
+    await new Promise((ok) => setTimeout(ok, 1100));
+    await turnoNcbi();
+    r = await pedirTexto(url);
+  }
+  return r;
+}
+
+async function traerPubMed(pmids: string[]): Promise<{ registros: Registro[]; error?: string }> {
+  const ids = pmids.filter((x) => /^[1-9]\d{0,9}$/.test(x)).slice(0, 50);
+  if (!ids.length) return { registros: [] };
+  const { real } = urlNcbi('efetch', { id: ids.join(','), retmode: 'xml', rettype: 'abstract' });
+  const { texto, error } = await pedirNcbi(real);
+  if (error) return { registros: [], error };
+  const porId = new Map(articulosPubMed(texto).map(dePubMed).filter((r): r is Registro => r !== null).map((r) => [r.id_externo, r]));
+  // En el mismo orden que la búsqueda (el de relevancia)
+  return { registros: ids.map((id) => porId.get(id)).filter((r): r is Registro => Boolean(r)) };
+}
+
+export async function buscarPubMed(c: Consulta): Promise<Respuesta> {
+  const partes = [`(${limpiarConsulta(c.texto)})`];
+  if (c.desde || c.hasta) partes.push(`(${c.desde ?? 1800}:${c.hasta ?? 3000}[dp])`);
+  if (c.soloAbierto) partes.push('free full text[sb]');
+  if (c.soloInstituto) partes.push('"Pasteur de Montevideo"[ad]');
+  if (c.soloRevisiones) partes.push('review[pt]');
+  const { sinClave, real } = urlNcbi('esearch', { term: partes.join(' AND '), retmax: String(Math.min(Math.max(c.max, 1), 50)), retmode: 'json', sort: 'relevance' });
+  const base = { proveedor: 'pubmed' as const, consultaEnviada: sinClave, costoUsd: null };
+  const busqueda = await pedirNcbi(real);
+  if (busqueda.error) return { ...base, registros: [], total: 0, error: busqueda.error };
+  let o: { esearchresult?: { count?: string; idlist?: string[]; ERROR?: string } } = {};
+  try {
+    o = JSON.parse(busqueda.texto);
+  } catch {
+    return { ...base, registros: [], total: 0, error: 'respuesta rara' };
+  }
+  const total = Number(o.esearchresult?.count ?? 0) || 0;
+  const { registros, error } = await traerPubMed(o.esearchresult?.idlist ?? []);
+  return { ...base, registros, total, error };
+}
+
+export async function obtenerPubMed(pmid: string): Promise<Registro | null> {
+  if (!/^[1-9]\d{0,9}$/.test(pmid)) return null;
+  return (await traerPubMed([pmid])).registros[0] ?? null;
+}
+
+export async function pubMedPorDoi(doi: string): Promise<Registro | null> {
+  const d = normalizarDoi(doi);
+  if (!d) return null;
+  const { real } = urlNcbi('esearch', { term: `"${d.replace(/"/g, '')}"[doi]`, retmax: '3', retmode: 'json' });
+  const { texto, error } = await pedirNcbi(real);
+  if (error) return null;
+  try {
+    const ids: string[] = JSON.parse(texto)?.esearchresult?.idlist ?? [];
+    const { registros } = await traerPubMed(ids);
+    return registros.find((r) => r.identificadores.doi === d) ?? null;
+  } catch {
+    return null;
+  }
+}
 
 // ---------------------------------------------------------------------
 // OpenAlex
@@ -114,5 +215,18 @@ export async function europePmcPorDoi(doi: string): Promise<Registro | null> {
   return registros.find((r) => r.identificadores.doi === d) ?? null;
 }
 
-export const obtener = (p: Proveedor, id: string) => (p === 'openalex' ? obtenerOpenAlex(id) : obtenerEuropePmc(id));
-export const porDoiEnLaOtra = (p: Proveedor, doi: string) => (p === 'openalex' ? europePmcPorDoi(doi) : openAlexPorDoi(doi));
+export const obtener = (p: Proveedor, id: string) => (p === 'pubmed' ? obtenerPubMed(id) : p === 'openalex' ? obtenerOpenAlex(id) : obtenerEuropePmc(id));
+
+/** El mismo trabajo en las otras dos fuentes, por DOI (para completar datos, resumen y licencia). */
+export async function enLasOtras(p: Proveedor, doi: string): Promise<Registro[]> {
+  const buscar = { pubmed: pubMedPorDoi, openalex: openAlexPorDoi, europepmc: europePmcPorDoi };
+  const otras = (Object.keys(buscar) as Proveedor[]).filter((x) => x !== p);
+  return (await Promise.all(otras.map((x) => buscar[x](doi)))).filter((r): r is Registro => r !== null);
+}
+
+/**
+ * Orden para guardar el mismo trabajo de varias fuentes: OpenAlex primero
+ * (manda en título, año, autores…), después Europe PMC y PubMed al final, así
+ * el resumen guardado es el de PubMed cuando está (migración 18).
+ */
+export const ORDEN_GUARDADO: Record<Proveedor, number> = { openalex: 0, europepmc: 1, pubmed: 2 };

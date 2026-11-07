@@ -53,7 +53,7 @@ export default async function Page() {
           <h2>Cómo funciona</h2>
           <ol className="eq-bajada">
             <li>
-              <strong>Fuentes.</strong> En <Link href="/equipo/biblioteca">Biblioteca</Link> se buscan artículos en OpenAlex y Europe PMC y se agregan. Una validadora los aprueba como
+              <strong>Fuentes.</strong> En <Link href="/equipo/biblioteca">Biblioteca</Link> se buscan artículos en PubMed, OpenAlex y Europe PMC y se agregan. Una validadora los aprueba como
               fuente confiable.
             </li>
             <li>

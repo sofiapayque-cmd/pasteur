@@ -25,7 +25,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ v
       <div>
         <h1>Biblioteca científica</h1>
         <p className="eq-bajada">
-          Artículos que respaldan las fichas. Se buscan en OpenAlex y Europe PMC; al agregarlos quedan como <strong>candidatos</strong> y una validadora los aprueba como fuente.
+          Artículos que respaldan las fichas. Se buscan en PubMed, OpenAlex y Europe PMC; al agregarlos quedan como <strong>candidatos</strong> y una validadora los aprueba como fuente.
           No se guarda el texto completo de ningún artículo: solo sus datos, el resumen (para el equipo) y el pasaje que cita cada ficha.
         </p>
       </div>
