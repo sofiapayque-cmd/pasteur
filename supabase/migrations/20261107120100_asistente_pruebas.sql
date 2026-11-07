@@ -41,4 +41,4 @@ revoke all on public.pruebas_asistente from public, anon, authenticated;
 create policy "pruebas del asistente: el equipo ve" on public.pruebas_asistente
   for select to authenticated using ((select privado.es_equipo()));
 grant select on public.pruebas_asistente to authenticated;
-grant select, insert, delete on public.pruebas_asistente to service_role;
+grant select, insert on public.pruebas_asistente to service_role; -- solo se agregan resultados
