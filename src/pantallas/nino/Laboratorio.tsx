@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import type { Alumno } from '@/datos/alumno';
+import type { Avance, Tarea } from '@/datos/tareas';
+import { actividad as datosActividad, dondeVa } from '@/lib/aulas/tareas';
 import { salirAlumno } from '@/acciones/alumno';
 import Moli from '@/components/Moli';
 import FondoVivo from '@/components/FondoVivo';
@@ -11,7 +13,7 @@ import './cuenta.css';
   explorar las actividades y salir. Las tareas de la maestra y el avance
   guardado llegan en las etapas 5 y 7.
 */
-export default function Laboratorio({ alumno }: { alumno: Alumno }) {
+export default function Laboratorio({ alumno, tareas }: { alumno: Alumno; tareas: (Tarea & { avance: Avance | null })[] }) {
   const aula = alumno.aula.nombre;
   const nombre = alumno.apodo ?? `número ${alumno.numero}`;
   return (
@@ -49,10 +51,37 @@ export default function Laboratorio({ alumno }: { alumno: Alumno }) {
       </section>
 
       <section className="lab__caja" aria-labelledby="actividades-titulo">
-        <h2 id="actividades-titulo">Actividades</h2>
-        <p>Tu maestra todavía no te mandó ninguna. Mientras tanto, podés explorar las cuatro.</p>
-        <Link className="btn btn--primario" href="/explorar">
-          Explorar las actividades
+        <h2 id="actividades-titulo">Tus actividades</h2>
+        {tareas.length === 0 ? (
+          <p>Tu maestra todavía no te mandó ninguna. Mientras tanto, podés explorar.</p>
+        ) : (
+          <ul className="lab__tareas">
+            {tareas.map((t) => {
+              const act = datosActividad(t.actividad);
+              const va = dondeVa(t.actividad, t.avance?.etapa);
+              const abierta = t.estado === 'activa';
+              const estado = t.avance?.completada_en ? '¡Terminada!' : t.avance ? `Vas por: ${va.nombre} (${va.indice} de ${va.total})` : 'Sin empezar';
+              return (
+                <li key={t.id} className={`lab__tarea ${abierta ? '' : 'lab__tarea--cerrada'}`}>
+                  <span className="lab__placa" style={{ background: act?.placa }} aria-hidden="true" />
+                  <div>
+                    <h3>
+                      {act?.numero} · {act?.nombre}
+                    </h3>
+                    <p>{abierta ? estado : `Cerrada por tu maestra · ${estado}`}</p>
+                  </div>
+                  {abierta && (
+                    <Link className="btn btn--primario" href={`/lab/tarea/${t.id}`}>
+                      {t.avance?.completada_en ? 'Ver' : t.avance ? 'Seguir' : 'Empezar'}
+                    </Link>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+        <Link className="enlace" href="/explorar">
+          Explorar otras actividades por mi cuenta
         </Link>
       </section>
     </main>

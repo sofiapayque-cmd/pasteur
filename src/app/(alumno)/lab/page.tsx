@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { exigirAlumno } from '@/datos/alumno';
+import { tareasDelAlumno } from '@/datos/tareas';
 import Laboratorio from '@/pantallas/nino/Laboratorio';
 
 /*
@@ -9,5 +10,6 @@ import Laboratorio from '@/pantallas/nino/Laboratorio';
 export const metadata: Metadata = { title: 'Tu laboratorio', robots: { index: false } };
 
 export default async function Page() {
-  return <Laboratorio alumno={await exigirAlumno()} />;
+  const alumno = await exigirAlumno();
+  return <Laboratorio alumno={alumno} tareas={await tareasDelAlumno()} />;
 }

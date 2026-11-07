@@ -12,6 +12,21 @@ import { INFO_ACTIVIDADES } from '../actividades/info';
   y la pantalla de pausa cuando la maestra pide mirar el pizarrón.
   Cada actividad dibuja su contenido adentro.
 */
+/* En una tarea, el avance se guarda solo: un cartelito cuenta cómo va. */
+function EstadoGuardado({ estado }) {
+  const texto = {
+    listo: 'Guardado',
+    guardando: 'Guardando…',
+    error: 'Sin conexión: se guarda cuando vuelva',
+    cerrada: 'Tu maestra cerró esta actividad',
+  }[estado];
+  return (
+    <span className={`guardado guardado--${estado}`} role="status" aria-live="polite">
+      {texto}
+    </span>
+  );
+}
+
 export default function MarcoActividad({ actividadId, progreso, children }) {
   const navegar = useNavigate();
   const desde = useDesde(); // ej. la maestra probando la actividad desde "Preparar la clase" (?desde=…)
@@ -25,21 +40,22 @@ export default function MarcoActividad({ actividadId, progreso, children }) {
       <header className="cabecera actividad__cabecera">
         <div className="cabecera__izq">
           {!progreso.enClase && (
-            <button className="btn btn--claro cabecera__volver" onClick={() => navegar(desde || '/explorar')}>
-              {desde === '/maestra' ? 'Volver a mi panel' : desde ? 'Volver a preparar la clase' : 'Salir'}
+            <button className="btn btn--claro cabecera__volver" onClick={() => navegar(progreso.tarea ? '/lab' : desde || '/explorar')}>
+              {progreso.tarea ? 'Mi laboratorio' : desde === '/maestra' ? 'Volver a mi panel' : desde ? 'Volver a preparar la clase' : 'Salir'}
             </button>
           )}
           <span className="etiqueta etiqueta--oscura">
-            {act?.numero} · {act?.nombre} · {progreso.enClase ? progreso.alumno.apodo : 'modo individual'}
+            {act?.numero} · {act?.nombre} · {progreso.enClase || progreso.tarea ? progreso.alumno?.apodo || 'tu tarea' : 'modo individual'}
           </span>
+          {progreso.tarea && <EstadoGuardado estado={progreso.guardado} />}
         </div>
         <div className="cabecera__der">
-          {!progreso.enClase && (
+          {!progreso.enClase && !progreso.tarea && (
             <button className="enlace" onClick={progreso.reiniciar}>
               Empezar de nuevo
             </button>
           )}
-          <VolverMaestra destino={!progreso.enClase && desde ? desde : undefined} />
+          {!progreso.tarea && <VolverMaestra destino={!progreso.enClase && desde ? desde : undefined} />}
         </div>
       </header>
 

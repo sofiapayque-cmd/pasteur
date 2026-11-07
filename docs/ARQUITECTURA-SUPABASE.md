@@ -250,3 +250,20 @@ Se desarrolló en `ia/asistente` (la rama que ya tiene todo configurado en Verce
 - Pantallas en 1024×600 (Ceibal), 1366×768 y celular, sin desborde; después de un error no se borra lo escrito.
 - **Aplicada en `ciencia-sin-limites-dev` el 6/11** con el OK de Sofia, idéntica al archivo (mismo md5). En dev: **29 OK · 0 FALLAS**, sin dejar nada. Asesor de seguridad: nada nuevo.
 - **Falta:** probar con una tarjeta real en el preview (aula "4 b", código SBZ4).
+
+## 15. Etapa 5, parte 1 · Tareas y avance guardado (6/11/2026, rama `ia/asistente`)
+
+Sin migraciones: las tablas `asignaciones` y `progreso` y sus reglas RLS están desde la etapa 1.
+
+**Maestra** (con el sistema de aulas):
+- `/maestra/aulas/[id]`: nueva sección **"Actividades del aula"** (abierta/cerrada, cuántos empezaron y terminaron) y botón **"Mandar una actividad"**.
+- `/maestra/aulas/[id]/mandar`: elegir la actividad (solo las disponibles) y sus opciones, las mismas de "Preparar la clase" (`OPCIONES`), y si lo que se habilita después (`DESBLOQUEOS`, por ejemplo antibióticos) está desde el principio o lo habilita ella.
+- `/maestra/aulas/[id]/tareas/[tarea]`: **cómo va cada uno** (etapa con barra, terminó, último cambio), habilitar/cerrar lo pendiente, cerrar o reabrir la tarea. Se actualiza sola cada 20 s.
+
+**Alumno:**
+- `/lab`: **"Tus actividades"** con su estado (sin empezar / vas por… / ¡terminada! / cerrada por tu maestra) y Empezar/Seguir/Ver.
+- `/lab/tarea/[id]`: la actividad de siempre con el **avance guardado en la base** (`useProgresoTarea`, `src/sala/progresoTarea.ts`): se guarda solo 1 s después del último cambio (al cambiar de etapa, enseguida), en fila (uno viejo nunca pisa uno nuevo), al ocultar la pestaña, y reintenta cada 5 s sin internet. Cartel "Guardado / Guardando… / Sin conexión / Tu maestra cerró esta actividad". Sin "Empezar de nuevo" ni "Vista de la maestra". Cada 30 s pregunta si la maestra habilitó o cerró algo. Al llegar a la última etapa queda **terminada** (`completada_en`).
+
+**Seguridad:** todo con la sesión de quien llama (RLS): la maestra solo manda y ve en SUS aulas; el alumno solo ve las tareas de SU aula (no borradores) y solo guarda SU avance en tareas abiertas. El servidor limpia opciones y habilitaciones contra las de la actividad, valida que la etapa exista y limita los datos a 60 KB.
+
+**Verificado:** tsc, ESLint, `next build` con y sin el sistema de aulas; pantallas con datos de ejemplo en compu, Ceibal (1024×600) y celular, sin desbordes. **Falta probarlo con cuentas reales en el preview.**

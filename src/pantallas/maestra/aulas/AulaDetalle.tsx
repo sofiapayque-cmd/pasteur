@@ -1,11 +1,14 @@
 'use client';
 
 import { useActionState, useState } from 'react';
+import Link from 'next/link';
 import Cabecera from '@/components/Cabecera';
 import FondoVivo from '@/components/FondoVivo';
 import CuentaDocente from '@/components/CuentaDocente';
 import { agregarAlumnos, archivarAula, cambiarActivo, guardarAula, nuevaClave, nuevasClavesDelGrupo, type EstadoAula } from '@/acciones/aulas';
 import type { Alumno, Aula } from '@/datos/aulas';
+import type { TareaConCuentas } from '@/datos/tareas';
+import { actividad as datosActividad } from '@/lib/aulas/tareas';
 import Tarjetas from './Tarjetas';
 import { CamposAula } from './MisAulas';
 import './aulas.css';
@@ -31,7 +34,19 @@ async function despachar(previo: EstadoAula, datos: FormData): Promise<EstadoAul
   }
 }
 
-export default function AulaDetalle({ aula, alumnos, cuenta, anioActual }: { aula: Aula; alumnos: Alumno[]; cuenta: string; anioActual: number }) {
+export default function AulaDetalle({
+  aula,
+  alumnos,
+  tareas = [],
+  cuenta,
+  anioActual,
+}: {
+  aula: Aula;
+  alumnos: Alumno[];
+  tareas?: TareaConCuentas[];
+  cuenta: string;
+  anioActual: number;
+}) {
   const [estado, accion, trabajando] = useActionState<EstadoAula, FormData>(despachar, { mensaje: '' });
   const [guardadas, setGuardadas] = useState<EstadoAula | null>(null);
   const archivada = Boolean(aula.archivada_en);
@@ -77,6 +92,43 @@ export default function AulaDetalle({ aula, alumnos, cuenta, anioActual }: { aul
         <p className={`aulas__mensaje ${estado.ok ? 'aulas__mensaje--ok' : ''}`} role="status" aria-live="polite">
           {estado.mensaje}
         </p>
+
+        <section className="aulas__bloque" aria-labelledby="titulo-tareas">
+          <div className="aula__titulo-fila">
+            <h2 id="titulo-tareas">Actividades del aula</h2>
+            {!archivada && (
+              <Link className="btn btn--primario" href={`/maestra/aulas/${aula.id}/mandar`}>
+                Mandar una actividad
+              </Link>
+            )}
+          </div>
+          {tareas.length === 0 ? (
+            <p className="aulas__vacio">Todavía no le mandaste ninguna actividad a esta aula. Cuando la mandes, aparece en el laboratorio de cada chico.</p>
+          ) : (
+            <ul className="aula__tareas">
+              {tareas.map((t) => {
+                const act = datosActividad(t.actividad);
+                return (
+                  <li key={t.id} className="aula__tarea">
+                    <span className="aula__placa" style={{ background: act?.placa }} aria-hidden="true" />
+                    <div>
+                      <strong>
+                        {act?.numero} · {act?.nombre}
+                      </strong>
+                      <span className="aulas__bajada">
+                        {t.estado === 'activa' ? 'Abierta' : 'Cerrada'} · mandada el {fecha.format(new Date(t.creada_en))} · {t.empezaron} de {activos} empezaron · {t.terminaron}{' '}
+                        {t.terminaron === 1 ? 'terminó' : 'terminaron'}
+                      </span>
+                    </div>
+                    <Link className="btn btn--secundario btn--chico" href={`/maestra/aulas/${aula.id}/tareas/${t.id}`}>
+                      Ver cómo va
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
 
         <section className="aulas__bloque" aria-labelledby="titulo-alumnos">
           <h2 id="titulo-alumnos">Alumnos</h2>

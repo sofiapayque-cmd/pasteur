@@ -297,3 +297,140 @@
     padding: 4mm 5mm;
   }
 }
+
+/* Actividades del aula (tareas, etapa 5) */
+.aula__titulo-fila {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.aula__tareas {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.aula__tarea {
+  display: grid;
+  grid-template-columns: 48px 1fr auto;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px;
+  background: #fff;
+  border: 1px solid var(--vidrio);
+  border-radius: 16px;
+}
+.aula__tarea > div {
+  display: grid;
+  gap: 2px;
+}
+.aula__tarea .aulas__bajada {
+  margin: 0;
+}
+.aula__placa {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 1px var(--membrana);
+}
+@media (max-width: 640px) {
+  .aula__tarea {
+    grid-template-columns: 40px 1fr;
+  }
+  .aula__placa {
+    width: 40px;
+    height: 40px;
+  }
+  .aula__tarea .btn {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}
+
+/* Mandar una actividad */
+.mandar__actividades {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+.mandar__actividad {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 4px 12px;
+  align-items: center;
+  padding: 12px;
+  background: #fff;
+  border: 2px solid var(--vidrio);
+  border-radius: 16px;
+  cursor: pointer;
+}
+.mandar__actividad:has(input:checked) {
+  border-color: var(--nucleo);
+  box-shadow: 0 0 0 2px var(--membrana);
+}
+.mandar__actividad input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.mandar__actividad small {
+  grid-column: 2;
+  color: var(--tinta-suave);
+  line-height: 1.35;
+}
+.mandar__grupo {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.mandar__grupo legend {
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.mandar__items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.mandar__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 1px solid var(--vidrio);
+  border-radius: var(--radius-pill);
+  background: #fff;
+  cursor: pointer;
+}
+
+/* Cómo va una tarea */
+.tarea__estado {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+.tarea__barra {
+  display: inline-block;
+  width: 120px;
+  height: 10px;
+  border-radius: 6px;
+  background: var(--vidrio);
+  overflow: hidden;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+.tarea__barra > span {
+  display: block;
+  height: 100%;
+  background: var(--plasma);
+}
+.tarea__barra--lista > span {
+  background: #9cc23a;
+}

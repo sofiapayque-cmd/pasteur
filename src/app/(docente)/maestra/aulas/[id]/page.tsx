@@ -2,6 +2,7 @@ import { notFound, redirect } from 'next/navigation';
 import { aulasReales } from '@/lib/supabase/config';
 import { exigirDocenteActiva } from '@/datos/docente';
 import { listarAlumnos, obtenerAula } from '@/datos/aulas';
+import { listarTareas } from '@/datos/tareas';
 import AulaDetalle from '@/pantallas/maestra/aulas/AulaDetalle';
 
 /* /maestra/aulas/[id] · Un aula de la maestra. Si no es suya, la base no la devuelve: 404. */
@@ -16,6 +17,6 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   const { id } = await params;
   const aula = await obtenerAula(id);
   if (!aula) notFound();
-  const alumnos = await listarAlumnos(aula.id);
-  return <AulaDetalle aula={aula} alumnos={alumnos} cuenta={docente.nombre || docente.email || 'Maestra'} anioActual={anioActual()} />;
+  const [alumnos, tareas] = await Promise.all([listarAlumnos(aula.id), listarTareas(aula.id)]);
+  return <AulaDetalle aula={aula} alumnos={alumnos} tareas={tareas} cuenta={docente.nombre || docente.email || 'Maestra'} anioActual={anioActual()} />;
 }

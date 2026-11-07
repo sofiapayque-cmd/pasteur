@@ -1309,3 +1309,18 @@
     display: none;
   }
 }
+
+/* Tarea de la maestra: el avance se guarda solo (MarcoActividad) */
+.guardado {
+  font: 600 13px/1.2 var(--font-sans);
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--tinta-suave);
+  white-space: nowrap;
+}
+.guardado--error,
+.guardado--cerrada {
+  background: #fde8e4;
+  color: #a12e1f;
+}
