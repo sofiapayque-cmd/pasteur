@@ -16,7 +16,7 @@ Escrita el 7/11/2026 y actualizada el mismo día con las decisiones de Sofia.
 | --- | --- | --- |
 | 1 · Mail propio (Resend + DNS) | Sofia | **Hecho el 2/11:** `mail.cienciasinlimites.uy` verificado en Resend |
 | 2 · Base de producción | Claude | **Hecho el 7/11** |
-| 3 · Configurar el ingreso en Supabase | Sofia | Pendiente |
+| 3 · Configurar el ingreso en Supabase | Sofia | **Hecho el 7/11** (SMTP, plantillas, Site URL y registro cerrado). Se comprueba con la primera invitación real (paso 7.2) |
 | 4 · Variables de Vercel | Sofia | Pendiente |
 | 5 · Llevar la rama a `main` | Claude prepara, Sofia aprueba | Pendiente |
 | 6 · Dominio | Sofia | **Hecho:** registrado el 2/11 en HostingMontevideo, DNS en Vercel, certificado SSL emitido. Falta solo publicar la versión nueva (paso 5) |
@@ -92,7 +92,7 @@ Vercel → proyecto `pasteur` → Settings → Environment Variables, entorno **
 | Variable | Valor | Sensitive |
 | --- | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` | `https://qgijjbgfuqyylrsiyzps.supabase.co` | no |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | la publishable de producción | no |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | `sb_publishable_sipvMPgwmi9fzqf2401l3Q_g052eINX` (pública: va en el navegador) | no |
 | `SUPABASE_SECRET_KEY` | la secret de producción | **sí** |
 | `NEXT_PUBLIC_AULAS_REALES` | `1` | no |
 | `NEXT_PUBLIC_ASISTENTE` | `1` | no |
