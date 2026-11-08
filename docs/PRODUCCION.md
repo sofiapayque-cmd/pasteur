@@ -17,8 +17,8 @@ Escrita el 7/11/2026 y actualizada el mismo día con las decisiones de Sofia.
 | 1 · Mail propio (Resend + DNS) | Sofia | **Hecho el 2/11:** `mail.cienciasinlimites.uy` verificado en Resend |
 | 2 · Base de producción | Claude | **Hecho el 7/11** |
 | 3 · Configurar el ingreso en Supabase | Sofia | **Hecho el 7/11** (SMTP, plantillas, Site URL y registro cerrado). Se comprueba con la primera invitación real (paso 7.2) |
-| 4 · Variables de Vercel | Sofia | Pendiente |
-| 5 · Llevar la rama a `main` | Claude prepara, Sofia aprueba | Pendiente |
+| 4 · Variables de Vercel | Sofia | **Hecho el 8/11** (las 7 necesarias; `ACCESO_SAL` y las de NCBI quedaron sin cargar porque son opcionales) |
+| 5 · Llevar la rama a `main` | Claude prepara, Sofia aprueba | **PR #2 abierto el 8/11**, falta que Sofia lo apruebe |
 | 6 · Dominio | Sofia | **Hecho:** registrado el 2/11 en HostingMontevideo, DNS en Vercel, certificado SSL emitido. Falta solo publicar la versión nueva (paso 5) |
 | 7 · Primeras cuentas | Claude + Sofia | Pendiente |
 | 8 · Prueba completa | Sofia + Claude | Pendiente |
@@ -97,9 +97,9 @@ Vercel → proyecto `pasteur` → Settings → Environment Variables, entorno **
 | `NEXT_PUBLIC_AULAS_REALES` | `1` | no |
 | `NEXT_PUBLIC_ASISTENTE` | `1` | no |
 | `OPENAI_API_KEY` | clave de un proyecto de OpenAI solo para producción, con límite de gasto | **sí** |
-| `ACCESO_SAL` | un texto largo al azar, nuevo | **sí** |
+| `ACCESO_SAL` | opcional: un texto largo al azar. Si falta, se usa la clave secreta de Supabase | **sí** |
 | `CRON_SECRET` | otro texto largo al azar (16 caracteres o más) | **sí** |
-| `NCBI_EMAIL` | un mail de contacto del proyecto (lo pide PubMed) | no |
+| `NCBI_EMAIL` | opcional: un mail de contacto del proyecto (PubMed lo agradece) | no |
 | `NCBI_API_KEY` | opcional: clave gratis de NCBI | **sí** |
 
 Las variables de Production que hoy apuntan al proyecto de Ohio se **reemplazan**.
@@ -115,7 +115,7 @@ Las variables de Production que hoy apuntan al proyecto de Ohio se **reemplazan*
 ## Paso 5 · Llevar la rama a `main` (Claude prepara, Sofia aprueba)
 
 - `ia/asistente` ya contiene a `main` y a `migracion/nextjs`, sin conflictos.
-- **Claude:** abre un PR `ia/asistente → main` y cierra el PR #1, que queda incluido.
+- **Claude:** abre un PR `ia/asistente → main` (es el **PR #2**, abierto el 8/11). El PR #1 queda incluido: GitHub lo marca como fusionado solo.
 - **Sofia:** lo aprueba con **Create a merge commit**.
 - Vercel despliega Production con las variables del paso 4.
 
