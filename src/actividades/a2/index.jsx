@@ -5,7 +5,6 @@ import Visor, { ROT_INICIAL } from './Visor';
 import { construir, curvaCambio } from './modelo';
 import {
   ESTRUCTURAS,
-  estructura as buscarEstructura,
   INICIAL,
   PRESETS_T,
   PRESETS_PH,
@@ -466,6 +465,7 @@ function Simulacion({ progreso, d, modelo }) {
 
   return (
     <section className="a2-etapa a2-dos">
+      <h1 className="solo-lector">Simulación</h1>
       <div className="a2-columna">
         <Visor
           modelo={modelo}
@@ -527,6 +527,7 @@ function Calculando({ k, modelo, c }) {
   const nucleos = Array.from({ length: 24 });
   return (
     <section className="a2-etapa a2-calcula" aria-live="polite">
+      <h1 className="solo-lector">Simulación: la computadora está calculando</h1>
       <div className="a2-compu anim-crecer">
         <span className="etiqueta">La computadora del laboratorio está calculando</span>
         <div className="a2-compu__nucleos" aria-hidden="true">

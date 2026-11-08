@@ -4,7 +4,7 @@ import Aviso from '../../../components/Aviso';
 import Campo from '../Campo';
 import { Foto, TarjetaCaso } from './comunes';
 import { ERRORES_FOTO, LUCES, OBJETIVOS } from '../contenido';
-import { AUMENTOS, CAMPO, FOCO_OK, PLANOS, desenfoque, escenaDe, exponer, factorBlanqueo } from '../motor';
+import { CAMPO, FOCO_OK, PLANOS, desenfoque, escenaDe, exponer, factorBlanqueo } from '../motor';
 
 const IDX = { b: 0, g: 1, r: 2 };
 const sinMovimiento = () => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
@@ -210,6 +210,7 @@ export default function Microscopio({ progreso, muestra, mision, vivo }) {
 
   return (
     <section className="a3-micro">
+      <h1 className="solo-lector">Microscopio: {muestra.nombre}</h1>
       {/* Izquierda: caso, objetivos y luces */}
       <aside className="a3-micro__lado">
         <TarjetaCaso mision={mision} pistas={pistas} onPista={otraPista} />

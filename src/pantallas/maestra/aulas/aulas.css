@@ -1,0 +1,489 @@
+/* ---------- Maestra: Mis aulas, aula y tarjetas de acceso ---------- */
+.aulas {
+  display: flex;
+  flex-direction: column;
+}
+.aulas__cuerpo {
+  position: relative;
+  z-index: 1;
+  width: min(1120px, 100%);
+  margin: 0 auto;
+  padding: var(--space-4) var(--space-4) var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.aulas__cuerpo h1 {
+  font-size: clamp(32px, 3.6vw, 44px);
+  color: var(--nucleo);
+}
+.aulas__bajada {
+  color: var(--tinta-suave);
+  max-width: 62ch;
+}
+.aulas__bloque {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: #fff;
+  border-radius: var(--radius-md);
+  box-shadow: var(--halo);
+}
+.aulas__bloque h2 {
+  font-size: 24px;
+  color: var(--nucleo);
+}
+.aulas__fila {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: var(--space-3);
+  align-items: end;
+}
+.aulas__fila .campo__entrada {
+  width: 100%;
+}
+.aulas__mensaje {
+  min-height: 24px;
+  font-weight: 600;
+}
+.aulas__mensaje--ok {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--clorofila);
+}
+.aulas__lista {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--space-3);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.aulas__aula {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  background: #fff;
+  border-radius: var(--radius-md);
+  box-shadow: var(--halo-cerca);
+  color: inherit;
+  text-decoration: none;
+  transition: transform 0.4s var(--ease-organico);
+}
+.aulas__aula:hover {
+  transform: translateY(-2px);
+}
+.aulas__aula--archivada {
+  opacity: 0.6;
+}
+.aulas__aula h3 {
+  font-size: 22px;
+  color: var(--nucleo);
+}
+.codigo-aula {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--tinta);
+}
+.codigo-aula--grande {
+  font-size: 40px;
+  line-height: 1;
+}
+.aulas__vacio {
+  color: var(--tinta-suave);
+}
+
+/* Aula */
+.aula__cabeza {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.aula__codigo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+  background: var(--membrana);
+  border-radius: var(--radius-md);
+}
+.aula__tabla-marco {
+  overflow-x: auto;
+}
+.aula__tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 16px;
+}
+.aula__tabla th {
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--tinta-suave);
+  padding: var(--space-2);
+  border-bottom: 2px solid var(--vidrio);
+}
+.aula__tabla td {
+  padding: var(--space-2);
+  border-bottom: 1px solid var(--vidrio);
+  vertical-align: middle;
+}
+.aula__tabla tr.aula__inactivo td {
+  color: var(--tinta-suave);
+}
+.aula__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.btn--chico {
+  min-height: 40px;
+  padding: 0 16px;
+  font-size: 15px;
+}
+.aula__acciones .btn--claro {
+  border: 2px solid var(--membrana);
+}
+.aulas__fila--corta {
+  max-width: 560px;
+}
+.aula__detalles summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--nucleo);
+}
+.aula__detalles[open] summary {
+  margin-bottom: var(--space-3);
+}
+.aula__confirmar {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+}
+.aula__confirmar input {
+  width: 22px;
+  height: 22px;
+  margin-top: 2px;
+}
+
+/* Tarjetas de acceso (en pantalla) */
+.tarjetas {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.tarjetas__aviso {
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  background: #fff4d9;
+  border: 2px solid var(--cultivo);
+  font-weight: 600;
+}
+.tarjetas__botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.tarjetas__grilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--space-3);
+}
+.tarjeta-acceso {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  background: #fff;
+  border: 2px dashed var(--plasma);
+  border-radius: 18px;
+  color: var(--tinta);
+}
+.tarjeta-acceso__marca {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--tinta-suave);
+}
+.tarjeta-acceso__marca span {
+  white-space: nowrap;
+}
+.tarjeta-acceso__marca span + span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tarjeta-acceso__datos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 14px;
+  margin: 0;
+}
+.tarjeta-acceso__datos dt {
+  font-size: 13px;
+  color: var(--tinta-suave);
+}
+.tarjeta-acceso__datos dd {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+.tarjeta-acceso__fila-clave {
+  grid-column: 1 / -1;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--agar);
+}
+/* La clave más larga tiene 20 caracteres: entra en un renglón a este tamaño */
+.tarjeta-acceso__datos .tarjeta-acceso__clave {
+  font-size: 20px;
+  letter-spacing: 0;
+}
+.tarjeta-acceso__entrar {
+  font-size: 13px;
+}
+.tarjeta-acceso__nombre {
+  font-size: 13px;
+  color: var(--tinta-suave);
+  border-bottom: 1px solid var(--tinta-suave);
+  padding-bottom: 2px;
+}
+
+/* Hoja para imprimir: invisible en pantalla; al imprimir, es lo único que sale */
+.hoja-impresion {
+  display: none;
+}
+@media print {
+  @page {
+    size: A4;
+    margin: 10mm;
+  }
+  body {
+    background: #fff !important;
+  }
+  body > :not(.hoja-impresion) {
+    display: none !important;
+  }
+  .hoja-impresion {
+    display: block;
+  }
+  .hoja-impresion .tarjetas__grilla {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6mm;
+  }
+  .hoja-impresion .tarjeta-acceso__fila-clave {
+    border: 1px solid #999;
+    background: none;
+  }
+  .hoja-impresion .tarjeta-acceso {
+    break-inside: avoid;
+    border-color: #555;
+    border-radius: 4mm;
+    padding: 4mm 5mm;
+  }
+}
+
+/* Actividades del aula (tareas, etapa 5) */
+.aula__titulo-fila {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.aula__tareas {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.aula__tarea {
+  display: grid;
+  grid-template-columns: 48px 1fr auto;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px;
+  background: #fff;
+  border: 1px solid var(--vidrio);
+  border-radius: 16px;
+}
+.aula__tarea > div {
+  display: grid;
+  gap: 2px;
+}
+.aula__tarea .aulas__bajada {
+  margin: 0;
+}
+.aula__placa {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 1px var(--membrana);
+}
+@media (max-width: 640px) {
+  .aula__tarea {
+    grid-template-columns: 40px 1fr;
+  }
+  .aula__placa {
+    width: 40px;
+    height: 40px;
+  }
+  .aula__tarea .btn {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}
+
+/* Mandar una actividad */
+.mandar__actividades {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+.mandar__actividad {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 4px 12px;
+  align-items: center;
+  padding: 12px;
+  background: #fff;
+  border: 2px solid var(--vidrio);
+  border-radius: 16px;
+  cursor: pointer;
+}
+.mandar__actividad:has(input:checked) {
+  border-color: var(--nucleo);
+  box-shadow: 0 0 0 2px var(--membrana);
+}
+.mandar__actividad input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.mandar__actividad small {
+  grid-column: 2;
+  color: var(--tinta-suave);
+  line-height: 1.35;
+}
+.mandar__grupo {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.mandar__grupo legend {
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.mandar__items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.mandar__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 1px solid var(--vidrio);
+  border-radius: var(--radius-pill);
+  background: #fff;
+  cursor: pointer;
+}
+
+/* Cómo va una tarea */
+.tarea__estado {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+.tarea__barra {
+  display: inline-block;
+  width: 120px;
+  height: 10px;
+  border-radius: 6px;
+  background: var(--vidrio);
+  overflow: hidden;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+.tarea__barra > span {
+  display: block;
+  height: 100%;
+  background: var(--plasma);
+}
+.tarea__barra--lista > span {
+  background: #9cc23a;
+}
+.aula__botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* Cuadernos de investigación (tarea) */
+.cuadernos__lista {
+  display: grid;
+  gap: 10px;
+}
+.cuaderno {
+  border: 2px solid var(--membrana);
+  border-radius: 18px;
+  background: #fff;
+  padding: 10px 16px;
+}
+.cuaderno summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--nucleo);
+}
+.cuaderno dl {
+  margin: 12px 0 4px;
+  display: grid;
+  gap: 10px;
+}
+.cuaderno dt {
+  font: 500 12px/1.2 var(--font-mono);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--tinta-suave);
+  margin-bottom: 4px;
+}
+.cuaderno dd {
+  margin: 0 0 4px;
+  line-height: 1.45;
+}
+@media print {
+  .aulas .cabecera,
+  .aulas .aula__cabeza,
+  .aulas .aulas__bloque:not(.cuadernos),
+  .cuadernos__botones {
+    display: none !important;
+  }
+  .cuaderno {
+    break-inside: avoid;
+    border-color: #999;
+  }
+}

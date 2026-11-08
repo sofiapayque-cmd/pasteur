@@ -8,6 +8,7 @@
   (cantidad de colonias, tamaño de halos) no son datos de laboratorio.
 */
 import { AMBIENTES } from './datos';
+import { firma, tamanoColonia } from './colonias';
 
 export function azar(semilla) {
   let s = Math.abs(Math.floor(semilla)) % 233280 || 1;
@@ -44,15 +45,8 @@ export const preferencia = (ambiente, temp) => PREFERENCIA[ambiente]?.[temp] ?? 
 export const mejorTemperatura = (ambiente) =>
   Object.entries(PREFERENCIA[ambiente] || { templado: 1 }).sort((a, b) => b[1] - a[1])[0][0];
 
-/* Colores y formas de colonias por ambiente (representación, no especies reales).
-   VALIDAR: es común que bacterias antárticas tengan pigmentos (rosados, anaranjados, amarillos). */
-const COLONIAS = {
-  'antartida-suelo': { colores: ['#F4A6BD', '#F2B13B', '#FFF6E6'], formas: ['lisa', 'puntito', 'rugosa'] },
-  'antartida-pinguino': { colores: ['#FFF6E6', '#F4A6BD', '#E9D7A8'], formas: ['lisa', 'rugosa', 'puntito'] },
-  'campo-suelo': { colores: ['#FFF6E6', '#F2B13B', '#D9C7A3'], formas: ['rugosa', 'lisa', 'puntito'] },
-  'campo-vaca': { colores: ['#FFF6E6', '#E9D7A8', '#F2B13B'], formas: ['lisa', 'puntito', 'rugosa'] },
-};
-export const coloresColonias = (ambiente) => (COLONIAS[ambiente] || COLONIAS['campo-suelo']).colores;
+/* Cómo se ven las colonias de cada ambiente: ver colonias.js (la "firma", con sus fuentes). */
+export const coloresColonias = (ambiente) => firma(ambiente).map((m) => m.color);
 
 /* Trazo en zigzag por defecto (coordenadas de la placa, viewBox 400×400, centro 200,200) */
 export function trazoZigzag(semilla = 1) {
@@ -127,7 +121,8 @@ export function colonias(placa) {
   const { ambiente, semilla = 1, contaminada } = placa;
   const { colonias: n, tipos } = resultadoPlaca(placa);
   const r = azar(semilla * 7 + 3);
-  const paleta = COLONIAS[ambiente] || COLONIAS['campo-suelo'];
+  const tiposDeAca = firma(ambiente);
+  const gusto = preferencia(ambiente, placa.temp);
   const trazo = placa.trazo?.length > 1 ? placa.trazo : trazoZigzag(semilla);
   const lista = [];
   for (let i = 0; i < n; i++) {
@@ -143,12 +138,15 @@ export function colonias(placa) {
       y = 200 + ((y - 200) / d) * 158;
     }
     const tipo = Math.floor(r() * tipos);
+    const morfo = tiposDeAca[tipo];
+    // Mismo orden de sorteos que antes: las placas ya guardadas quedan con las colonias en el mismo lugar
     lista.push({
       x,
       y,
-      forma: paleta.formas[tipo],
-      color: paleta.colores[tipo],
-      tam: paleta.formas[tipo] === 'puntito' ? 5 + r() * 4 : 9 + r() * 10,
+      tipo,
+      forma: morfo.id,
+      color: morfo.color,
+      tam: tamanoColonia(morfo, r(), gusto),
       aparece: r() < 0.65 ? 1 : 2,
       giro: Math.round(r() * 360),
       semilla: Math.floor(r() * 1000),

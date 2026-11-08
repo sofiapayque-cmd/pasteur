@@ -74,6 +74,8 @@ export default function Campo({
       statsRef.current?.(s);
     });
     return () => cancelAnimationFrame(id);
+    // Se redibuja cuando cambia alguna parte de la vista, no cada vez que llega un objeto `vista` nuevo.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [escena, vista.x, vista.y, vista.a, vista.z, vista.l, tam, version]);
 
   const fluo = vista.l && vista.l !== 'w';

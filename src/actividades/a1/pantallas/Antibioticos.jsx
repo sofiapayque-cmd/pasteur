@@ -7,7 +7,8 @@ import {
 } from '../laboratorio';
 import { Cabeza, AvisoCapa, Pasos, sumarError, useTiempos } from '../piezas/comunes';
 import Arrastrable from '../piezas/Arrastrable';
-import Placa, { PlacaVidrio } from '../piezas/Placa';
+import Placa, { Colonia, DefsColonias, PlacaVidrio } from '../piezas/Placa';
+import { firma, tono } from '../colonias';
 import { Disco } from '../piezas/Instrumentos';
 import Reloj from '../piezas/Reloj';
 import { Termometro } from './Cultivo';
@@ -36,7 +37,8 @@ const adentro = (x, y) => {
 /* Placa sembrada "en césped" con discos de antibiótico. Donde el antibiótico frena, queda un halo. */
 export function PlacaCesped({ ambiente, discos, momento = 0, tamano = 360, onToque, destino, semilla = 5, etiqueta }) {
   const uid = useId().replace(/:/g, '');
-  const [c1, c2] = coloresColonias(ambiente);
+  const [c1] = coloresColonias(ambiente);
+  const morfo = firma(ambiente)[0];
   const resultados = discos.map((d) => ({ ...d, ...resultadoAntibiotico(ambiente, d.id) }));
   const resistentes = useMemo(() => {
     const r = azar(semilla * 13 + 1);
@@ -46,7 +48,7 @@ export function PlacaCesped({ ambiente, discos, momento = 0, tamano = 360, onToq
       for (let i = 0; i < d.resistentes; i++) {
         const ang = r() * Math.PI * 2;
         const dist = RADIO_DISCO + 7 + r() * Math.max(4, R - RADIO_DISCO - 14);
-        lista.push({ x: d.x + Math.cos(ang) * dist, y: d.y + Math.sin(ang) * dist, tam: 4 + r() * 3 });
+        lista.push({ x: d.x + Math.cos(ang) * dist, y: d.y + Math.sin(ang) * dist, tam: 4 + r() * 3, semilla: 3 + lista.length * 17, giro: lista.length * 53 });
       }
     });
     return lista;
@@ -65,29 +67,41 @@ export function PlacaCesped({ ambiente, discos, momento = 0, tamano = 360, onToq
     <div className={`a1-cesped ${onToque ? 'a1-cesped--activa' : ''}`} data-destino={destino} onClick={click}>
       <PlacaVidrio tamano={tamano} tapa={momento > 0} etiqueta={etiqueta || 'Placa con antibióticos'}>
         <defs>
-          <pattern id={`pc${uid}`} width="12" height="12" patternUnits="userSpaceOnUse">
-            <circle cx="3" cy="3" r="2.6" fill={c1} />
-            <circle cx="9" cy="8" r="2.2" fill={c2} />
-            <circle cx="9" cy="2" r="1.4" fill={c1} />
+          <DefsColonias uid={`r${uid}`} ambiente={ambiente} />
+          {/* Césped: una capa de bacterias pareja y mate sobre todo el agar */}
+          <radialGradient id={`cg${uid}`} cx=".45" cy=".42" r=".62">
+            <stop offset="0" stopColor={tono(c1, 0.24)} />
+            <stop offset=".75" stopColor={c1} />
+            <stop offset="1" stopColor={tono(c1, -0.14)} />
+          </radialGradient>
+          <pattern id={`pc${uid}`} width="14" height="14" patternUnits="userSpaceOnUse">
+            <ellipse cx="3" cy="4" rx="2.2" ry="1.6" fill={tono(c1, -0.3)} opacity=".16" />
+            <ellipse cx="10" cy="10" rx="1.8" ry="1.3" fill={tono(c1, -0.3)} opacity=".13" />
+            <circle cx="10" cy="3" r="1.1" fill="#FFFFFF" opacity=".24" />
+            <circle cx="4" cy="11" r=".9" fill="#FFFFFF" opacity=".2" />
           </pattern>
+          {/* Halo: el borde es nítido pero no cortado a cuchillo */}
+          <radialGradient id={`hm${uid}`}>
+            <stop offset=".92" stopColor="#000" />
+            <stop offset="1" stopColor="#FFF" />
+          </radialGradient>
           <mask id={`mk${uid}`}>
             <rect width="400" height="400" fill="#fff" />
-            {momento > 0 && resultados.map((d) => <circle key={d.id} cx={d.x} cy={d.y} r={RADIO_HALO[d.halo]} fill="#000" />)}
+            {momento > 0 && resultados.map((d) => <circle key={d.id} cx={d.x} cy={d.y} r={RADIO_HALO[d.halo] + 2} fill={`url(#hm${uid})`} />)}
           </mask>
         </defs>
         <g mask={`url(#mk${uid})`} className="a1-cesped__capa" style={{ opacity: opacidad }}>
-          <circle cx="200" cy="200" r="176" fill={c1} opacity=".55" />
+          <circle cx="200" cy="200" r="176" fill={`url(#cg${uid})`} opacity={morfo.translucida ? 0.8 : 0.94} />
           <circle cx="200" cy="200" r="176" fill={`url(#pc${uid})`} />
         </g>
         {momento > 0 &&
           resultados.map((d) => (
-            <circle key={`h${d.id}`} cx={d.x} cy={d.y} r={RADIO_HALO[d.halo]} fill="none" stroke="#C9A85E" strokeWidth="1.5" strokeDasharray="3 5" opacity=".7" />
+            <circle key={`h${d.id}`} cx={d.x} cy={d.y} r={RADIO_HALO[d.halo]} fill="none" stroke="#8F7440" strokeWidth="1.2" opacity=".4" />
           ))}
         {resistentes.map((c, i) => (
           <g key={i} transform={`translate(${c.x.toFixed(1)} ${c.y.toFixed(1)})`}>
             <g className="a1-colonia" style={{ transform: `scale(${momento === 2 ? 1 : momento === 1 ? 0.45 : 0})`, opacity: momento ? 1 : 0 }}>
-              <circle r={c.tam} fill={c2} stroke="#22232A" strokeOpacity=".25" strokeWidth="1.2" />
-              <circle cx={-c.tam * 0.3} cy={-c.tam * 0.3} r={c.tam * 0.3} fill="#fff" opacity=".7" />
+              <Colonia c={{ ...c, forma: morfo.id, color: morfo.color, tam: c.tam * 1.25 }} uid={`r${uid}`} />
             </g>
           </g>
         ))}

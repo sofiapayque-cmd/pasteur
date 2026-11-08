@@ -88,9 +88,13 @@ function suscribir(avisar) {
   };
 }
 
+// En el servidor no hay localStorage: se dibuja como "sin sala abierta".
+// El navegador usa lo mismo al hidratar y enseguida lee la sala real.
+const enServidor = () => SALA_VACIA;
+
 /** Hook para leer la sala desde cualquier pantalla. Se actualiza solo. */
 export function useSala() {
-  return useSyncExternalStore(suscribir, leer, leer);
+  return useSyncExternalStore(suscribir, leer, enServidor);
 }
 
 // Código de 4 caracteres, sin letras que se confunden (O/0, I/1)

@@ -125,7 +125,7 @@ function usePiedras(semilla, cantidad, colores, { rMin = 8, rMax = 24, evitar = 
   }, [semilla, cantidad]); // eslint-disable-line react-hooks/exhaustive-deps
 }
 
-function Marco({ id, children, etiqueta }) {
+function Marco({ children, etiqueta }) {
   return (
     <svg className="a1-nivel" viewBox="0 0 400 400" role="img" aria-label={etiqueta}>
       {children}

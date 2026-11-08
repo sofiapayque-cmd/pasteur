@@ -21,14 +21,14 @@ Esta versión tiene el recorrido de la maestra, la sala de clase y las cuatro ac
    npm run dev
    ```
 
-   La Terminal muestra una dirección como `http://localhost:5173`. Abrila en el navegador.
+   La Terminal muestra una dirección como `http://localhost:3000`. Abrila en el navegador.
    Mientras esté abierta, cada cambio que guardes en el código se ve al instante.
 
 5. Para cortar, volvé a la Terminal y apretá `Ctrl + C`.
 
 ## Cómo probar
 
-**Cada actividad sola:** Inicio › Soy niña o niño › "No tengo código: explorar sin sala" (o directo en `#/explorar`). La maestra también puede probarlas desde su panel con "Probarla yo".
+**Cada actividad sola:** Inicio › Soy niña o niño › "No tengo código: explorar sin sala" (o directo en `/explorar`). La maestra también puede probarlas desde su panel con "Probarla yo".
 
 **La clase completa** (todavía funciona dentro de un mismo navegador; más adelante se conecta a un servicio en tiempo real para que funcione entre la computadora de la maestra y las Ceibal):
 
@@ -44,7 +44,6 @@ Cada pestaña nueva es un niño distinto. El botón punteado "Simular un alumno"
 
 ```
 src/
-  App.jsx                 el mapa de la web: qué pantalla va en cada dirección
   data/contenido.js       actividades, apodos, colores y textos generales
   sala/sala.js            la sala de clase: todo lo que conecta maestra y niños
   sala/progreso.js        useProgreso: cómo cada actividad guarda el avance del niño
@@ -55,8 +54,14 @@ src/
       index.jsx           la experiencia del niño
       etapas.js           etapas, preguntas, guía docente, opciones de la maestra
   components/             piezas comunes: Moli, FondoVivo (organismos flotando),
-                          Aviso (errores y aciertos), MarcoActividad, Microvista...
-  pages/                  pantallas generales: inicio, rol, maestra/, nino/
+                          Aviso (errores y aciertos), MarcoActividad, Micrografia...
+  app/                    Next.js (App Router): el mapa de la web, una carpeta por dirección
+                          (publico) · (docente) maestra/ · (alumno) clase/ y explorar/
+                          layout.tsx: fuentes, estilos y metadatos
+  navegacion/             navegar entre pantallas (useNavigate, useParams, Navigate) y SoloNavegador
+  hooks/navegador.ts      leer el navegador sin romper el servidor (useHidratado, useMediaQuery, useOrigen)
+  pantallas/              pantallas generales: inicio, rol, maestra/, nino/
+                          (no se llama pages/: Next.js reserva ese nombre)
   styles/
     tokens.css            colores, tipografías, espacios: el sistema visual
     base.css              botones, etiquetas y animaciones comunes
@@ -75,14 +80,15 @@ docs/GUIA-ACTIVIDADES.md  reglas para crear o cambiar una actividad
 | Navegación, inicio con zoom, organismos flotando | Funciona |
 | Las 4 actividades en modo individual | Funcionan |
 | Sala: código, apodos, empezar, pausa, desbloqueos, tablero, puesta en común | Funciona en un mismo navegador |
-| Sala entre computadoras distintas (maestra ↔ Ceibal) | Próximo paso: Supabase o Firebase |
+| Sala entre computadoras distintas (maestra ↔ Ceibal) | Supabase preparado; falta aprobar y aplicar la base (`supabase/borrador/`) |
 | Logo del instituto, QR, guías docentes en PDF | Lugares marcados, faltan los archivos |
 | Textos entre corchetes [ ] y comentarios `// VALIDAR:` | A revisar con el Institut Pasteur |
 
 ## Tecnologías
 
-- **React 18**: arma la interfaz en componentes (cada pantalla y cada pieza es un archivo).
-- **React Router**: maneja las direcciones de la web (`#/maestra`, `#/clase`...).
-- **Vite**: el programa que la levanta en tu computadora y la prepara para publicar (`npm run build` crea la carpeta `dist/`, que es lo que se sube a internet).
-- **three.js**: solo para la molécula 3D de Simulaciones Biomoleculares, y se carga únicamente al entrar a esa actividad.
+- **Next.js 16 (App Router) + TypeScript**: el marco de la web. `npm run dev` la levanta en tu computadora, `npm run build` la prepara y `npm start` la sirve como en producción (Vercel).
+- **React 19**: arma la interfaz en componentes (cada pantalla y cada pieza es un archivo).
+- **Direcciones**: sin # (`/maestra`, `/clase/K7RM`...), con el App Router de Next.js. Los links viejos con # siguen andando. Mapa completo en `docs/MIGRACION.md`.
+- **Supabase** (preparado, sin activar): inicio de sesión de la maestra y la base para que la sala funcione entre computadoras. Para probar con Supabase, copiá `.env.example` como `.env.local` y completalo. Borrador de la base en `supabase/borrador/`.
+- La versión anterior con Vite quedó guardada en la rama `version-vite` (y el tag `vite-v1`).
 - Las animaciones son CSS y Canvas, pensadas para que anden en las Ceibal.

@@ -350,7 +350,7 @@ function generarBacterias() {
   const W = 320;
   const H = 320;
   const items = []; // { tag, kind, data }
-  const ponerBacteria = (x, y, zc) => {
+  const ponerBacteria = (x, y) => {
     const p = rnd();
     const rot = rnd() * Math.PI;
     if (p < 0.55) {

@@ -1,0 +1,276 @@
+/*
+  Ingreso con tarjeta y laboratorio del alumno (etapa 4).
+  Pensado para la Ceibal: pantallas chicas (1024×600 o 1366×768) y dedos.
+*/
+.entrar--cuenta {
+  gap: 48px;
+}
+.entrar__moli {
+  flex: 0 0 auto;
+}
+.entrar__grupo {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.entrar__grupo legend,
+.entrar__campo > span:first-child {
+  font-weight: 600;
+  font-size: 17px;
+  margin-bottom: 8px;
+  padding: 0;
+}
+.casilla--chica {
+  width: 72px;
+  height: 84px;
+  font-size: 42px;
+}
+.entrar__fila {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  width: 100%;
+}
+.entrar__campo {
+  display: flex;
+  flex-direction: column;
+}
+.entrar__campo input {
+  height: 64px;
+  border-radius: 16px;
+  border: 2px solid var(--plasma);
+  background: #fff;
+  padding: 0 16px;
+  font: 600 24px/1 var(--font-display);
+  color: var(--nucleo);
+}
+.entrar__campo input:focus {
+  border-color: var(--nucleo);
+  outline: 3px solid color-mix(in srgb, var(--plasma) 45%, transparent);
+}
+.entrar__campo input[aria-invalid='true'],
+.entrar__casillas .casilla[aria-invalid='true'] {
+  border-color: var(--coral);
+}
+.entrar__campo--numero input {
+  width: 96px;
+  text-align: center;
+}
+.entrar__campo--clave {
+  flex: 1 1 260px;
+}
+.entrar__clave {
+  display: flex;
+  gap: 8px;
+}
+.entrar__clave input {
+  flex: 1;
+  min-width: 0;
+}
+.entrar__ver {
+  min-width: 76px;
+  border-radius: 16px;
+  border: 2px solid var(--membrana);
+  background: #fff;
+  font-weight: 600;
+  color: var(--nucleo);
+  cursor: pointer;
+}
+
+/* Laboratorio */
+.lab {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+  align-content: start;
+  max-width: 980px;
+  margin: 0 auto;
+  padding: var(--space-4) var(--space-5) var(--space-6);
+}
+.lab__cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.lab__saludo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+.lab__cabecera .etiqueta {
+  white-space: normal;
+  min-width: 0;
+}
+.lab__saludo > div {
+  min-width: 0;
+}
+.lab__saludo h1 {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: clamp(34px, 4.5vw, 52px);
+  color: var(--nucleo);
+}
+.lab__saludo p {
+  margin: 8px 0 0;
+  font-size: 18px;
+  max-width: 52ch;
+}
+.lab__nombre {
+  text-decoration: underline;
+  text-decoration-thickness: 8px;
+  text-underline-offset: 6px;
+  text-decoration-color: var(--plasma);
+}
+.lab__caja {
+  position: relative;
+  background: #fff;
+  border-radius: 24px;
+  padding: var(--space-4);
+  display: grid;
+  gap: 12px;
+  justify-items: start;
+}
+.lab__caja h2 {
+  margin: 0;
+  font-size: 28px;
+  color: var(--nucleo);
+}
+.lab__caja p {
+  margin: 0;
+  font-size: 17px;
+}
+.lab__apodo {
+  display: grid;
+  gap: 12px;
+  width: 100%;
+}
+.lab__apodo .apodo__opciones {
+  margin-top: 0;
+}
+.lab__fila {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+.lab__ok {
+  margin: 0;
+  font-weight: 700;
+  color: #3f6a00;
+}
+
+/* Ceibal chica y celular */
+@media (max-width: 760px) {
+  .entrar__moli {
+    display: none;
+  }
+  .lab {
+    padding: var(--space-3) 16px var(--space-5);
+  }
+  .lab__saludo > div:first-child {
+    display: none;
+  }
+  .lab__apodo .apodo__opciones {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .lab__caja {
+    padding: 20px 16px;
+  }
+  .lab .apodo__opcion {
+    font-size: 15px;
+    padding: 0 8px;
+  }
+  .lab .apodo__colores {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .lab .apodo__color {
+    width: 48px;
+    height: 48px;
+  }
+}
+@media (max-width: 420px) {
+  .casilla--chica {
+    width: 60px;
+    height: 72px;
+    font-size: 34px;
+  }
+}
+
+/* Tareas en el laboratorio */
+.lab__tareas {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+  width: 100%;
+}
+.lab__tarea {
+  display: grid;
+  grid-template-columns: 64px 1fr auto;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  border: 2px solid var(--membrana);
+  border-radius: 20px;
+}
+.lab__tarea h3 {
+  margin: 0;
+  font-size: 20px;
+  color: var(--nucleo);
+}
+.lab__tarea p {
+  margin: 4px 0 0;
+  font-size: 16px;
+}
+.lab__tarea--cerrada {
+  opacity: 0.7;
+}
+.lab__placa {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 2px var(--membrana);
+}
+@media (max-width: 560px) {
+  .lab__tarea {
+    grid-template-columns: 48px 1fr;
+  }
+  .lab__placa {
+    width: 48px;
+    height: 48px;
+  }
+  .lab__tarea .btn {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}
+
+/* Clase en vivo abierta (aviso arriba del laboratorio) */
+.lab__clase {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  border: 3px solid var(--coral);
+}
+.lab__clase h2 {
+  margin: 0 0 4px;
+}
+.lab__clase p {
+  margin: 0;
+}
+@media (max-width: 640px) {
+  .lab__clase {
+    grid-template-columns: 1fr;
+  }
+  .lab__clase .lab__placa {
+    display: none;
+  }
+}
