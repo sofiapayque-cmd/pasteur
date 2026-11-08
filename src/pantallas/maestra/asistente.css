@@ -191,3 +191,50 @@
     padding: 20px 16px;
   }
 }
+
+/* Panel al costado de la puesta en común (8/11) */
+.puesta-asis {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  justify-content: flex-end;
+  background: rgba(34, 35, 42, 0.35);
+}
+.puesta-asis__panel {
+  width: min(560px, 100%);
+  height: 100%;
+  overflow-y: auto;
+  background: var(--agar);
+  padding: var(--space-4);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: var(--space-3);
+  box-shadow: -16px 0 40px rgba(47, 74, 133, 0.2);
+}
+.puesta-asis__panel .campo__entrada {
+  min-width: 0;
+  max-width: 100%;
+}
+/* Que una opción larga del selector no ensanche el formulario en pantallas angostas */
+.asis__form {
+  grid-template-columns: minmax(0, 1fr);
+}
+.asis__form .campo {
+  min-width: 0;
+}
+.puesta-asis__panel:focus {
+  outline: none;
+}
+.puesta-asis__cabeza {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.puesta-asis__cabeza h2 {
+  margin: 0;
+  font-size: 28px;
+  color: var(--nucleo);
+}

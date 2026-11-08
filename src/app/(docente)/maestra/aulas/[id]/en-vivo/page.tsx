@@ -10,6 +10,8 @@ import SoloNavegador from '@/navegacion/SoloNavegador';
 import MandarActividad from '@/pantallas/maestra/aulas/MandarActividad';
 import TareasParaClase from '@/pantallas/maestra/aulas/TareasParaClase';
 import ClaseEnVivo from '@/pantallas/maestra/aulas/ClaseEnVivo';
+import { iaConfigurada } from '@/lib/ia/openai';
+import { claveSecretaConfigurada } from '@/lib/supabase/admin';
 
 /*
   /maestra/aulas/[id]/en-vivo · La clase en vivo del aula (etapa 5, parte 2).
@@ -17,6 +19,9 @@ import ClaseEnVivo from '@/pantallas/maestra/aulas/ClaseEnVivo';
   · Si no: elegir la actividad (o una tarea ya mandada) y abrirla.
   Si el aula no es de la maestra, la base no la devuelve: 404.
 */
+// La puesta en común puede abrir "Preguntale al Pasteur", que tarda lo que tarda la IA
+export const maxDuration = 30;
+
 const fecha = new Intl.DateTimeFormat('es-UY', { day: 'numeric', month: 'short', timeZone: 'America/Montevideo' });
 
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {
@@ -32,7 +37,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
     if (!inst) notFound();
     return (
       <SoloNavegador>
-        <ClaseEnVivo inicial={inst} />
+        <ClaseEnVivo inicial={inst} asistente={iaConfigurada() && claveSecretaConfigurada} />
       </SoloNavegador>
     );
   }

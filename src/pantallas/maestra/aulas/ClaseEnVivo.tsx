@@ -18,7 +18,7 @@ import { actividad as datosActividad } from '@/lib/aulas/tareas';
   del estado de la clase, no de la dirección: si la maestra recarga o entra
   desde otra compu, vuelve al mismo punto.
 */
-export default function ClaseEnVivo({ inicial }: { inicial: Instantanea }) {
+export default function ClaseEnVivo({ inicial, asistente = false }: { inicial: Instantanea; asistente?: boolean }) {
   const { sala, inst, conexion, aviso, acciones } = useClaseMaestra(inicial);
   const aulaUrl = `/maestra/aulas/${inst.aula.id}`;
 
@@ -35,6 +35,7 @@ export default function ClaseEnVivo({ inicial }: { inicial: Instantanea }) {
     aula: { id: inst.aula.id, nombre: inst.aula.nombre },
     conexion,
     aviso,
+    asistente,
   };
 
   return (

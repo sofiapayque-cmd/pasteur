@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense } from 'react';
+import { Suspense, useCallback, useState } from 'react';
 import { Navigate, useNavigate } from '@/navegacion';
 import FondoVivo from '../../components/FondoVivo';
 import Cargando from '../../components/Cargando';
@@ -8,12 +8,15 @@ import { ACTIVIDADES } from '../../data/contenido';
 import { INFO_ACTIVIDADES } from '../../actividades/info';
 import { PUESTAS } from '../../actividades/componentes';
 import { useClase } from '../../sala/contexto';
+import PanelAsistente from './PanelAsistente';
 
 /* PUESTA EN COMÚN — lo que encontró toda la clase, para conversar (clase real o prototipo, ver useClase). */
 export default function Puesta() {
   const clase = useClase();
   const { sala, real } = clase;
   const navegar = useNavigate();
+  const [asistenteAbierto, setAsistenteAbierto] = useState(false);
+  const cerrarAsistente = useCallback(() => setAsistenteAbierto(false), []);
 
   if (sala.estado === 'cerrada') return real ? null : <Navigate to="/maestra" replace />;
 
@@ -67,6 +70,12 @@ export default function Puesta() {
             ))}
           </ol>
         </div>
+        {/* "Preguntale al Pasteur" sin salir de la puesta en común (8/11): solo en la clase real */}
+        {real && clase.asistente && (
+          <button className="btn btn--secundario" onClick={() => setAsistenteAbierto(true)}>
+            Preguntale al Pasteur
+          </button>
+        )}
         <button className="btn btn--claro" onClick={() => window.print()}>
           Imprimir resumen de la clase
         </button>
@@ -87,6 +96,7 @@ export default function Puesta() {
           </>
         )}
       </aside>
+      {asistenteAbierto && <PanelAsistente actividad={sala.actividad} onCerrar={cerrarAsistente} />}
     </main>
   );
 }

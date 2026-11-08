@@ -28,6 +28,19 @@ export default function Panel({ cuenta = null }) {
           <Moli estilo="plano" patas tamano={110} />
         </div>
       </div>
+      {/* "Preguntale al Pasteur" a la vista (8/11): antes era solo un botón chico arriba a la derecha */}
+      {cuenta && (
+        <section className="tarjeta panel__asistente" aria-labelledby="panel-asistente">
+          <div>
+            <span className="etiqueta">Para la clase</span>
+            <h2 id="panel-asistente">Preguntale al Pasteur</h2>
+            <p>Escribí una pregunta que haya hecho la clase y mostrales la respuesta que aprobó una investigadora del Instituto.</p>
+          </div>
+          <a className="btn btn--primario" href="/maestra/preguntar">
+            Hacer una pregunta
+          </a>
+        </section>
+      )}
       <ul className="panel__actividades">
         {ACTIVIDADES.map((a, i) => (
           <li key={a.id} className={`panel__actividad anim-crecer ${a.disponible ? '' : 'panel__actividad--pausa'}`} style={{ animationDelay: `${0.1 + i * 0.15}s` }}>

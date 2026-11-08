@@ -1685,3 +1685,138 @@
     padding: var(--space-4) var(--space-3) 80px;
   }
 }
+
+/* ---------- Pie "Accesos institucionales" (8/11) ----------
+   La web no tenía footer: es una franja fina, con el mismo fondo claro y las
+   mismas letras que el aviso de "Pedí acceso" del inicio. Va al final de cada
+   página pública; en el inicio, donde todo está ubicado a mano, va abajo de todo. */
+.pie-inst {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  padding: 0 16px 16px;
+  margin-top: auto;
+}
+.pie-inst__nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px 20px;
+  padding: 8px 20px;
+  border-radius: var(--radius-pill);
+  background: rgba(251, 249, 241, 0.92);
+  font: 500 14px/1.4 var(--font-sans);
+}
+.pie-inst__titulo {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tinta-suave);
+}
+.pie-inst__enlace {
+  color: var(--nucleo);
+  font-weight: 600;
+  text-decoration: none;
+  padding: 4px 0;
+}
+.pie-inst__enlace:hover {
+  text-decoration: underline;
+}
+.inicio .pie-inst {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+/* En el inicio, el texto de abajo sube lo justo para dejarle lugar al pie */
+.inicio:has(.pie-inst) .inicio__texto {
+  bottom: calc(9vh + 44px);
+}
+@media (max-width: 640px) {
+  .pie-inst__nav {
+    border-radius: var(--radius-sm);
+    padding: 8px 16px;
+  }
+}
+
+/* ¿Quién explora hoy? · acceso del equipo científico, más chico que las dos opciones principales */
+.rol__equipo {
+  margin: -3vh 16px var(--space-4);
+  max-width: calc(100% - 32px);
+  padding: 10px 20px;
+  border-radius: var(--radius-pill);
+  background: rgba(251, 249, 241, 0.92);
+  color: var(--tinta);
+  font: 500 15px/1.3 var(--font-sans);
+  text-decoration: none;
+  text-align: center;
+}
+.rol__equipo b {
+  color: var(--nucleo);
+  white-space: nowrap;
+}
+.rol__equipo:hover b {
+  text-decoration: underline;
+}
+/* Ingreso del alumno: el contenido va centrado en fila, así que el pie va abajo de todo */
+.entrar:has(.pie-inst) {
+  padding-bottom: calc(var(--space-5) + 56px);
+}
+.entrar .pie-inst {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+/* Panel de la maestra: "Preguntale al Pasteur" a la vista (8/11) */
+.panel__asistente {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3) var(--space-4);
+  margin: var(--space-4) var(--space-6) 0;
+  max-width: 960px;
+}
+.panel__asistente h2 {
+  margin: 4px 0;
+  font-size: 26px;
+  color: var(--nucleo);
+}
+.panel__asistente p {
+  margin: 0;
+  max-width: 60ch;
+  line-height: 1.45;
+}
+@media (max-width: 900px) {
+  .panel__asistente {
+    margin: var(--space-3) var(--space-3) 0;
+  }
+}
+/* Celular: el pie va en dos renglones y el aviso de "Pedí acceso" del inicio se sube para no encimarse */
+@media (max-width: 640px) {
+  .pie-inst {
+    padding: 0 12px 8px;
+  }
+  .pie-inst__nav {
+    gap: 2px 16px;
+    padding: 6px 14px;
+  }
+  .pie-inst__titulo {
+    flex-basis: 100%;
+    text-align: center;
+    font-size: 11px;
+  }
+  .inicio:has(.pie-inst) .inicio__acceso {
+    bottom: 72px;
+  }
+  .inicio:has(.pie-inst) .inicio__texto {
+    bottom: 128px;
+  }
+}

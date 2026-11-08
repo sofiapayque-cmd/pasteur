@@ -5,6 +5,7 @@ import Cabecera from '../../components/Cabecera';
 import FondoVivo from '../../components/FondoVivo';
 import Moli from '../../components/Moli';
 import { ACTIVIDADES } from '../../data/contenido';
+import PieInstitucional from '../../components/PieInstitucional';
 
 /*
   EXPLORAR: los laboratorios.
@@ -59,6 +60,7 @@ export default function Explorar({ visitante = false }) {
           </li>
         ))}
       </ul>
+      {visitante && <PieInstitucional />}
     </main>
   );
 }

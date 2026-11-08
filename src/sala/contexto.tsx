@@ -29,6 +29,8 @@ export type Clase = {
   volverA?: string;
   conexion?: Conexion;
   aviso?: string;
+  /** Solo en la clase real: "Preguntale al Pasteur" está listo (IA y clave del servidor configuradas) */
+  asistente?: boolean;
 };
 
 const Contexto = createContext<Clase | null>(null);

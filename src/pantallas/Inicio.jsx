@@ -5,6 +5,7 @@ import { useNavigate } from '@/navegacion';
 import { TEXTO_INICIO } from '../data/contenido';
 import FondoVivo from '../components/FondoVivo';
 import { aulasReales } from '@/lib/supabase/config';
+import PieInstitucional from '@/components/PieInstitucional';
 
 /*
   01 · INICIO
@@ -49,6 +50,9 @@ export default function Inicio() {
         <button className={`inicio__circulo ${zoom ? 'inicio__circulo--zoom' : ''}`} onClick={entrar} aria-label="Entrar a la experiencia">
           <span className={`etiqueta inicio__pista ${zoom ? 'se-desvanece' : ''}`}>Tocá el círculo</span>
         </button>
+      </div>
+      <div className={zoom ? 'se-desvanece' : ''}>
+        <PieInstitucional />
       </div>
     </main>
   );

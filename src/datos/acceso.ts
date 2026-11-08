@@ -1,6 +1,7 @@
 import 'server-only';
 import { cache } from 'react';
 import { aulasReales } from '@/lib/supabase/config';
+import { crearClienteServidor } from '@/lib/supabase/servidor';
 import { puedeEntrar, type Area, type TipoPersona } from '@/lib/acceso/permisos';
 import { obtenerAlumno } from './alumno';
 import { obtenerDocente } from './docente';
@@ -44,5 +45,17 @@ export async function puede(area: Area): Promise<boolean> {
   const quien = await quienEs();
   return puedeEntrar(quien.tipo, area);
 }
+
+/**
+ * ¿Hay alguna sesión abierta en este navegador, sea de quien sea?
+ * Sirve para distinguir a un visitante de alguien que entró con otra cuenta
+ * (por ejemplo, una maestra que abre el ingreso del equipo).
+ */
+export const haySesion = cache(async (): Promise<boolean> => {
+  const supabase = await crearClienteServidor();
+  if (!supabase) return false;
+  const { data } = await supabase.auth.getClaims();
+  return Boolean(data?.claims?.sub);
+});
 
 export type { TipoPersona };

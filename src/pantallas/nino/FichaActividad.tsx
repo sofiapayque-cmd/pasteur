@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import Cabecera from '@/components/Cabecera';
 import FondoVivo from '@/components/FondoVivo';
+import PieInstitucional from '@/components/PieInstitucional';
 import { ACTIVIDADES } from '@/data/contenido';
 import { INFO_ACTIVIDADES } from '@/actividades/info';
 
@@ -61,7 +62,7 @@ export default function FichaActividad({ act }: { act: string }) {
             <Link className="btn btn--primario" href="/clase">
               Entrar con mi tarjeta
             </Link>
-            <Link className="btn btn--claro" href="/maestra/entrar">
+            <Link className="btn btn--secundario" href="/maestra/entrar">
               Soy docente
             </Link>
           </div>
@@ -70,6 +71,7 @@ export default function FichaActividad({ act }: { act: string }) {
           </Link>
         </section>
       </div>
+      <PieInstitucional />
     </main>
   );
 }

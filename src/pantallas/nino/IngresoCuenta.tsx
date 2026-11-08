@@ -4,6 +4,7 @@ import { startTransition, useActionState, useRef, useState, type FormEvent, type
 import Link from 'next/link';
 import Moli from '@/components/Moli';
 import FondoVivo from '@/components/FondoVivo';
+import PieInstitucional from '@/components/PieInstitucional';
 import { ingresarAlumno, type EstadoIngreso } from '@/acciones/alumno';
 import { normalizarCodigo } from '@/lib/aulas/ingreso';
 import './cuenta.css';
@@ -128,6 +129,7 @@ export default function IngresoCuenta({ codigoInicial = '' }: { codigoInicial?: 
           No tengo tarjeta: ver los laboratorios
         </Link>
       </form>
+      <PieInstitucional />
     </main>
   );
 }

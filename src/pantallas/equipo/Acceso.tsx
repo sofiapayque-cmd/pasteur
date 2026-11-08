@@ -2,13 +2,15 @@
 
 import { useActionState, type ReactNode } from 'react';
 import Cabecera from '@/components/Cabecera';
-import { elegirClaveEquipo, ingresarEquipo, type Estado } from '@/acciones/equipo';
+import PieInstitucional from '@/components/PieInstitucional';
+import Link from 'next/link';
+import { elegirClaveEquipo, ingresarEquipo, salirEquipo, type Estado } from '@/acciones/equipo';
 
 /* Pantallas de acceso del equipo del Pasteur: entrar y elegir contraseña. */
 function Marco({ titulo, bajada, children }: { titulo: string; bajada: string; children: ReactNode }) {
   return (
     <main className="pantalla acceso">
-      <Cabecera miga="Equipo del Institut Pasteur" />
+      <Cabecera volverA="/rol" miga="Equipo del Institut Pasteur" />
       <div className="acceso__cuerpo">
         <section className="acceso__tarjeta anim-crecer">
           <span className="etiqueta">Equipo</span>
@@ -17,6 +19,7 @@ function Marco({ titulo, bajada, children }: { titulo: string; bajada: string; c
           {children}
         </section>
       </div>
+      <PieInstitucional />
     </main>
   );
 }
@@ -41,6 +44,32 @@ export function IngresoEquipo({ aviso }: { aviso?: string }) {
           {enviando ? 'Entrando…' : 'Entrar'}
         </button>
         <p className="acceso__bajada">¿Olvidaste la contraseña? Pedile a la admin del equipo un link nuevo.</p>
+      </form>
+    </Marco>
+  );
+}
+
+/**
+ * Alguien con sesión de otra cuenta abrió el ingreso del equipo (8/11).
+ * "Salir" cierra esa sesión y vuelve al formulario del equipo.
+ */
+const CUENTAS = {
+  docente: { nombre: 'una cuenta de maestra', volver: '/maestra', volverTexto: 'Volver a mi panel' },
+  alumno: { nombre: 'una cuenta de alumno', volver: '/lab', volverTexto: 'Volver a mi laboratorio' },
+  otra: { nombre: 'una cuenta que no es del equipo, o que está suspendida', volver: '/', volverTexto: 'Volver al inicio' },
+} as const;
+
+export function RestringidoEquipo({ cuenta }: { cuenta: keyof typeof CUENTAS }) {
+  const c = CUENTAS[cuenta];
+  return (
+    <Marco titulo="Acceso restringido" bajada={`El panel del equipo es solo para investigadoras e investigadores del Institut Pasteur. En este navegador entraste con ${c.nombre}.`}>
+      <form action={salirEquipo} className="acceso__form">
+        <button className="btn btn--primario btn--grande" type="submit">
+          Salir y entrar con otra cuenta
+        </button>
+        <Link className="enlace" href={c.volver}>
+          {c.volverTexto}
+        </Link>
       </form>
     </Marco>
   );

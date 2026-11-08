@@ -157,6 +157,63 @@ try {
     const v = await visitar(navegador, url, desde);
     anotar(`${desde} lleva a ${hacia}`, v.ruta === hacia && !v.actividad, `terminó en ${v.ruta}`);
   }
+  // 6 · Etapa 2: pie "Accesos institucionales" y acceso de investigadores, en compu, Ceibal y celular
+  const PUBLICAS = ['/', '/rol', '/explorar', '/explorar/a1', '/clase', '/maestra/entrar', '/maestra/recuperar', '/pedir-acceso', '/equipo/entrar'];
+  const TAMANOS = [
+    [1366, 768],
+    [1024, 600],
+    [390, 844],
+  ];
+  for (const ruta of PUBLICAS) {
+    for (const [ancho, alto] of TAMANOS) {
+      const ctx = await navegador.newContext({ viewport: { width: ancho, height: alto } });
+      const p = await ctx.newPage();
+      await p.goto(url + ruta, { waitUntil: 'networkidle', timeout: 180_000 });
+      await p.waitForTimeout(500);
+      const pie = await p.evaluate(() => {
+        const nav = document.querySelector('footer.pie-inst nav[aria-label="Accesos institucionales"]');
+        if (!nav) return null;
+        const caja = nav.getBoundingClientRect();
+        const enlaces = [...nav.querySelectorAll('a')].map((a) => ({ texto: a.textContent.trim(), href: a.getAttribute('href') }));
+        // En el inicio, el pie no se puede encimar con el texto de abajo
+        const texto = document.querySelector('.inicio__texto p, .inicio__texto')?.getBoundingClientRect();
+        const enInicio = Boolean(document.querySelector('main.inicio'));
+        const t = enInicio ? document.querySelector('.inicio__texto')?.getBoundingClientRect() : null;
+        const encima = t ? !(t.bottom <= caja.top || t.top >= caja.bottom || t.right <= caja.left || t.left >= caja.right) : false;
+        // ¿Se puede tocar cada enlace? En su centro tiene que estar el enlace, no otra cosa encima
+        const tapados = [...nav.querySelectorAll('a')].filter((a) => {
+          a.scrollIntoView({ block: 'center', inline: 'center' });
+          const r = a.getBoundingClientRect();
+          const el = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+          return el !== a && !a.contains(el);
+        }).map((a) => a.textContent.trim());
+        return { enlaces, tapados, encima, desborde: document.documentElement.scrollWidth - window.innerWidth, hayTexto: Boolean(texto) };
+      });
+      const ok =
+        pie &&
+        pie.enlaces.some((e) => e.texto === 'Acceso docentes' && e.href === '/maestra/entrar') &&
+        pie.enlaces.some((e) => e.texto === 'Acceso investigadores' && e.href === '/equipo/entrar') &&
+        !pie.tapados.length &&
+        !pie.encima &&
+        pie.desborde <= 2;
+      anotar(`${ruta} (${ancho}×${alto}) tiene el pie de accesos institucionales`, Boolean(ok), ok ? '' : JSON.stringify(pie));
+      await ctx.close();
+    }
+  }
+
+  // El acceso de investigadores en "¿Quién explora hoy?" y que el pie lleve al ingreso del equipo
+  {
+    const ctx = await navegador.newContext({ viewport: { width: 1024, height: 600 } });
+    const p = await ctx.newPage();
+    await p.goto(url + '/rol', { waitUntil: 'networkidle' });
+    const enRol = await p.locator('a.rol__equipo', { hasText: 'Acceso investigadores' }).getAttribute('href');
+    anotar('/rol ofrece "Acceso investigadores" junto a maestras y chicos', enRol === '/equipo/entrar', `href ${enRol}`);
+    await p.locator('footer.pie-inst a', { hasText: 'Acceso investigadores' }).click();
+    await p.waitForURL('**/equipo/entrar', { timeout: 60_000 });
+    const titulo = await p.locator('h1').first().textContent();
+    anotar('El pie lleva al ingreso del equipo (formulario, sin sesión)', titulo?.trim() === 'Panel del equipo', `h1: ${titulo}`);
+    await ctx.close();
+  }
 } finally {
   await navegador.close();
   parar();
