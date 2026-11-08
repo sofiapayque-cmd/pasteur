@@ -1,16 +1,18 @@
 import SoloNavegador from '@/navegacion/SoloNavegador';
 import Solo from '@/pantallas/nino/Solo';
-import { IDS_ACTIVIDAD } from '@/tipos/actividad';
+import FichaActividad from '@/pantallas/nino/FichaActividad';
+import { puede } from '@/datos/acceso';
 
-/* /explorar/[act] · Modo individual: hacer una actividad */
-
-// Las cuatro actividades se generan al compilar (a1…a4); otra dirección la resuelve la pantalla.
-export function generateStaticParams() {
-  return IDS_ACTIVIDAD.map((act) => ({ act }));
-}
-
+/*
+  /explorar/[act] · Hacer una actividad por su cuenta (modo individual).
+  Desde el 8/11 ya no es pública: el servidor mira la sesión en cada pedido
+  (por eso ya no se genera fija al compilar). Alumnos, maestras y equipo la
+  hacen; un visitante ve la ficha de la actividad y la actividad no se arma.
+  Sin el sistema real de aulas (prototipo), sigue abierta como antes.
+*/
 export default async function Page({ params }: { params: Promise<{ act: string }> }) {
   const { act } = await params;
+  if (!(await puede('actividad'))) return <FichaActividad act={act} />;
   // key: al pasar de una actividad a otra la pantalla se monta de nuevo (arreglo de la etapa 2)
   // Solo en el navegador: actividad con Canvas y avance guardado en esta pestaña.
   return (

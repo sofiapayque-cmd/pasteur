@@ -1627,3 +1627,61 @@
     padding: 18px 14px;
   }
 }
+
+/* ---------- Ficha pública de una actividad (sin sesión, 8/11) ----------
+   Pantalla nueva: alguien sin cuenta ve de qué se trata la actividad pero no la hace.
+   Reutiliza la placa, la etiqueta, la tarjeta y los botones de siempre. */
+.ficha-act__cuerpo {
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) minmax(320px, 1.2fr);
+  gap: var(--space-6);
+  align-items: start;
+  padding: var(--space-5) var(--space-6) 120px;
+}
+.ficha-act__presentacion {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+.ficha-act__presentacion h1 {
+  font-size: clamp(34px, 4vw, 48px);
+  line-height: 1.05;
+}
+.ficha-act__bajada {
+  font-size: 18px;
+  line-height: 1.45;
+  max-width: 460px;
+}
+.ficha-act__detalle {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 620px;
+}
+.ficha-act__detalle h2 {
+  font-size: 20px;
+  margin-top: 8px;
+}
+.ficha-act__detalle ul,
+.ficha-act__etapas {
+  margin: 0;
+  padding-left: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  line-height: 1.45;
+}
+.ficha-act__botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 4px;
+}
+@media (max-width: 900px) {
+  .ficha-act__cuerpo {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+    padding: var(--space-4) var(--space-3) 80px;
+  }
+}

@@ -125,7 +125,7 @@ export default function IngresoCuenta({ codigoInicial = '' }: { codigoInicial?: 
           {entrando ? 'Entrando…' : 'Entrar'}
         </button>
         <Link className="enlace" href="/explorar">
-          No tengo tarjeta: explorar sin entrar
+          No tengo tarjeta: ver los laboratorios
         </Link>
       </form>
     </main>

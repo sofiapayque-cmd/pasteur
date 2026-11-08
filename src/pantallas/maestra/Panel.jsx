@@ -6,6 +6,7 @@ import Moli from '../../components/Moli';
 import FondoVivo from '../../components/FondoVivo';
 import { ACTIVIDADES } from '../../data/contenido';
 import CuentaDocente from '../../components/CuentaDocente';
+import { aulasReales } from '@/lib/supabase/config';
 
 /* 03 · PANEL DE LA MAESTRA — las cuatro actividades aparecen como colonias que crecen.
    cuenta: nombre de la maestra con sesión (sistema de aulas), o null en el prototipo. */
@@ -36,7 +37,8 @@ export default function Panel({ cuenta = null }) {
             <p className="panel__bajada">{a.bajada}</p>
             {a.disponible ? (
               <>
-                <button className="btn btn--primario" onClick={() => navegar(`/maestra/${a.id}/preparar`)}>
+                {/* Con el sistema real de aulas, la clase se arma desde "Mis aulas" (no desde la sala de prueba del navegador) */}
+                <button className="btn btn--primario" onClick={() => navegar(aulasReales ? '/maestra/aulas' : `/maestra/${a.id}/preparar`)}>
                   Preparar la clase
                 </button>
                 <button className="enlace enlace--centro" onClick={() => navegar(conDesde(`/explorar/${a.id}`, '/maestra'))}>

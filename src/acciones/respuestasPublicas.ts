@@ -2,6 +2,7 @@
 
 import { equipoReal } from '@/lib/supabase/config';
 import { crearClienteAdmin } from '@/lib/supabase/admin';
+import { puede } from '@/datos/acceso';
 
 /*
   "PREGUNTAS DEL PASTEUR" DENTRO DE LAS ACTIVIDADES (bloque 4).
@@ -11,6 +12,8 @@ import { crearClienteAdmin } from '@/lib/supabase/admin';
   docs/PLAN-ENTREGA.md, privacidad). Son contenido aprobado y público: se
   leen con la clave secreta solo para eso (la vista del sello es del equipo).
   Cada vez que alguien abre una, se suma una vista anónima (migración 20).
+  Desde el 8/11 las actividades no son públicas: estas acciones piden la
+  misma sesión que hacer una actividad (alumno, maestra o equipo).
 */
 export type RespuestaPublica = { fichaId: string; pregunta: string; texto: string; fuentes: string[] };
 
@@ -18,6 +21,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export async function respuestasDeActividad(actividad: string): Promise<RespuestaPublica[]> {
   if (!equipoReal || !/^a[1-4]$/.test(actividad)) return [];
+  if (!(await puede('actividad'))) return [];
   const admin = crearClienteAdmin();
   if (!admin) return [];
   const { data: fichas } = await admin
@@ -48,6 +52,7 @@ export async function respuestasDeActividad(actividad: string): Promise<Respuest
 /** Suma una vista anónima (solo de respuestas publicadas: lo controla la base). */
 export async function contarVistaEnActividad(fichaId: string): Promise<void> {
   if (!equipoReal || !UUID.test(fichaId)) return;
+  if (!(await puede('actividad'))) return;
   const admin = crearClienteAdmin();
   if (!admin) return;
   const { error } = await admin.rpc('contar_vista_respuesta', { p_ficha: fichaId, p_origen: 'actividad' });
