@@ -214,3 +214,15 @@ En paralelo, sin código:
 | 7 · Calidad visual (opción A, A1) | Placas y muestras hechas (ver `REVISION-EXPERIENCIAS.md` §8) | Pruebas automáticas, pantallas y fluidez | Que Sofia lo mire; validar la firma de cada ambiente. |
 | 8 · Producción | Base nueva en São Paulo con las 17 migraciones (7/11, autorizado por Sofia); región y latido diario en `vercel.json`; links de un solo uso con botón "Entrar"; plantillas de mail | Migraciones idénticas (md5), seguridad idéntica a pruebas (1.476 elementos), 31 OK en producción | Pasos de Sofia en `docs/PRODUCCION.md`: mail, ingreso, variables, PR a `main`, dominio, primeras cuentas. |
 | 9 · Pruebas finales | `npm run test:actividades`: cada etapa de A1, A2 y A3 en compu y Ceibal (42 pantallas OK); 54 pruebas unitarias; seguridad de la base | — | Prueba completa en producción (paso 8 de `PRODUCCION.md`) y una Ceibal real. |
+
+## Ajustes de producto (desde el 8/11)
+
+Plan completo, con criterios de aceptación, horas y pruebas: documento "Ajustes de producto · auditoría y plan" (https://claude.ai/artifact/HzT6TcXYJEXQeDkZajA2ZP). Se trabaja en la rama `ia/asistente`; cada etapa pasa a `main` solo con el OK de Sofia.
+
+| Etapa | Estado | Pruebas | Falta |
+| --- | --- | --- | --- |
+| 1 · Actividades privadas | Hecha en la rama (8/11, commit 78c68f6) | `test:acceso` 4 OK · `test:acceso-e2e` 31 OK (desarrollo y build de producción) · `test:actividades` 42 OK · 55 unitarias anteriores | Revisión de Sofia con sesión (alumno, maestra y equipo) en la versión de prueba |
+| 2 · Accesos visibles | Pendiente | — | Pregunta 3 (footer) |
+| 3 · Timer y puesta en común | Pendiente | — | Preguntas 4, 5, 8 y 10 |
+| 4 · Curiosidades | Pendiente | — | Temas iniciales; preguntas 7 y 11 |
+| 5 · Figma y 3D | Pendiente | — | — |
