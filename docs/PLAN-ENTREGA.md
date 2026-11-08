@@ -222,7 +222,7 @@ Plan completo, con criterios de aceptación, horas y pruebas: documento "Ajustes
 | Etapa | Estado | Pruebas | Falta |
 | --- | --- | --- | --- |
 | 1 · Actividades privadas | Hecha en la rama (8/11, commit 78c68f6) | `test:acceso` 4 OK · `test:acceso-e2e` 31 OK (desarrollo y build de producción) · `test:actividades` 42 OK · 55 unitarias anteriores | Revisión de Sofia con sesión (alumno, maestra y equipo) en la versión de prueba |
-| 2 · Accesos visibles | Pendiente | — | Pregunta 3 (footer) |
+| 2 · Accesos visibles | Hecha en la rama (8/11, commit 679f4c8). Pregunta 3: se tomó la propuesta (franja fina al pie) | `test:acceso-e2e` 60 OK (desarrollo y build de producción; pie en 9 páginas × 3 tamaños) · capturas de las pantallas con sesión | Revisión de Sofia con sesión de maestra: tarjeta del panel y asistente en la puesta en común; con sesión de maestra, abrir `/equipo/entrar` |
 | 3 · Timer y puesta en común | Pendiente | — | Preguntas 4, 5, 8 y 10 |
 | 4 · Curiosidades | Pendiente | — | Temas iniciales; preguntas 7 y 11 |
 | 5 · Figma y 3D | Pendiente | — | — |
