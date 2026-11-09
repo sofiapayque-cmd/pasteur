@@ -58,6 +58,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
             return {
               id: t.id,
               nombre: `${act?.numero ?? ''} · ${act?.nombre ?? t.actividad}`,
+              placa: act?.placa,
               detalle: `Mandada el ${fecha.format(new Date(t.creada_en))} · ${t.empezaron} ${t.empezaron === 1 ? 'empezó' : 'empezaron'}`,
             };
           })}

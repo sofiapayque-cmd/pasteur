@@ -21,6 +21,9 @@
   color: var(--tinta-suave);
   max-width: 62ch;
 }
+.aulas__cuerpo h1 + .aulas__bajada {
+  margin-top: 8px;
+}
 .aulas__bloque {
   display: flex;
   flex-direction: column;
@@ -392,6 +395,15 @@
 .mandar__grupo legend {
   font-weight: 700;
   margin-bottom: 6px;
+}
+/* El título del bloque se ve igual que los demás títulos de bloque (h2) */
+.mandar__grupo .mandar__titulo {
+  font: 700 24px/1.2 var(--font-display);
+  color: var(--nucleo);
+  margin-bottom: 12px;
+}
+.mandar__opciones {
+  gap: var(--space-4);
 }
 .mandar__items {
   display: flex;

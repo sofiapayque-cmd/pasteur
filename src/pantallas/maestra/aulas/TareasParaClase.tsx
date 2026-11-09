@@ -8,7 +8,7 @@ export default function TareasParaClase({
   tareas,
   accion,
 }: {
-  tareas: { id: string; nombre: string; detalle: string }[];
+  tareas: { id: string; nombre: string; detalle: string; placa?: string }[];
   accion: (tareaId: string) => Promise<EstadoTareaForm>;
 }) {
   const [mensaje, setMensaje] = useState('');
@@ -20,6 +20,7 @@ export default function TareasParaClase({
       <ul className="aula__tareas">
         {tareas.map((t) => (
           <li key={t.id} className="aula__tarea">
+            <span className="aula__placa" style={{ background: t.placa }} aria-hidden="true" />
             <div>
               <strong>{t.nombre}</strong>
               <span className="aulas__bajada">{t.detalle}</span>
