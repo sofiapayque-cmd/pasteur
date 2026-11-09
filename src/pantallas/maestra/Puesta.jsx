@@ -9,6 +9,7 @@ import { INFO_ACTIVIDADES } from '../../actividades/info';
 import { PUESTAS } from '../../actividades/componentes';
 import { useClase } from '../../sala/contexto';
 import PanelAsistente from './PanelAsistente';
+import ResumenClase from './ResumenClase';
 
 /* PUESTA EN COMÚN — lo que encontró toda la clase, para conversar (clase real o prototipo, ver useClase). */
 export default function Puesta() {
@@ -41,11 +42,19 @@ export default function Puesta() {
       </div>
 
       <div className="puesta__principal">
-        {Especial ? (
-          <Suspense fallback={<Cargando />}>
-            <Especial sala={sala} />
-          </Suspense>
-        ) : (
+        {/* Datos, comparación, resumen automático y conclusiones para proyectar (8/11) */}
+        <ResumenClase
+          actividad={sala.actividad}
+          alumnos={sala.alumnos}
+          grafico={
+            Especial ? (
+              <Suspense fallback={<Cargando />}>
+                <Especial sala={sala} />
+              </Suspense>
+            ) : undefined
+          }
+        />
+        {!Especial && (
           <section className="tarjeta puesta__lista">
             <span className="etiqueta etiqueta--oscura">Cada investigador</span>
             <ul>

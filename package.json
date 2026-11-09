@@ -17,6 +17,7 @@
     "test:placas": "node --import ./pruebas/registrar.mjs --test --experimental-strip-types pruebas/placas.test.mjs",
     "test:acceso": "node --import ./pruebas/registrar.mjs --test --experimental-strip-types pruebas/acceso.test.mjs",
     "test:tiempo": "node --import ./pruebas/registrar.mjs --test --experimental-strip-types pruebas/tiempo.test.mjs",
+    "test:puesta": "node --import ./pruebas/registrar.mjs --test --experimental-strip-types pruebas/puesta.test.mjs",
     "test:actividades": "node --import ./pruebas/registrar.mjs pruebas/actividades.e2e.mjs",
     "test:acceso-e2e": "node --import ./pruebas/registrar.mjs pruebas/acceso.e2e.mjs"
   },
