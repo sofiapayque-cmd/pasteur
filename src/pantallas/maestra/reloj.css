@@ -1,0 +1,96 @@
+/* Timer de la clase en vivo (8/11). Mismos colores, tarjetas y botones de siempre. */
+.reloj {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 20px;
+  padding: 14px 20px;
+  border-radius: var(--radius-md);
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(47, 74, 133, 0.12);
+}
+.reloj__fila,
+.reloj__botones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.reloj__elegir .campo__entrada {
+  height: 48px;
+}
+.reloj__cuenta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 130px;
+}
+.reloj__numeros {
+  font: 700 40px/1 var(--font-display);
+  font-variant-numeric: tabular-nums;
+  color: var(--nucleo);
+}
+.reloj--pausado .reloj__numeros {
+  color: var(--tinta-suave);
+}
+.reloj--terminado {
+  background: var(--clorofila);
+}
+.reloj--definitivo {
+  background: var(--membrana);
+}
+.reloj__nota {
+  margin: 0;
+  max-width: 46ch;
+  line-height: 1.4;
+}
+
+/* Lo que ve el chico en su Ceibal */
+.reloj-alumno {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: 30;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 8px 24px rgba(47, 74, 133, 0.18);
+  font: 600 15px/1.2 var(--font-sans);
+}
+.reloj-alumno__numeros {
+  font: 700 20px/1 var(--font-display);
+  font-variant-numeric: tabular-nums;
+  color: var(--nucleo);
+}
+.reloj-aviso {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  z-index: 31;
+  transform: translateX(-50%);
+  width: min(560px, calc(100% - 32px));
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 16px;
+  padding: 16px 20px;
+  border-radius: var(--radius-md);
+  background: var(--clorofila);
+  box-shadow: 0 12px 32px rgba(47, 74, 133, 0.22);
+}
+.reloj-aviso p {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.4;
+}
+.reloj-aviso b {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 22px;
+}

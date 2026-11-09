@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, type ReactNode } from 'react';
+import type { AccionTiempo, FilaTiempo } from '@/lib/aulas/tiempo';
 import { alternarPausa, cerrarSala, desbloquear, empezar, irAPuesta, simularAlumno, useSala } from './sala';
 import type { Conexion } from './claseEnVivo';
 
@@ -31,6 +32,14 @@ export type Clase = {
   aviso?: string;
   /** Solo en la clase real: "Preguntale al Pasteur" está listo (IA y clave del servidor configuradas) */
   asistente?: boolean;
+  /** Solo en la clase real: el timer (migración 21) */
+  tiempo?: {
+    fila: FilaTiempo;
+    desfase: number;
+    mover: (accion: AccionTiempo, segundos?: number) => void;
+    /** cuándo guardó por última vez cada chico de la clase (para "guardaron al final") */
+    actualizaciones: string[];
+  };
 };
 
 const Contexto = createContext<Clase | null>(null);

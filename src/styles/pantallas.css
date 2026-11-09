@@ -1820,3 +1820,14 @@
     bottom: 128px;
   }
 }
+
+/* Tablero en vivo: el timer de la clase, debajo de la cabecera (8/11) */
+.tablero__reloj {
+  padding: 0 var(--space-5);
+  margin-bottom: var(--space-3);
+}
+@media (max-width: 900px) {
+  .tablero__reloj {
+    padding: 0 var(--space-3);
+  }
+}

@@ -8,7 +8,8 @@ import FondoVivo from '@/components/FondoVivo';
 import Moli from '@/components/Moli';
 import { EXPERIENCIAS } from '@/actividades/componentes';
 import { useProgresoTarea } from '@/sala/progresoTarea';
-import { useClaseAlumno } from '@/sala/claseEnVivo';
+import { useClaseAlumno, useDesfase } from '@/sala/claseEnVivo';
+import RelojAlumno from './RelojAlumno';
 import { desbloqueosDeClase, type SesionFila } from '@/lib/aulas/clase';
 
 /*
@@ -30,6 +31,7 @@ type Props = {
 
 export default function ClaseAlumno({ sesion: inicialSesion, tarea, inicial, alumno }: Props) {
   const { sesion } = useClaseAlumno(inicialSesion);
+  const { desfase } = useDesfase();
   const desbloqueos = desbloqueosDeClase(tarea.desbloqueos, sesion.desbloqueos);
   const nombre = alumno.apodo ?? `número ${alumno.numero}`;
   // Siempre se llama (aunque todavía esté esperando): las reglas de los hooks de React
@@ -95,10 +97,14 @@ export default function ClaseAlumno({ sesion: inicialSesion, tarea, inicial, alu
   }
 
   return (
-    <MarcoActividad actividadId={tarea.actividad} progreso={progreso}>
-      <Suspense fallback={<Cargando />}>
-        <Experiencia progreso={progreso} />
-      </Suspense>
-    </MarcoActividad>
+    <>
+      <MarcoActividad actividadId={tarea.actividad} progreso={progreso}>
+        <Suspense fallback={<Cargando />}>
+          <Experiencia progreso={progreso} />
+        </Suspense>
+      </MarcoActividad>
+      {/* Timer de la clase (8/11): al terminar, guarda en ese momento lo que tiene */}
+      <RelojAlumno fila={sesion} desfase={desfase} alTerminar={base.guardarYa} />
+    </>
   );
 }

@@ -5,6 +5,7 @@ import GloboMoli from '../../components/GloboMoli';
 import FondoVivo from '../../components/FondoVivo';
 import { ACTIVIDADES } from '../../data/contenido';
 import { useClase } from '../../sala/contexto';
+import RelojClase from './RelojClase';
 import { useOrigen } from '@/hooks/navegador';
 import { aulasReales } from '@/lib/supabase/config';
 
@@ -63,6 +64,8 @@ export default function SalaEspera() {
           </p>
         )}
         {real && clase.aviso && <p className="sala__aviso">{clase.aviso}</p>}
+        {/* Duración de la clase (8/11): opcional; el tiempo arranca al tocar "Empezar" */}
+        {real && clase.tiempo && <RelojClase {...clase.tiempo} modo="preparar" />}
       </section>
 
       <section className="sala__lista">

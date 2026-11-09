@@ -5,7 +5,9 @@ import { crearClienteServidor } from '@/lib/supabase/servidor';
 import { exigirDocenteActiva } from '@/datos/docente';
 import { esUuid, obtenerAula } from '@/datos/aulas';
 import { obtenerAlumno } from '@/datos/alumno';
-import { claseAbiertaDeAula, COLUMNAS_SESION, instantaneaMaestra } from '@/datos/claseEnVivo';
+import { claseAbiertaDeAula, COLUMNAS_SESION, instantaneaMaestra, leerSesion } from '@/datos/claseEnVivo';
+import { crearClienteAdmin } from '@/lib/supabase/admin';
+import { esAccionTiempo, tiempoDeFila, type AccionTiempo, type FilaTiempo, type Tiempo } from '@/lib/aulas/tiempo';
 import { desbloqueosDe, leerFormularioActividad } from '@/lib/aulas/tareas';
 import { esPaso, PASOS, type Instantanea, type Paso, type SesionFila } from '@/lib/aulas/clase';
 import type { EstadoTareaForm } from './tareas';
@@ -142,6 +144,49 @@ export async function estadoClaseMaestra(sesionId: string, desde?: string): Prom
 export async function estadoClaseAlumno(sesionId: string): Promise<SesionFila | null> {
   const alumno = await obtenerAlumno();
   if (!alumno || !esUuid(sesionId)) return null;
-  const { data } = await (await db()).from('sesiones').select(COLUMNAS_SESION).eq('id', sesionId).maybeSingle();
-  return (data as SesionFila | null) ?? null;
+  const supabase = await db();
+  return leerSesion<SesionFila>((c) => supabase.from('sesiones').select(c).eq('id', sesionId).maybeSingle());
+}
+
+// ---------------------------------------------------------------------
+// El timer de la clase (migración 21, pedido de Sofia del 8/11)
+// ---------------------------------------------------------------------
+export type ResultadoTiempo = { ok: true; tiempo: Tiempo; ahora: string } | { ok: false; mensaje: string };
+
+const MENSAJES_TIEMPO: Record<string, string> = {
+  'el tiempo ya empezó': 'El tiempo ya empezó: podés extenderlo o finalizarlo.',
+  'la clase ya está cerrada': 'La clase ya está cerrada.',
+  'la clase tiene cierre definitivo': 'La clase ya tiene cierre definitivo.',
+  'la clase no puede pasar de 4 horas': 'La clase no puede durar más de 4 horas.',
+};
+
+/**
+ * Pone, inicia, pausa, sigue, extiende o finaliza el tiempo de la clase, o la
+ * cierra definitivamente. Primero se comprueba con la sesión de la maestra
+ * que la clase es de su aula (RLS); después lo hace la base con su propia
+ * hora (función mover_tiempo, que solo llama el servidor y vuelve a
+ * comprobar que la clase es de esa maestra).
+ */
+export async function moverTiempo(sesionId: string, accion: AccionTiempo, segundos?: number): Promise<ResultadoTiempo> {
+  const docente = await exigirDocenteActiva();
+  if (!esUuid(sesionId) || !esAccionTiempo(accion)) return { ok: false, mensaje: 'Pedido raro.' };
+  const seg = segundos === undefined ? null : Math.round(Number(segundos));
+  if (seg !== null && (!Number.isFinite(seg) || seg < 60 || seg > 14400)) return { ok: false, mensaje: 'Elegí entre 1 minuto y 4 horas.' };
+  const { data: suya } = await (await db()).from('sesiones').select('id').eq('id', sesionId).maybeSingle();
+  if (!suya) return { ok: false, mensaje: 'No encontramos esa clase.' };
+  const admin = crearClienteAdmin();
+  if (!admin) return { ok: false, mensaje: 'El timer todavía no está activado en esta versión.' };
+  const { data, error } = await admin.rpc('mover_tiempo', { p_sesion: sesionId, p_docente: docente.id, p_accion: accion, p_segundos: seg });
+  if (error) {
+    if (error.code === 'PGRST202' || error.code === '42883') return { ok: false, mensaje: 'El timer todavía no está activado en esta versión.' };
+    if (error.code !== '22023') console.error('[clase] tiempo:', error.code);
+    return { ok: false, mensaje: MENSAJES_TIEMPO[error.message] ?? 'No se pudo cambiar el tiempo. Mirá cómo está ahora y probá de nuevo.' };
+  }
+  const fila = data as FilaTiempo & { ahora: string };
+  return { ok: true, tiempo: tiempoDeFila(fila), ahora: fila.ahora };
+}
+
+/** La hora del servidor, para que cada pantalla corrija su reloj (no es un dato privado). */
+export async function horaDelServidor(): Promise<string> {
+  return new Date().toISOString();
 }

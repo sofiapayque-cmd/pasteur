@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { crearClienteNavegador } from '@/lib/supabase/cliente';
 import { aplicarProgreso, aplicarSesion, fusionar, salaDesde, ultimoCambio, type Instantanea, type Paso, type SesionFila } from '@/lib/aulas/clase';
-import { estadoClaseAlumno, estadoClaseMaestra, habilitarEnClase, moverClase, pausarClase } from '@/acciones/claseEnVivo';
+import { estadoClaseAlumno, estadoClaseMaestra, habilitarEnClase, horaDelServidor, moverClase, moverTiempo, pausarClase } from '@/acciones/claseEnVivo';
+import { calcularDesfase, type AccionTiempo } from '@/lib/aulas/tiempo';
 
 /*
   CLASE EN VIVO EN EL NAVEGADOR (etapa 5, parte 2).
@@ -84,6 +85,37 @@ function useConsulta(conexion: Conexion, consultar: () => void) {
 }
 
 // ---------------------------------------------------------------------
+// El reloj del servidor (para el timer, 8/11)
+// ---------------------------------------------------------------------
+const CADA_DESFASE = 5 * 60_000;
+
+/**
+ * Diferencia entre el reloj del servidor y el de esta compu. Se mide al
+ * entrar y cada 5 minutos; cada respuesta del timer también la actualiza.
+ */
+export function useDesfase() {
+  const [desfase, setDesfase] = useState(0);
+  const medir = useCallback(async () => {
+    const enviado = Date.now();
+    try {
+      const servidor = await horaDelServidor();
+      setDesfase(calcularDesfase(servidor, enviado, Date.now()));
+    } catch {
+      /* sin internet: se queda con la última medida */
+    }
+  }, []);
+  useEffect(() => {
+    const primera = setTimeout(medir, 0);
+    const cada = setInterval(medir, CADA_DESFASE);
+    return () => {
+      clearTimeout(primera);
+      clearInterval(cada);
+    };
+  }, [medir]);
+  return { desfase, setDesfase };
+}
+
+// ---------------------------------------------------------------------
 // La maestra
 // ---------------------------------------------------------------------
 export function useClaseMaestra(inicial: Instantanea) {
@@ -135,6 +167,42 @@ export function useClaseMaestra(inicial: Instantanea) {
     [consultar],
   );
 
+  // El timer: lo cambia la base con su hora; la respuesta trae esa hora para corregir el reloj de esta compu
+  const { desfase, setDesfase } = useDesfase();
+  const tiempo = useCallback(
+    async (accion: AccionTiempo, segundos?: number) => {
+      setAviso('');
+      const enviado = Date.now();
+      try {
+        const r = await moverTiempo(sesionId, accion, segundos);
+        if (r.ok) {
+          setDesfase(calcularDesfase(r.ahora, enviado, Date.now()));
+          const t = r.tiempo;
+          setInst((i) =>
+            aplicarSesion(i, {
+              id: i.sesion.id,
+              tiempo_estado: t.estado,
+              tiempo_duracion: t.duracion,
+              tiempo_fin: t.fin,
+              tiempo_restante: t.restante,
+              tiempo_terminado_en: t.terminadoEn,
+              cierre: t.cierre,
+            }),
+          );
+          // El cierre definitivo también cierra la tarea: se trae todo de nuevo
+          if (accion === 'definitivo') consultar(true);
+        } else {
+          setAviso(r.mensaje);
+          consultar(true);
+        }
+      } catch {
+        setAviso('No hay conexión: probá de nuevo en un ratito.');
+        consultar(true);
+      }
+    },
+    [consultar, sesionId, setDesfase],
+  );
+
   const sala = useMemo(() => salaDesde(inst), [inst]);
   const acciones = useMemo(
     () => ({
@@ -149,7 +217,7 @@ export function useClaseMaestra(inicial: Instantanea) {
     [hacer, sesionId],
   );
 
-  return { sala, inst, conexion, aviso, acciones };
+  return { sala, inst, conexion, aviso, acciones, tiempo, desfase };
 }
 
 // ---------------------------------------------------------------------
