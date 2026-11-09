@@ -8,7 +8,7 @@ import { ACTIVIDADES } from '../../data/contenido';
 import CuentaDocente from '../../components/CuentaDocente';
 import { aulasReales } from '@/lib/supabase/config';
 
-/* 03 · PANEL DE LA MAESTRA — las cuatro actividades aparecen como colonias que crecen.
+/* 03 · PANEL DE LA MAESTRA — las actividades aparecen como colonias que crecen.
    cuenta: nombre de la maestra con sesión (sistema de aulas), o null en el prototipo. */
 /** @param {{ cuenta?: string | null }} props */
 export default function Panel({ cuenta = null }) {

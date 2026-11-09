@@ -31,7 +31,6 @@ const ACTIVIDADES = [
   { id: 'a1', nombre: 'Genómica Microbiana' },
   { id: 'a2', nombre: 'Simulaciones Biomoleculares' },
   { id: 'a3', nombre: 'Bioimagenología' },
-  { id: 'a4', nombre: 'Evolución de Virus' },
 ];
 
 async function levantar() {
@@ -135,6 +134,9 @@ try {
   // 4 · Una actividad que no existe
   const r404 = await fetch(`${url}/explorar/zz`);
   anotar('/explorar/zz da "no encontrada"', r404.status === 404, `estado ${r404.status}`);
+  // A4 se retiró el 9/11: ni ficha ni actividad
+  const ra4 = await fetch(`${url}/explorar/a4`);
+  anotar('/explorar/a4 (retirada) da "no encontrada"', ra4.status === 404, `estado ${ra4.status}`);
 
   // 5 · Enlaces viejos y áreas privadas: a qué ingreso llevan
   const destinos = [
@@ -201,13 +203,14 @@ try {
     }
   }
 
-  // El acceso de investigadores en "¿Quién explora hoy?" y que el pie lleve al ingreso del equipo
+  // "¿Quién explora hoy?" sin el acceso de investigadores en el medio (9/11: queda solo en el pie) y que el pie lleve al ingreso del equipo
   {
     const ctx = await navegador.newContext({ viewport: { width: 1024, height: 600 } });
     const p = await ctx.newPage();
     await p.goto(url + '/rol', { waitUntil: 'networkidle' });
-    const enRol = await p.locator('a.rol__equipo', { hasText: 'Acceso investigadores' }).getAttribute('href');
-    anotar('/rol ofrece "Acceso investigadores" junto a maestras y chicos', enRol === '/equipo/entrar', `href ${enRol}`);
+    const fueraDelPie = await p.locator('a[href="/equipo/entrar"]:not(footer.pie-inst a)').count();
+    const enPie = await p.locator('footer.pie-inst a', { hasText: 'Acceso investigadores' }).count();
+    anotar('/rol muestra "Acceso investigadores" solo en el pie', fueraDelPie === 0 && enPie === 1, `fuera del pie ${fueraDelPie}, en el pie ${enPie}`);
     await p.locator('footer.pie-inst a', { hasText: 'Acceso investigadores' }).click();
     await p.waitForURL('**/equipo/entrar', { timeout: 60_000 });
     const titulo = await p.locator('h1').first().textContent();

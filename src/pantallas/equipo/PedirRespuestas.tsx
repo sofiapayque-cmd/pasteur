@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { startTransition, useActionState, useState, type FormEvent } from 'react';
 import { ideasDePreguntas, pedirRespuestas, type EstadoIdeas, type EstadoPedido } from '@/acciones/respuestas';
-import { ACTIVIDADES } from '@/lib/equipo/comun';
+import { ACTIVIDADES, ACTIVIDADES_A_ELEGIR } from '@/lib/equipo/comun';
 
 /*
   "Pedir respuestas a la IA": la lista de preguntas (una por renglón) y la
@@ -48,7 +48,7 @@ export default function PedirRespuestas() {
           <label className="campo" style={{ flex: '0 1 260px' }}>
             <span className="campo__nombre">Actividad</span>
             <select className="campo__entrada" name="actividad" value={actividad} onChange={(e) => setActividad(e.target.value)}>
-              {Object.entries(ACTIVIDADES).map(([k, v]) => (
+              {ACTIVIDADES_A_ELEGIR.map(([k, v]) => (
                 <option key={k} value={k}>
                   {v}
                 </option>

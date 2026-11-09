@@ -3,7 +3,7 @@ import { exigirMiembro } from '@/datos/equipo';
 import { nombresDelEquipo } from '@/datos/fichas';
 import { listarPreguntasSinRespuesta, listarRespuestas, masVistas, NOMBRE_GRUPO, type Grupo } from '@/datos/respuestas';
 import { iaConfigurada } from '@/lib/ia/openai';
-import { ACTIVIDADES } from '@/lib/equipo/comun';
+import { ACTIVIDADES, ACTIVIDADES_A_ELEGIR } from '@/lib/equipo/comun';
 import PedirRespuestas from '@/pantallas/equipo/PedirRespuestas';
 import PreguntasDeClases from '@/pantallas/equipo/PreguntasDeClases';
 import Tarjeta from '@/pantallas/equipo/TarjetaRespuesta';
@@ -112,7 +112,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ v
             <Link href={enlace({ actividad: '' })} aria-current={!actividad ? 'true' : undefined}>
               Todas las actividades
             </Link>
-            {Object.entries(ACTIVIDADES).map(([k, v]) => (
+            {ACTIVIDADES_A_ELEGIR.map(([k, v]) => (
               <Link key={k} href={enlace({ actividad: k })} aria-current={actividad === k ? 'true' : undefined}>
                 {v.split(' · ')[0]}
               </Link>

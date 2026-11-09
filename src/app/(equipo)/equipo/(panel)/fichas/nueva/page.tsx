@@ -1,7 +1,7 @@
 import { exigirMiembro } from '@/datos/equipo';
 import { listarTemas } from '@/datos/fichas';
 import { crearFicha } from '@/acciones/fichas';
-import { ACTIVIDADES } from '@/lib/equipo/comun';
+import { ACTIVIDADES, ACTIVIDADES_A_ELEGIR } from '@/lib/equipo/comun';
 import Forma from '@/pantallas/equipo/Forma';
 
 /* /equipo/fichas/nueva · Empezar una ficha (después se completa en su página) */
@@ -37,7 +37,7 @@ export default async function Page() {
               <span className="campo__nombre">Actividad</span>
               <select className="campo__entrada" name="actividad" defaultValue="">
                 <option value="">Ninguna en particular</option>
-                {Object.entries(ACTIVIDADES).map(([k, v]) => (
+                {ACTIVIDADES_A_ELEGIR.map(([k, v]) => (
                   <option key={k} value={k}>
                     {v}
                   </option>

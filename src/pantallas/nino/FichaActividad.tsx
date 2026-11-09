@@ -16,7 +16,8 @@ import { INFO_ACTIVIDADES } from '@/actividades/info';
 type Info = { GUIA?: { titulo?: string; objetivos?: string[] }; ETAPAS?: { id: string; nombre: string }[] };
 
 export default function FichaActividad({ act }: { act: string }) {
-  const actividad = ACTIVIDADES.find((a) => a.id === act);
+  // pausa: texto opcional si alguna vez se vuelve a mostrar una actividad en pausa
+  const actividad: ((typeof ACTIVIDADES)[number] & { pausa?: string }) | undefined = ACTIVIDADES.find((a) => a.id === act);
   if (!actividad) notFound();
   const info = (INFO_ACTIVIDADES as Record<string, Info>)[act] ?? {};
   const objetivos = info.GUIA?.objetivos ?? [];

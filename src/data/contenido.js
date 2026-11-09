@@ -11,8 +11,8 @@ export const ACTIVIDADES = [
     placa: 'radial-gradient(circle at 45% 45%, #2F4A85 0 12%, #8ED5C3 13% 45%, #E3F3EE 46% 100%)' },
   { id: 'a3', numero: '03', nombre: 'Bioimagenología', bajada: 'Manejá un microscopio de verdad: enfocá, cambiá el aumento y encendé luces de colores.', color: 'var(--filamento)', fondo: 'var(--a3-fondo)', disponible: true,
     placa: 'radial-gradient(circle at 50% 45%, #FBF9F1 0 10%, #9C9CF5 11% 44%, #EEEEFD 45% 100%)' },
-  { id: 'a4', numero: '04', nombre: 'Evolución de Virus', bajada: 'Mirá cómo un virus se copia, se equivoca y forma un árbol de variantes.', color: 'var(--tincion)', fondo: 'var(--a4-fondo)', disponible: false, pausa: 'En pausa: la estamos rediseñando para que se entienda mejor.',
-    placa: 'radial-gradient(circle at 55% 45%, #EF6F5E 0 14%, #F4A6BD 15% 46%, #FBE6EC 47% 100%)' },
+  // A4 · Evolución de Virus: retirada de la plataforma el 9/11 (pedido de Sofia). El código sigue en
+  // src/actividades/a4 por si vuelve; para mostrarla otra vez, agregar acá su ficha.
 ];
 
 // Apodos científicos: los chicos eligen uno, nunca escriben su nombre

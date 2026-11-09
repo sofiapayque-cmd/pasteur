@@ -115,7 +115,7 @@ Hecha el 6/11/2026 sobre la rama `ia/asistente` (último commit 2c35eaf), antes 
 - **A3 · Bioimagenología.**
   - Es un microscopio dibujado por código: aumento, enfoque, planos, canales de fluorescencia, fotoblanqueo y misiones.
   - No usa imágenes reales.
-- **A4.** En pausa.
+- **A4.** Retirada de la plataforma el 9/11 (pedido de Sofia): no aparece en ninguna lista y `/explorar/a4` da "no encontrada". El código sigue en `src/actividades/a4` por si vuelve.
 - **Técnica.**
   - No están instalados React Three Fiber ni GSAP. `three` está instalado pero no se usa.
   - Todo es 2D a propósito: lo decidimos el 28/10 por el rendimiento de las Ceibal.
@@ -224,5 +224,6 @@ Plan completo, con criterios de aceptación, horas y pruebas: documento "Ajustes
 | 1 · Actividades privadas | Hecha en la rama (8/11, commit 78c68f6) | `test:acceso` 4 OK · `test:acceso-e2e` 31 OK (desarrollo y build de producción) · `test:actividades` 42 OK · 55 unitarias anteriores | Revisión de Sofia con sesión (alumno, maestra y equipo) en la versión de prueba |
 | 2 · Accesos visibles | Hecha en la rama (8/11, commit 679f4c8). Pregunta 3: se tomó la propuesta (franja fina al pie) | `test:acceso-e2e` 60 OK (desarrollo y build de producción; pie en 9 páginas × 3 tamaños) · capturas de las pantallas con sesión | Revisión de Sofia con sesión de maestra: tarjeta del panel y asistente en la puesta en común; con sesión de maestra, abrir `/equipo/entrar` |
 | 3 · Timer y puesta en común | Hecha en la rama (8/11). Timer: commit 69e9d89, con la migración 21 aplicada **solo en la base de pruebas**. Puesta en común: commit 7d04697. Preguntas 4, 5, 8 y 10: se tomaron las propuestas (timer opcional, cierre flexible por defecto, conclusiones del cuaderno, resumen sin IA) | Migración 21: 40 OK en local y 40 OK en la base de pruebas (todo vuelto atrás) · `test:tiempo` 8 OK · `test:puesta` 10 OK · timer recorrido en todos sus estados con capturas · puesta de A1, A2 y A3 con capturas (compu y celular) · `test:acceso-e2e` 60 OK · `test:actividades` 42 OK | Revisión de Sofia en la versión de prueba con una maestra y dos chicos. Migración 21 en producción solo con su autorización (si no está, la clase funciona como antes, sin timer) |
+| Retoques del 9/11 | Hechos en la rama: A4 retirada de todas las listas (panel de la maestra, explorar y selectores del equipo) y el acceso de investigadores sale de "¿Quién explora hoy?" (queda en el pie) | `test:acceso-e2e` 58 OK (incluye `/explorar/a4` no encontrada y el acceso solo en el pie) · `test:actividades` 42 OK | Que Sofia diga qué pantallas se ven mal |
 | 4 · Curiosidades | Pendiente | — | Temas iniciales; preguntas 7 y 11 |
 | 5 · Figma y 3D | Pendiente | — | — |

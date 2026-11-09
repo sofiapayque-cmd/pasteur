@@ -26,6 +26,8 @@ export const ACTIVIDADES: Record<string, string> = {
   a3: 'A3 · Bioimagenología',
   a4: 'A4 · Evolución de virus',
 };
+/** Las que se pueden elegir hoy. A4 se retiró el 9/11: queda arriba solo para nombrar lo que ya estaba guardado. */
+export const ACTIVIDADES_A_ELEGIR = Object.entries(ACTIVIDADES).filter(([id]) => id !== 'a4');
 
 /** Máximo de palabras de la versión para chicos (migración 9). Son máximos, no mínimos. */
 export const LIMITE_PALABRAS: Record<Formato, number> = { pregunta: 90, dato: 60 };

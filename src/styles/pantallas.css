@@ -1742,25 +1742,6 @@
   }
 }
 
-/* ¿Quién explora hoy? · acceso del equipo científico, más chico que las dos opciones principales */
-.rol__equipo {
-  margin: -3vh 16px var(--space-4);
-  max-width: calc(100% - 32px);
-  padding: 10px 20px;
-  border-radius: var(--radius-pill);
-  background: rgba(251, 249, 241, 0.92);
-  color: var(--tinta);
-  font: 500 15px/1.3 var(--font-sans);
-  text-decoration: none;
-  text-align: center;
-}
-.rol__equipo b {
-  color: var(--nucleo);
-  white-space: nowrap;
-}
-.rol__equipo:hover b {
-  text-decoration: underline;
-}
 /* Ingreso del alumno: el contenido va centrado en fila, así que el pie va abajo de todo */
 .entrar:has(.pie-inst) {
   padding-bottom: calc(var(--space-5) + 56px);

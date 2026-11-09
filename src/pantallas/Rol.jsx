@@ -3,7 +3,6 @@
 import { useNavigate } from '@/navegacion';
 import Cabecera from '../components/Cabecera';
 import PieInstitucional from '../components/PieInstitucional';
-import { equipoReal } from '@/lib/supabase/config';
 
 /* 02 · ¿QUIÉN EXPLORA? — fondo de textura celular (después va la imagen del Frame 2). */
 export default function Rol() {
@@ -25,12 +24,6 @@ export default function Rol() {
           <span className="rol__celula-texto">Entro con el código de mi clase</span>
         </button>
       </div>
-      {/* Acceso del equipo científico (8/11): junto a maestras y chicos, pero más chico */}
-      {equipoReal && (
-        <a className="rol__equipo" href="/equipo/entrar">
-          ¿Sos investigadora o investigador del Pasteur? <b>Acceso investigadores</b>
-        </a>
-      )}
       <span className="rol__vertical">Institut Pasteur de Montevideo</span>
       <PieInstitucional />
     </main>
