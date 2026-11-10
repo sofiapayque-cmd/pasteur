@@ -12,18 +12,46 @@
 
 export const ESCENA = { ancho: 1920, alto: 1080 } as const;
 
-/* La lupa: centro óptico, radio exterior del aro, grosor del aro y aumento. */
-export const LENTE = { x: 953, y: 597, radio: 188, aro: 9.5, aumento: 1.7 } as const;
-
-/* Radio del vidrio (lo que se ve por dentro del aro). */
-export const RADIO_VIDRIO = LENTE.radio - LENTE.aro;
+/*
+  La lupa: centro óptico (el centro del vidrio), radio exterior del aro
+  (como en la referencia 1) y aumento.
+*/
+export const LENTE = { x: 953, y: 597, radio: 188, aumento: 1.7 } as const;
 
 /*
-  Mango: sale del aro hacia abajo a la izquierda, como en la referencia
-  (el extremo queda cerca de los pies del grupo, en 700, 940).
-  `giro` es el ángulo respecto de la vertical; `largo`, desde el aro.
+  Ilustración de la lupa (magnifier/lupa-marco): aro, conector y mango, con
+  el vidrio y el fondo transparentes. Medidas del archivo, en píxeles:
+  centro del vidrio, radio exterior del aro (promedio) y hasta dónde llega el
+  aro sin tocar el conector (para la copia del aro que va adelante).
 */
-export const MANGO = { giro: 36.4, largo: 238 } as const;
+export const MARCO = {
+  src: '/illustrations/hero/magnifier/lupa-marco.webp',
+  ancho: 628,
+  alto: 723,
+  vidrioX: 374.2,
+  vidrioY: 250.1,
+  radioAro: 242.4,
+  radioCorte: 252,
+} as const;
+
+/* Cuántas unidades de la escena vale un píxel del archivo de la lupa. */
+export const ESCALA_MARCO = LENTE.radio / MARCO.radioAro;
+
+/*
+  Radio del vidrio, en unidades. El hueco del archivo es apenas ovalado
+  (212 × 219 px de radio): se usa el mayor, y lo que sobra queda debajo del aro.
+*/
+export const RADIO_VIDRIO = Math.ceil(219 * ESCALA_MARCO) + 1;
+
+/* Brillos del vidrio (magnifier/lupa-reflejos): un disco con los reflejos en el borde. */
+export const REFLEJOS = {
+  src: '/illustrations/hero/magnifier/lupa-reflejos.webp',
+  ancho: 546,
+  alto: 547,
+  centroX: 272.5,
+  centroY: 273,
+  radio: 255,
+} as const;
 
 export type Celula = {
   id: string;
@@ -102,8 +130,9 @@ export const PISO = 950;
   De izquierda a derecha: rodete, rulos y pelirroja (la pelirroja, junto al mango).
   Vista de tres cuartos mirando hacia arriba, recortada de cada hoja de rotación.
   Los altos respetan la proporción entre las hojas (rulos es el más alto).
-  PROVISORIO: la pelirroja no sostiene el mango porque no hay una ilustración
-  con esa pose (falta "pelirroja-sostiene", ver docs/PORTADA-ILUSTRADA.md).
+  PROVISORIO: la pelirroja todavía no sostiene el mango. En pelirroja-sostiene
+  agarra un mango unas cuatro veces más finito que el de la lupa gigante, así
+  que no encaja con la escala de la referencia (ver docs/PORTADA-ILUSTRADA.md).
 */
 export const CIENTIFICOS: Cientifico[] = [
   { id: 'rodete', src: '/illustrations/hero/scientists/rodete-mira.webp', ancho: 172, alto: 396, x: 586, h: 173 },

@@ -3,11 +3,11 @@
 import Link from 'next/link';
 import type { CSSProperties } from 'react';
 import './hero.css';
-import { CELULAS, CIENTIFICOS, LENTE } from './escena';
+import { CELULAS, CIENTIFICOS, LENTE, RADIO_VIDRIO } from './escena';
 import FloatingCells from './FloatingCells';
 import HeroScientists from './HeroScientists';
 import HeroTitle from './HeroTitle';
-import InteractiveMagnifier, { LupaMango } from './InteractiveMagnifier';
+import InteractiveMagnifier, { LupaAro, LupaMango } from './InteractiveMagnifier';
 
 /*
   PORTADA ILUSTRADA (hero editorial)
@@ -15,8 +15,8 @@ import InteractiveMagnifier, { LupaMango } from './InteractiveMagnifier';
 
   Capas, de atrás hacia adelante (todas dentro de una "escena" de 1920 × 1080
   unidades que se escala para entrar en la pantalla):
-  1. células que flotan · 2. mango de la lupa · 3. científicos ·
-  4. lupa (vidrio con la copia ampliada + aro) · 5. textos y enlaces.
+  1. células que flotan · 2. lupa con su mango · 3. científicos ·
+  4. vidrio con la copia ampliada y los brillos · 5. aro · 6. textos y enlaces.
 
   'use client' porque en las etapas C y D se suman las animaciones con GSAP.
 */
@@ -27,7 +27,7 @@ const VARIABLES_LENTE = {
   '--lente-x': LENTE.x,
   '--lente-y': LENTE.y,
   '--lente-r': LENTE.radio,
-  '--lente-aro': LENTE.aro,
+  '--vidrio-r': RADIO_VIDRIO,
 } as CSSProperties;
 
 export default function HeroEditorial() {
@@ -43,6 +43,7 @@ export default function HeroEditorial() {
           <LupaMango />
           <HeroScientists cientificos={CIENTIFICOS} />
           <InteractiveMagnifier celulas={CELULAS} />
+          <LupaAro />
         </div>
         <HeroTitle entrarA={ENTRAR_A} />
         {/* La lupa también lleva a entrar (para el mouse; el teclado usa el subtítulo). */}
