@@ -47,7 +47,7 @@
   transform: rotate(var(--giro));
 }
 
-/* 2 y 5 · La lupa (lupa-marco): entera detrás de los científicos, y solo el aro encima del vidrio */
+/* 2 y 4 · La lupa (lupa-marco): entera, y otra vez solo el aro encima del vidrio. Toda la lupa queda detrás de los científicos. */
 .hero-marco {
   position: absolute;
   display: block;
@@ -61,17 +61,17 @@
   z-index: 2;
 }
 .hero-marco--aro {
-  z-index: 5;
+  z-index: 4;
   clip-path: circle(
     calc(var(--corte-r) * var(--u)) at calc(var(--corte-x) * var(--u)) calc(var(--corte-y) * var(--u))
   );
 }
 
-/* 3 · Científicos */
+/* 5 · Científicos, delante de toda la lupa */
 .hero-cientificos {
   position: absolute;
   inset: 0;
-  z-index: 3;
+  z-index: 5;
 }
 .hero-cientifico {
   position: absolute;
@@ -93,10 +93,10 @@
   background: radial-gradient(closest-side, rgba(34, 35, 42, 0.17), rgba(34, 35, 42, 0.06) 60%, rgba(34, 35, 42, 0));
 }
 
-/* 4 · Vidrio: círculo centrado en el centro óptico, debajo del aro */
+/* 3 · Vidrio: círculo centrado en el centro óptico, debajo del aro */
 .hero-lente {
   position: absolute;
-  z-index: 4;
+  z-index: 3;
   left: calc((var(--lente-x) - var(--vidrio-r)) * var(--u));
   top: calc((var(--lente-y) - var(--vidrio-r)) * var(--u));
   width: calc(2 * var(--vidrio-r) * var(--u));

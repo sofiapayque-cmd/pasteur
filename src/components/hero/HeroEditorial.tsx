@@ -15,8 +15,9 @@ import InteractiveMagnifier, { LupaAro, LupaMango } from './InteractiveMagnifier
 
   Capas, de atrás hacia adelante (todas dentro de una "escena" de 1920 × 1080
   unidades que se escala para entrar en la pantalla):
-  1. células que flotan · 2. lupa con su mango · 3. científicos ·
-  4. vidrio con la copia ampliada y los brillos · 5. aro · 6. textos y enlaces.
+  1. células que flotan · 2. lupa con su mango · 3. vidrio con la copia
+  ampliada y los brillos · 4. aro · 5. científicos · 6. textos y enlaces.
+  Nadie sostiene la lupa: está entera detrás de los científicos.
 
   'use client' porque en las etapas C y D se suman las animaciones con GSAP.
 */
@@ -41,9 +42,9 @@ export default function HeroEditorial() {
         >
           <FloatingCells celulas={CELULAS} />
           <LupaMango />
-          <HeroScientists cientificos={CIENTIFICOS} />
           <InteractiveMagnifier celulas={CELULAS} />
           <LupaAro />
+          <HeroScientists cientificos={CIENTIFICOS} />
         </div>
         <HeroTitle entrarA={ENTRAR_A} />
         {/* La lupa también lleva a entrar (para el mouse; el teclado usa el subtítulo). */}

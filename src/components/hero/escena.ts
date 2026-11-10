@@ -127,15 +127,14 @@ export type Cientifico = {
 export const PISO = 950;
 
 /*
-  De izquierda a derecha: rodete, rulos y pelirroja (la pelirroja, junto al mango).
+  De izquierda a derecha: pelirroja, rulos y rodete, como en las referencias.
   Vista de tres cuartos mirando hacia arriba, recortada de cada hoja de rotación.
   Los altos respetan la proporción entre las hojas (rulos es el más alto).
-  PROVISORIO: la pelirroja todavía no sostiene el mango. En pelirroja-sostiene
-  agarra un mango unas cuatro veces más finito que el de la lupa gigante, así
-  que no encaja con la escala de la referencia (ver docs/PORTADA-ILUSTRADA.md).
+  Nadie sostiene la lupa (decidido por Sofia el 10/11): está detrás de ellos
+  y se mueve sola.
 */
 export const CIENTIFICOS: Cientifico[] = [
-  { id: 'rodete', src: '/illustrations/hero/scientists/rodete-mira.webp', ancho: 172, alto: 396, x: 586, h: 173 },
-  { id: 'rulos', src: '/illustrations/hero/scientists/rulos-mira.webp', ancho: 164, alto: 471, x: 652, h: 206 },
-  { id: 'pelirroja', src: '/illustrations/hero/scientists/pelirroja-mira.webp', ancho: 178, alto: 427, x: 722, h: 187 },
+  { id: 'pelirroja', src: '/illustrations/hero/scientists/pelirroja-mira.webp', ancho: 178, alto: 427, x: 586, h: 187 },
+  { id: 'rulos', src: '/illustrations/hero/scientists/rulos-mira.webp', ancho: 164, alto: 471, x: 657, h: 206 },
+  { id: 'rodete', src: '/illustrations/hero/scientists/rodete-mira.webp', ancho: 172, alto: 396, x: 722, h: 173 },
 ];

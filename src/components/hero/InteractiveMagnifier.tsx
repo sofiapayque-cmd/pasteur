@@ -6,13 +6,13 @@ import { CELULA_SRC } from './FloatingCells';
 /*
   LUPA
   Tres piezas, con la misma ilustración del aro y el mango (lupa-marco):
-  1. <LupaMango>: la lupa entera, detrás de los científicos (así el mango
-     queda atrás de ellos).
+  1. <LupaMango>: la lupa entera (el mango pasa por detrás de los científicos).
   2. <InteractiveMagnifier>: el vidrio. NO es una imagen cerrada: adentro hay
      una segunda capa con las mismas células (misma lista), agrandadas respecto
      del centro óptico y recortadas por el círculo. Encima, los brillos
      (lupa-reflejos).
   3. <LupaAro>: otra vez lupa-marco, recortada al aro, encima del vidrio.
+  Las tres van detrás de los científicos: nadie sostiene la lupa.
 
   Etapa B: todo quieto. En la etapa D, GSAP moverá estas tres piezas juntas
   y actualizará la copia ampliada en el mismo cuadro que la capa de afuera.

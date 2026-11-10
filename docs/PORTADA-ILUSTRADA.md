@@ -21,11 +21,12 @@ Todo está en `src/components/hero/`:
 | `HeroTitle.tsx` | Título y «Comenzá a experimentar» (el enlace para entrar). |
 | `FloatingCells.tsx` | Células de afuera. |
 | `HeroScientists.tsx` | Los tres científicos y su sombra en el piso. |
-| `InteractiveMagnifier.tsx` | La lupa en tres piezas: la ilustración entera detrás de los científicos, el vidrio con la copia ampliada y los brillos, y otra vez la ilustración recortada al aro, encima del vidrio. |
+| `InteractiveMagnifier.tsx` | La lupa en tres piezas: la ilustración entera, el vidrio con la copia ampliada y los brillos, y otra vez la ilustración recortada al aro, encima del vidrio. Las tres van detrás de los científicos. |
 | `hero.css` | Estilos aislados: todas las clases empiezan con `hero`. |
 
 - **Medidas.** La escena mide 1920 × 1080 unidades, como la referencia 1. En pantalla, cada unidad vale `--u`, así la composición entra entera y centrada en cualquier compu.
-- **Capas**, de atrás hacia adelante: células, lupa con su mango, científicos, vidrio, aro, textos.
+- **Capas**, de atrás hacia adelante: células, lupa con su mango, vidrio, aro, científicos, textos.
+- **Nadie sostiene la lupa** (decidido por Sofia el 10/11): está entera detrás de los científicos y se mueve sola. Los científicos van en el orden de las referencias: pelirroja, rulos y rodete.
 - **La lupa no es una imagen cerrada.** Dentro del vidrio hay una segunda capa con las mismas células, agrandadas 1,7 veces respecto del centro óptico y recortadas por el círculo. Por eso solo se ven ampliadas las que están cerca del centro (a menos de radio ÷ aumento), como con una lupa de verdad.
 - **Para entrar:** «Comenzá a experimentar» y la lupa llevan a "¿Quién explora hoy?" (`/rol`).
 - **Se conservan** el lugar del logo y "Pedí acceso" (solo con el sistema de aulas prendido).
@@ -46,32 +47,15 @@ En `public/illustrations/hero/`:
 - `cells/Translucent Teal Cell with Pink Nucleus.png` es idéntico a `cells/cell.png`.
 - `lupa-marco` mide 628 × 723 px: en una pantalla común se ve nítida; en pantallas de alta densidad (Mac con Retina) se ve apenas suave. Una versión al doble de tamaño lo resolvería.
 
-## Provisorio
+## La pelirroja que sostiene el mango (descartado)
 
-**La pelirroja no sostiene el mango.** Está al lado, con su pose de siempre: no se le inventó un brazo.
+- `scientists/pelirroja-sostiene.png` (10/11) tenía la pose correcta, pero agarraba un mango unas cuatro veces más finito que el de la lupa gigante: puesta en la escena, se veía un mango chico adelante del grande.
+- Sofia decidió que nadie sostenga la lupa. El archivo queda guardado, sin usar.
 
-`scientists/pelirroja-sostiene.png` (10/11) tiene la pose correcta, pero agarra un mango **unas cuatro veces más finito** que el de la lupa:
+## Ilustraciones opcionales
 
-| | Ancho del mango, en unidades de la escena |
-| --- | --- |
-| La lupa, al tamaño de la referencia 1 | 47 a 61 |
-| El que tiene la pelirroja en las manos, a la altura de los demás | 10 a 16 |
-
-- Puesta en la escena, se ve un mango chico adelante del grande.
-- Agrandarla no sirve: tendría que medir unas cuatro veces más que los otros dos.
-- Achicar la lupa tampoco: dejaría de ser la protagonista.
-- Por eso queda guardada en la carpeta, sin usar.
-
-## Ilustración que falta
-
-**`scientists/pelirroja-sostiene.png`, versión 2**
-- La misma pose (dos manos en el mango, mirando hacia arriba), pero agarrando un mango del grosor del de `lupa-marco` a escala de la escena: más o menos **la mitad del ancho de su torso**.
-- Es como en la referencia 1, donde la científica de rodete agarra el mango gigante.
-- Mismo ángulo del mango: unos 35° de la vertical, subiendo hacia la derecha.
-- El mango puede terminar justo arriba de sus manos: de ahí para arriba se ve el de `lupa-marco`.
-- Fondo transparente, al menos 800 px de alto.
-
-**Opcional para la etapa C:** cabeza y cuerpo de cada científico en archivos aparte, con el mismo encuadre. Sin eso, el movimiento se limita a inclinar apenas el cuerpo entero.
+- **Para la etapa C:** cabeza y cuerpo de cada científico en archivos aparte, con el mismo encuadre. Sin eso, el movimiento se limita a inclinar apenas el cuerpo entero.
+- **`lupa-marco` al doble de tamaño:** para que se vea nítida en pantallas Retina.
 
 ## Al unir con `ia/asistente`
 
