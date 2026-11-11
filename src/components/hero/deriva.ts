@@ -7,7 +7,7 @@
   Cada célula:
   - elige un destino en cualquier lugar de la pantalla: entre varios lugares
     al azar, el que está más lejos de las otras células (así se reparten y no
-    se amontonan en el medio). Una de cada cinco veces, más o menos, el
+    se amontonan en el medio). Una de cada ocho veces, más o menos, el
     destino es la lupa, y al llegar elige otro: así pasa por debajo del
     vidrio y sigue de largo;
   - si el vidrio queda vacío unos segundos, la que está más cerca va hacia
@@ -39,7 +39,7 @@ export const DERIVA = {
   llegada: 70,
   llegadaLupa: 25,
   /** cada cuántos destinos uno es la lupa (cada célula empieza en un punto distinto de la cuenta) */
-  cadaCuantosLaLupa: 5,
+  cadaCuantosLaLupa: 8,
   /** qué tan lejos del centro de la lupa puede caer ese destino */
   radioLupa: 40,
   /** desde qué distancia empieza a esquivar un texto, y con cuánta fuerza */
@@ -51,8 +51,8 @@ export const DERIVA = {
   separacion: 0.9,
   fuerzaSeparacion: 40,
   /** empuje suave entre todas, para que se repartan: hasta qué distancia y con cuánta fuerza */
-  espacio: 340,
-  fuerzaEspacio: 14,
+  espacio: 480,
+  fuerzaEspacio: 22,
   /** entre cuántos lugares al azar elige el destino más despejado */
   candidatos: 10,
   /** cuánto de la célula puede salir por el borde, y desde dónde la empuja hacia adentro */
@@ -62,7 +62,7 @@ export const DERIVA = {
   /** si casi no avanza durante este tiempo, cambia de destino */
   atascada: 2.5,
   /** si no se ve ninguna por el vidrio durante este tiempo (segundos), llama a la más cercana; con el mouse encima, antes */
-  esperaLupa: 4,
+  esperaLupa: 3,
   esperaLupaActiva: 0.8,
   /** cuántas pueden ir a la vez hacia la lupa por un llamado */
   llamadasALaVez: 2,
@@ -296,9 +296,11 @@ export function avanzar(
       const ddx = x - xs[j];
       const ddy = y - ys[j];
       const dist = Math.hypot(ddx, ddy) || 0.001;
-      // un poco de todas, para que se repartan (menos si va a la lupa: va a propósito)
+      // un poco de todas, para que se repartan (menos si va a la lupa: va a propósito).
+      // Proporcional a su velocidad: a las chicas (lentas) no las frena más que a las grandes
       if (dist < DERIVA.espacio) {
-        const f = DERIVA.fuerzaEspacio * (1 - dist / DERIVA.espacio) * (rumbo.aLaLupa ? 0.25 : 1);
+        const f =
+          DERIVA.fuerzaEspacio * (1 - dist / DERIVA.espacio) * (rumbo.aLaLupa ? 0.25 : 1) * (velocidadDe(c) / DERIVA.velocidadCerca);
         ax += (ddx / dist) * f;
         ay += (ddy / dist) * f;
       }

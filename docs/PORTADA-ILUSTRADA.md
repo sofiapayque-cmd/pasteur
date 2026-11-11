@@ -72,18 +72,18 @@ Todo está en `src/components/hero/`:
 
 Arrancan en la composición aprobada y **recorren toda la pantalla** (pedido de Sofia, 11/11). Todo está en `deriva.ts`:
 
-- **Destinos:** cada célula elige adónde ir entre 10 lugares al azar, el más lejos de las otras células y de adonde van las otras. Así se reparten por toda la pantalla y no se amontonan en el medio.
+- **Destinos:** cada célula elige adónde ir entre 10 lugares al azar, el más lejos de las otras células y de adonde van las otras. Además, todas se apartan un poco entre sí (más las grandes, que son más rápidas). Así se reparten por toda la pantalla y no se amontonan alrededor de la lupa.
 - **Curvas:** gira de a poco hacia su destino, con una ondulación lenta. Nunca dobla de golpe.
 - **Profundidad:** las chicas (más lejos) van más lento (11 unidades por segundo) que las grandes (26). Las de tamaños muy distintos se pueden cruzar: la grande pasa por delante.
-- **Por la lupa:** una de cada cinco veces, el destino es la lupa. Pasa por el medio del vidrio y sigue de largo.
-- **Turno de la lupa:** si nadie pasa por el vidrio durante 4 s, va la que llegaría primero, un poco más rápido. Con el mouse encima, van una detrás de otra (sin llenar el vidrio), y debajo del vidrio pasan más despacio: se las ve más rato y más grandes.
+- **Por la lupa:** una de cada ocho veces, el destino es la lupa. Pasa por el medio del vidrio y sigue de largo.
+- **Turno de la lupa:** si nadie pasa por el vidrio durante 3 s, va la que llegaría primero, un poco más rápido. Con el mouse encima, van una detrás de otra (sin llenar el vidrio), y debajo del vidrio pasan más despacio: se las ve más rato y más grandes.
 - **Textos libres:** esquivan el título, el subtítulo y "Pedí acceso" antes de llegar, y nunca se acercan a menos de 12 unidades.
   - Esos textos están marcados con `data-hero-evitar`, y se miden de nuevo cuando cambia el tamaño de la ventana.
   - Si una célula queda debajo de un texto (por ejemplo, al achicar la ventana o en la Ceibal), sale de a poco, sin saltar.
 - **Bordes:** se pueden asomar un poco, pero no se van de la pantalla.
 - Además giran apenas: ±4 a 9°, y una de cada cuatro ±14 a 22°. También "respiran" (±2,5 % de tamaño).
 
-En 10 minutos simulados, cada célula recorre de 1000 a 1700 unidades de ancho; la distancia media a la vecina más cercana queda en unas 200 unidades. En el navegador, el vidrio está vacío menos del 10 % del tiempo.
+En 10 minutos simulados, cada célula recorre de 900 a 1750 unidades de ancho; la distancia media a la vecina más cercana queda en unas 235 unidades (en la composición aprobada, 272), y en promedio hay células en 8 o 9 de 12 zonas de la pantalla. En el navegador, el vidrio está vacío un 10 % del tiempo.
 
 ### Científicos
 
@@ -135,7 +135,7 @@ Medido con la versión de producción, simulando un procesador 4 y 6 veces más 
 | 1024 × 600 | 6 veces más lento | 60, en reposo y con la lupa subiendo |
 | 1366 × 768 | 4 veces más lento | 60 |
 
-- Con el procesador 6 veces más lento, el hilo principal está ocupado un 35–37 % (antes del viaje por toda la pantalla, 24–31 %: ahora hay más copias ampliadas a la vista). Las cuentas del viaje son un 6 %. Nunca se recalcula el diseño de la página: solo se mueven imágenes, cada una en su propia capa.
+- Con el procesador 6 veces más lento, el hilo principal está ocupado entre un 28 y un 40 % según la medición (antes del viaje por toda la pantalla, 24–31 %: ahora hay más copias ampliadas a la vista). Las cuentas del viaje son un 5–7 %. Nunca se recalcula el diseño de la página: solo se mueven imágenes, cada una en su propia capa.
 - Si la pestaña no se ve, el movimiento se detiene solo.
 - Falta probarla en una Ceibal real, porque su placa de video es más débil que la de la simulación.
 
