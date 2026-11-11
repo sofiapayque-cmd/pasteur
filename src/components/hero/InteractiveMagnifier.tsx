@@ -1,21 +1,20 @@
-/* eslint-disable @next/next/no-img-element -- imágenes ya optimizadas (WebP a su tamaño) que se escalan con la escena y después anima GSAP; next/image no suma nada acá */
+/* eslint-disable @next/next/no-img-element -- imágenes ya optimizadas (WebP a su tamaño) que se escalan con la escena y anima GSAP; next/image no suma nada acá */
 import type { CSSProperties } from 'react';
-import { CELULA_ALTO, ESCALA_MARCO, LENTE, MARCO, RADIO_VIDRIO, REFLEJOS, enLaLente, type Celula } from './escena';
+import { CELULA_ALTO, ESCALA_MARCO, ESCENA, LENTE, MARCO, PUNTA, RADIO_VIDRIO, REFLEJOS, enLaLente, type Celula } from './escena';
 import { CELULA_SRC } from './FloatingCells';
 
 /*
   LUPA
-  Tres piezas, con la misma ilustración del aro y el mango (lupa-marco):
-  1. <LupaMango>: la lupa entera (el mango pasa por detrás de los científicos).
-  2. <InteractiveMagnifier>: el vidrio. NO es una imagen cerrada: adentro hay
-     una segunda capa con las mismas células (misma lista), agrandadas respecto
-     del centro óptico y recortadas por el círculo. Encima, los brillos
-     (lupa-reflejos).
-  3. <LupaAro>: otra vez lupa-marco, recortada al aro, encima del vidrio.
-  Las tres van detrás de los científicos: nadie sostiene la lupa.
-
-  Etapa B: todo quieto. En la etapa D, GSAP moverá estas tres piezas juntas
-  y actualizará la copia ampliada en el mismo cuadro que la capa de afuera.
+  Una sola pieza (data-lupa) que se mueve entera, detrás de los científicos.
+  Gira y crece desde la punta del mango (animarPortada.ts). Adentro, de
+  atrás hacia adelante:
+  1. La ilustración completa (lupa-marco): mango, conector y aro.
+  2. El vidrio. NO es una imagen cerrada: adentro hay una segunda capa con
+     las mismas células (misma lista y mismo estado que las de afuera),
+     agrandadas respecto del centro óptico y recortadas por el círculo.
+     Encima, los brillos (lupa-reflejos).
+  3. Otra vez lupa-marco, recortada al aro, para que el aro tape el borde
+     de lo ampliado.
 */
 
 /* Dónde va la imagen de la lupa, en unidades: el centro de su vidrio cae en el centro óptico. */
@@ -27,6 +26,12 @@ const VARIABLES_MARCO = {
   '--corte-r': MARCO.radioCorte * ESCALA_MARCO,
   '--corte-x': MARCO.vidrioX * ESCALA_MARCO,
   '--corte-y': MARCO.vidrioY * ESCALA_MARCO,
+} as CSSProperties;
+
+/* La lupa gira y crece desde la punta del mango. */
+const VARIABLES_LUPA = {
+  '--punta-x': `${(PUNTA.x / ESCENA.ancho) * 100}%`,
+  '--punta-y': `${(PUNTA.y / ESCENA.alto) * 100}%`,
 } as CSSProperties;
 
 function ImagenMarco({ className }: { className: string }) {
@@ -43,14 +48,6 @@ function ImagenMarco({ className }: { className: string }) {
   );
 }
 
-export function LupaMango() {
-  return <ImagenMarco className="hero-marco--mango" />;
-}
-
-export function LupaAro() {
-  return <ImagenMarco className="hero-marco--aro" />;
-}
-
 /* Los brillos se agrandan para que el borde de su disco coincida con el borde del vidrio. */
 const ESCALA_REFLEJOS = RADIO_VIDRIO / REFLEJOS.radio;
 const VARIABLES_REFLEJOS = {
@@ -62,44 +59,50 @@ const VARIABLES_REFLEJOS = {
 
 export default function InteractiveMagnifier({ celulas }: { celulas: Celula[] }) {
   return (
-    <div className="hero-lente">
-      <div className="hero-lente__ampliado">
-        {celulas.map((c) => {
-          const p = enLaLente(c);
-          return (
-            <img
-              key={c.id}
-              src={CELULA_SRC}
-              alt=""
-              width={640}
-              height={602}
-              draggable={false}
-              decoding="async"
-              className="hero-celula hero-celula--ampliada"
-              data-celula={c.id}
-              style={
-                {
-                  '--x': p.x,
-                  '--y': p.y,
-                  '--d': p.d,
-                  '--h': p.d * CELULA_ALTO,
-                  '--giro': `${c.giro}deg`,
-                  visibility: p.visible ? 'visible' : 'hidden',
-                } as CSSProperties
-              }
-            />
-          );
-        })}
+    <div className="hero-lupa" data-lupa style={VARIABLES_LUPA}>
+      <ImagenMarco className="hero-marco--mango" />
+      <div className="hero-lente">
+        <div className="hero-lente__ampliado" data-ampliado>
+          {celulas.map((c) => {
+            // posición con la lupa en reposo y la célula en su lugar; el movimiento se suma encima
+            const p = enLaLente(c);
+            return (
+              <img
+                key={c.id}
+                src={CELULA_SRC}
+                alt=""
+                width={640}
+                height={602}
+                draggable={false}
+                decoding="async"
+                className="hero-celula hero-celula--ampliada"
+                data-capa="adentro"
+                data-celula={c.id}
+                style={
+                  {
+                    '--x': p.x,
+                    '--y': p.y,
+                    '--d': p.d,
+                    '--h': p.d * CELULA_ALTO,
+                    '--giro': `${c.giro}deg`,
+                    visibility: p.visible ? 'visible' : 'hidden',
+                  } as CSSProperties
+                }
+              />
+            );
+          })}
+        </div>
+        <img
+          src={REFLEJOS.src}
+          alt=""
+          width={REFLEJOS.ancho}
+          height={REFLEJOS.alto}
+          draggable={false}
+          className="hero-lente__reflejos"
+          style={VARIABLES_REFLEJOS}
+        />
       </div>
-      <img
-        src={REFLEJOS.src}
-        alt=""
-        width={REFLEJOS.ancho}
-        height={REFLEJOS.alto}
-        draggable={false}
-        className="hero-lente__reflejos"
-        style={VARIABLES_REFLEJOS}
-      />
+      <ImagenMarco className="hero-marco--aro" />
     </div>
   );
 }

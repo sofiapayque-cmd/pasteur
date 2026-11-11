@@ -1,25 +1,26 @@
 'use client';
 
 import Link from 'next/link';
-import type { CSSProperties } from 'react';
+import { useEffect, useRef, type CSSProperties } from 'react';
 import './hero.css';
+import { animarPortada } from './animarPortada';
 import { CELULAS, CIENTIFICOS, LENTE, RADIO_VIDRIO } from './escena';
 import FloatingCells from './FloatingCells';
 import HeroScientists from './HeroScientists';
 import HeroTitle from './HeroTitle';
-import InteractiveMagnifier, { LupaAro, LupaMango } from './InteractiveMagnifier';
+import InteractiveMagnifier from './InteractiveMagnifier';
 
 /*
   PORTADA ILUSTRADA (hero editorial)
-  Etapa B: composición estática con las ilustraciones reales.
 
-  Capas, de atrás hacia adelante (todas dentro de una "escena" de 1920 × 1080
-  unidades que se escala para entrar en la pantalla):
-  1. células que flotan · 2. lupa con su mango · 3. vidrio con la copia
-  ampliada y los brillos · 4. aro · 5. científicos · 6. textos y enlaces.
+  React arma la composición quieta (todo en una "escena" de 1920 × 1080
+  unidades que se escala para entrar en la pantalla). Después, animarPortada
+  la pone en movimiento con GSAP, sin volver a dibujar React.
+
+  Capas, de atrás hacia adelante:
+  1. células que flotan · 2. la lupa (mango, vidrio con la copia ampliada,
+  brillos y aro), que se mueve entera · 3. científicos · 4. textos y enlaces.
   Nadie sostiene la lupa: está entera detrás de los científicos.
-
-  'use client' porque en las etapas C y D se suman las animaciones con GSAP.
 */
 const ENTRAR_A = '/rol';
 
@@ -32,23 +33,40 @@ const VARIABLES_LENTE = {
 } as CSSProperties;
 
 export default function HeroEditorial() {
+  const raiz = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = raiz.current;
+    if (!el) return;
+    let desarmar = animarPortada(el);
+    // si cambia "reducir movimiento" mientras la página está abierta, se vuelve a armar
+    const consulta = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const alCambiar = () => {
+      desarmar();
+      desarmar = animarPortada(el);
+    };
+    consulta.addEventListener('change', alCambiar);
+    return () => {
+      consulta.removeEventListener('change', alCambiar);
+      desarmar();
+    };
+  }, []);
+
   return (
-    <div className="hero" style={VARIABLES_LENTE}>
-      <div className="hero__escena">
+    <div className="hero" style={VARIABLES_LENTE} ref={raiz}>
+      <div className="hero__escena" data-escena>
         <div
           className="hero__ilustracion"
           role="img"
           aria-label="Tres científicas y científicos miran células por una lupa gigante."
         >
           <FloatingCells celulas={CELULAS} />
-          <LupaMango />
           <InteractiveMagnifier celulas={CELULAS} />
-          <LupaAro />
           <HeroScientists cientificos={CIENTIFICOS} />
         </div>
         <HeroTitle entrarA={ENTRAR_A} />
-        {/* La lupa también lleva a entrar (para el mouse; el teclado usa el subtítulo). */}
-        <Link className="hero__lente-enlace" href={ENTRAR_A} tabIndex={-1} aria-hidden="true" />
+        {/* La lupa también lleva a entrar (para el mouse; el teclado usa el subtítulo). Acompaña al vidrio cuando se mueve. */}
+        <Link className="hero__lente-enlace" href={ENTRAR_A} tabIndex={-1} aria-hidden="true" data-lente-enlace />
       </div>
     </div>
   );

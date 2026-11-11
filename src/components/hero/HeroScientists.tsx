@@ -9,6 +9,7 @@ const MARGEN_RECORTE = 6;
   Los tres científicos, agrupados al pie de la lupa.
   Cada uno es una imagen aparte (recortada de su hoja de rotación), no la
   lámina completa. Apoyan en el piso con una sombra suave: no flotan.
+  Se mueven (animarPortada.ts) solo girando apenas desde los pies.
 */
 export default function HeroScientists({ cientificos }: { cientificos: Cientifico[] }) {
   return (
@@ -33,6 +34,8 @@ export default function HeroScientists({ cientificos }: { cientificos: Cientific
                 '--h': c.h,
                 '--w': (c.h * c.ancho) / c.alto,
                 '--abajo': abajo,
+                // los pies: el punto desde el que se balancean
+                '--pies': `${((c.alto - MARGEN_RECORTE) / c.alto) * 100}%`,
               } as CSSProperties
             }
           />

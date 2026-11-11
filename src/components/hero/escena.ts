@@ -6,8 +6,9 @@
   composición conserva sus proporciones en 1440 × 900, 1920 × 1080 o una Ceibal.
 
   Es la ÚNICA fuente de datos de las células: la capa de afuera y la copia
-  ampliada dentro de la lupa salen de esta misma lista. En las etapas C y D,
-  GSAP moverá estas posiciones y las dos capas las leerán igual.
+  ampliada dentro de la lupa salen de esta misma lista. El movimiento
+  (movimiento.ts y animarPortada.ts) solo suma desplazamientos a estas
+  posiciones, y las dos capas los leen del mismo lugar.
 */
 
 export const ESCENA = { ancho: 1920, alto: 1080 } as const;
@@ -32,10 +33,23 @@ export const MARCO = {
   vidrioY: 250.1,
   radioAro: 242.4,
   radioCorte: 252,
+  /* punta del mango (el extremo redondeado, sobre el eje del mango) */
+  puntaX: 31.4,
+  puntaY: 699.3,
 } as const;
 
 /* Cuántas unidades de la escena vale un píxel del archivo de la lupa. */
 export const ESCALA_MARCO = LENTE.radio / MARCO.radioAro;
+
+/*
+  Punta del mango en la escena: queda en el piso, escondida detrás de los
+  científicos. La lupa gira y crece desde acá, como si la levantaran desde
+  donde está el grupo.
+*/
+export const PUNTA = {
+  x: LENTE.x + (MARCO.puntaX - MARCO.vidrioX) * ESCALA_MARCO,
+  y: LENTE.y + (MARCO.puntaY - MARCO.vidrioY) * ESCALA_MARCO,
+} as const;
 
 /*
   Radio del vidrio, en unidades. El hueco del archivo es apenas ovalado
@@ -62,6 +76,8 @@ export type Celula = {
   d: number;
   /** giro en grados */
   giro: number;
+  /** cuánto se aleja como máximo de su lugar, en unidades (si no se indica, depende del tamaño) */
+  deriva?: number;
 };
 
 /*
@@ -70,6 +86,8 @@ export type Celula = {
   - "m" y "n" están debajo del vidrio: solo se ven ampliadas, como en la referencia
     (una grande arriba a la izquierda y otra cortada por el borde, abajo a la derecha).
   - "l" queda detrás del aro, asomando a la derecha, como en la referencia.
+  - "l", "m" y "n" se alejan más de su lugar (deriva): son las que entran y
+    salen del vidrio, para que siempre haya alguna pasando por la lupa.
 */
 export const CELULAS: Celula[] = [
   { id: 'a', x: 185, y: 205, d: 150, giro: -12 },
@@ -83,9 +101,9 @@ export const CELULAS: Celula[] = [
   { id: 'i', x: 275, y: 932, d: 125, giro: 22 },
   { id: 'j', x: 1340, y: 950, d: 150, giro: -16 },
   { id: 'k', x: 1820, y: 880, d: 100, giro: 6 },
-  { id: 'l', x: 1140, y: 650, d: 92, giro: -30 },
-  { id: 'm', x: 908, y: 560, d: 96, giro: 12 },
-  { id: 'n', x: 1024, y: 654, d: 70, giro: -18 },
+  { id: 'l', x: 1140, y: 650, d: 92, giro: -30, deriva: 75 },
+  { id: 'm', x: 908, y: 560, d: 96, giro: 12, deriva: 85 },
+  { id: 'n', x: 1024, y: 654, d: 70, giro: -18, deriva: 65 },
 ];
 
 /* Proporción de la imagen de la célula (celula.webp mide 640 × 602). */

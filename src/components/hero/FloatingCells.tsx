@@ -6,8 +6,8 @@ export const CELULA_SRC = '/illustrations/hero/cells/celula.webp';
 
 /*
   Células alrededor de la escena (capa de afuera).
-  Etapa B: quietas. En la etapa C las mueve GSAP leyendo la misma lista
-  (escena.ts), sin volver a dibujar React en cada cuadro.
+  Acá quedan en su lugar; las mueve animarPortada.ts, sin volver a dibujar
+  React en cada cuadro.
 */
 export default function FloatingCells({ celulas }: { celulas: Celula[] }) {
   return (
@@ -22,6 +22,7 @@ export default function FloatingCells({ celulas }: { celulas: Celula[] }) {
           draggable={false}
           decoding="async"
           className="hero-celula"
+          data-capa="afuera"
           data-celula={c.id}
           style={
             {

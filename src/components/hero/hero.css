@@ -45,9 +45,22 @@
   height: calc(var(--h) * var(--u));
   max-width: none;
   transform: rotate(var(--giro));
+  /* se mueven todo el tiempo: cada una en su propia capa (lo más liviano para la Ceibal) */
+  will-change: transform;
 }
 
-/* 2 y 4 · La lupa (lupa-marco): entera, y otra vez solo el aro encima del vidrio. Toda la lupa queda detrás de los científicos. */
+/*
+  2 · La lupa: una sola pieza, detrás de los científicos. Gira y crece desde
+  la punta del mango. Adentro: la ilustración entera, el vidrio y otra vez
+  la ilustración recortada al aro.
+*/
+.hero-lupa {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  transform-origin: var(--punta-x) var(--punta-y);
+  will-change: transform;
+}
 .hero-marco {
   position: absolute;
   display: block;
@@ -58,10 +71,10 @@
   max-width: none;
 }
 .hero-marco--mango {
-  z-index: 2;
+  z-index: 1;
 }
 .hero-marco--aro {
-  z-index: 4;
+  z-index: 3;
   clip-path: circle(
     calc(var(--corte-r) * var(--u)) at calc(var(--corte-x) * var(--u)) calc(var(--corte-y) * var(--u))
   );
@@ -81,6 +94,9 @@
   width: calc(var(--w) * var(--u));
   height: calc(var(--h) * var(--u));
   max-width: none;
+  /* se balancean desde los pies, sin despegarse del piso */
+  transform-origin: 50% var(--pies);
+  will-change: transform;
 }
 /* sombra de apoyo, con el grano del suelo de la referencia 2 */
 .hero-cientificos__sombra {
@@ -93,10 +109,10 @@
   background: radial-gradient(closest-side, rgba(34, 35, 42, 0.17), rgba(34, 35, 42, 0.06) 60%, rgba(34, 35, 42, 0));
 }
 
-/* 3 · Vidrio: círculo centrado en el centro óptico, debajo del aro */
+/* Vidrio: círculo centrado en el centro óptico, debajo del aro */
 .hero-lente {
   position: absolute;
-  z-index: 3;
+  z-index: 2;
   left: calc((var(--lente-x) - var(--vidrio-r)) * var(--u));
   top: calc((var(--lente-y) - var(--vidrio-r)) * var(--u));
   width: calc(2 * var(--vidrio-r) * var(--u));
@@ -104,28 +120,37 @@
   border-radius: 50%;
   overflow: hidden;
   clip-path: circle(50%);
+  /*
+    El fondo marfil tapa las células de atrás tal como son: por el vidrio se
+    ven solo agrandadas (si no, se verían dos veces). Como el fondo de la
+    página es el mismo marfil, el vidrio se ve transparente.
+  */
   background: var(--agar);
   /* sombra suave del borde del vidrio */
-  box-shadow: inset 0 0 calc(16 * var(--u)) rgba(0, 40, 60, 0.28);
+  box-shadow: inset 0 0 calc(14 * var(--u)) rgba(0, 40, 60, 0.2);
 }
-/* el vidrio tiñe de turquesa lo que hay detrás, más en los bordes (colores de la referencia) */
+/* el vidrio apenas teñido de azul, un poco más en los bordes */
 .hero-lente::before {
   content: '';
   position: absolute;
   inset: 0;
+  z-index: 1;
+  pointer-events: none;
   background: radial-gradient(
     circle at 44% 40%,
-    rgba(66, 190, 191, 0.42) 0%,
-    rgba(5, 127, 153, 0.66) 64%,
-    rgba(0, 104, 134, 0.88) 100%
+    rgba(150, 210, 222, 0.06) 0%,
+    rgba(90, 172, 192, 0.16) 62%,
+    rgba(30, 128, 156, 0.36) 100%
   );
 }
+/* lo que se ve por el vidrio (gira al revés que la lupa, para quedar derecho) */
 .hero-lente__ampliado {
   position: absolute;
   inset: 0;
 }
 .hero-lente__reflejos {
   position: absolute;
+  z-index: 2;
   display: block;
   left: calc(var(--x) * var(--u));
   top: calc(var(--y) * var(--u));

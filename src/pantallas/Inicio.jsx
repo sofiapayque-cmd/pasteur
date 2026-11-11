@@ -13,10 +13,13 @@ export default function Inicio() {
   return (
     <main className="pantalla inicio">
       <HeroEditorial />
-      <div className="logo-pendiente inicio__logo">[Logo Institut Pasteur]</div>
+      {/* data-hero-evitar: las células de la portada no pasan por debajo */}
+      <div className="logo-pendiente inicio__logo" data-hero-evitar>
+        [Logo Institut Pasteur]
+      </div>
       {/* Para escuelas o maestras que nos encuentran (pedido de Sofia, 6/11) */}
       {aulasReales && (
-        <a className="inicio__acceso" href="/pedir-acceso">
+        <a className="inicio__acceso" href="/pedir-acceso" data-hero-evitar>
           ¿Sos maestra o trabajás en una escuela? <b>Pedí acceso</b>
         </a>
       )}
