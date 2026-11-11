@@ -3,8 +3,8 @@ import Link from 'next/link';
 /*
   Título y subtítulo, como en la referencia 1.
   «Comenzá a experimentar» es el enlace para entrar (lleva a "¿Quién explora
-  hoy?"): se ve igual que en la referencia y se subraya al pasar el mouse o
-  con el teclado. Con el teclado, al llegar acá la lupa se levanta.
+  hoy?"): se ve como texto, sin subrayado. Con el teclado se ve el recuadro
+  de foco y la lupa se levanta.
   data-hero-evitar: las células no se acercan a estos textos.
 */
 export default function HeroTitle({ entrarA }: { entrarA: string }) {
