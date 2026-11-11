@@ -9,12 +9,14 @@
 
   Revisa que:
     1. la copia ampliada esté siempre donde la vería una lupa real
-       (centro óptico + aumento × distancia), con las células moviéndose,
-       con la lupa quieta y levantada;
+       (centro óptico + aumento × distancia) y del tamaño justo, con las
+       células moviéndose, con la lupa quieta y levantada;
+    1b. las células recorran toda la pantalla y pasen seguido por la lupa;
     2. distintas células (chica, mediana, grande) que cruzan la lupa por
        distintos caminos se vean ampliadas solo mientras pasan por el vidrio;
-    3. al pasar el mouse la lupa suba entre 40 y 60 px y crezca un 10 %, sin
-       temblar en el borde, y vuelva al sacar el mouse; con el teclado, igual;
+    3. al pasar el mouse la lupa suba entre 40 y 60 px, crezca un 10 % y
+       agrande más (2,3), sin temblar en el borde, y vuelva al sacar el mouse;
+       con el teclado, igual;
     4. ninguna célula tape el título, el subtítulo ni "Pedí acceso";
     5. con "reducir movimiento" no se mueva nada;
     6. la lupa lleve a "¿Quién explora hoy?";
@@ -69,6 +71,7 @@ const FOTO = () => {
   const vidrio = document.querySelector('.hero-lente');
   const p = window.__portada;
   const escala = p.lupa.escala;
+  const aumento = p.lupa.aumento;
   const celulas = [...document.querySelectorAll('[data-capa="afuera"]')].map((a, i) => {
     const id = a.dataset.celula;
     const d = document.querySelector(`[data-capa="adentro"][data-celula="${id}"]`);
@@ -77,22 +80,21 @@ const FOTO = () => {
       afuera: centro(a),
       radio: (a.offsetWidth / 2) * p.estados[i].escala,
       adentro: centro(d),
-      radioAdentro: (d.offsetWidth / 2) * p.estados[i].escala * escala,
+      // las dos giran igual: la proporción de sus cajas es la del aumento
+      proporcion: d.getBoundingClientRect().width / a.getBoundingClientRect().width,
       visible: getComputedStyle(d).visibility === 'visible',
     };
   });
-  return { vidrio: centro(vidrio), radioVidrio: (vidrio.offsetWidth / 2) * escala, escala, celulas };
+  return { vidrio: centro(vidrio), radioVidrio: (vidrio.offsetWidth / 2) * escala, escala, aumento, celulas };
 };
-
-const AUMENTO = 1.7;
 
 /* Compara cada copia ampliada con donde la vería una lupa real. Devuelve cuántas había adentro. */
 function comprobarFoto(f, etiqueta) {
-  const k = AUMENTO * f.escala;
+  const k = f.aumento;
   let adentro = 0;
   for (const c of f.celulas) {
     const esperado = { x: f.vidrio.x + k * (c.afuera.x - f.vidrio.x), y: f.vidrio.y + k * (c.afuera.y - f.vidrio.y) };
-    const borde = Math.hypot(esperado.x - f.vidrio.x, esperado.y - f.vidrio.y) - c.radioAdentro - f.radioVidrio;
+    const borde = Math.hypot(esperado.x - f.vidrio.x, esperado.y - f.vidrio.y) - c.radio * k - f.radioVidrio;
     if (Math.abs(borde) < 3) continue; // justo en el borde: el redondeo decide
     const debeVerse = borde < 0;
     revisar(c.visible === debeVerse, `${etiqueta} · ${c.id}: ${debeVerse ? 'debería verse' : 'no debería verse'} ampliada`);
@@ -100,6 +102,7 @@ function comprobarFoto(f, etiqueta) {
       adentro++;
       const error = Math.hypot(c.adentro.x - esperado.x, c.adentro.y - esperado.y);
       revisar(error < 1.5, `${etiqueta} · ${c.id}: la copia está a ${error.toFixed(2)} px de donde la vería una lupa real`);
+      revisar(Math.abs(c.proporcion / k - 1) < 0.015, `${etiqueta} · ${c.id}: agrandada ×${c.proporcion.toFixed(2)} en vez de ×${k.toFixed(2)}`);
     }
   }
   return adentro;
@@ -122,7 +125,7 @@ async function probarAmpliacion(pag) {
       if (comprobarFoto(await pag.evaluate(FOTO), `moviéndose, lupa ${estado}`) > 0) conAlguna++;
     }
   }
-  revisar(conAlguna > 20, `casi nunca hubo células pasando por la lupa (${conAlguna} de 80 fotos)`);
+  revisar(conAlguna > 40, `casi nunca hubo células pasando por la lupa (${conAlguna} de 80 fotos)`);
   await pag.evaluate(() => { window.__portada.desactivar(); window.__portada.velocidad(1); });
   await esperar(pag, 1200);
 
@@ -162,6 +165,34 @@ async function probarAmpliacion(pag) {
   await pag.evaluate(() => window.__portada.desactivar());
 }
 
+/* 1b · Recorren toda la pantalla: unos 3 minutos de viaje, acelerado. */
+async function probarViaje(pag) {
+  const ancho = pag.viewportSize().width;
+  await pag.evaluate(() => window.__portada.velocidad(20));
+  const rangos = {};
+  let conAlguna = 0;
+  const fotos = 90;
+  for (let i = 0; i < fotos; i++) {
+    await esperar(pag, 100);
+    const f = await pag.evaluate(FOTO);
+    if (f.celulas.some((c) => c.visible)) conAlguna++;
+    for (const c of f.celulas) {
+      const r = (rangos[c.id] ??= { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity });
+      r.minX = Math.min(r.minX, c.afuera.x);
+      r.maxX = Math.max(r.maxX, c.afuera.x);
+      r.minY = Math.min(r.minY, c.afuera.y);
+      r.maxY = Math.max(r.maxY, c.afuera.y);
+    }
+  }
+  await pag.evaluate(() => window.__portada.velocidad(1));
+  const anchos = Object.entries(rangos).map(([id, r]) => [id, Math.max(r.maxX - r.minX, r.maxY - r.minY)]);
+  for (const [id, a] of anchos) revisar(a > ancho * 0.2, `la célula ${id} casi no se movió de su lugar (${Math.round(a)} px)`);
+  const promedio = anchos.reduce((s, [, a]) => s + a, 0) / anchos.length;
+  revisar(promedio > ancho * 0.35, `las células recorren poco (${Math.round(promedio)} px en promedio)`);
+  revisar(conAlguna / fotos > 0.6, `pocas veces hubo células en la lupa (${Math.round((conAlguna / fotos) * 100)} %)`);
+  return { promedio, enLaLupa: conAlguna / fotos };
+}
+
 async function probarHover(pag) {
   await pag.mouse.move(40, 40);
   await esperar(pag, 1200);
@@ -171,9 +202,10 @@ async function probarHover(pag) {
   await esperar(pag, 1700);
   const despues = await pag.locator('.hero-lente').boundingBox();
   const sube = centro.y - (despues.y + despues.height / 2);
-  const escala = await pag.evaluate(() => window.__portada.lupa.escala);
+  const { escala, aumento } = await pag.evaluate(() => ({ ...window.__portada.lupa }));
   revisar(sube >= 40 && sube <= 60, `al pasar el mouse la lupa sube ${sube.toFixed(1)} px (se esperaba entre 40 y 60)`);
   revisar(escala >= 1.08 && escala <= 1.12, `al pasar el mouse la lupa crece ×${escala.toFixed(3)} (se esperaba entre 1,08 y 1,12)`);
+  revisar(Math.abs(aumento - 2.3) < 0.02, `al pasar el mouse agranda ×${aumento.toFixed(2)} (se esperaba 2,3)`);
 
   // en el borde de abajo (dentro de donde estaba, fuera de donde está): no tiembla
   await pag.mouse.move(centro.x, centro.y + antes.height * 0.47, { steps: 3 });
@@ -254,6 +286,10 @@ try {
   await esperar(pag, 800);
   await probarAmpliacion(pag);
   console.log('1-2 · ampliación: listo');
+  await pag.reload({ waitUntil: 'networkidle' });
+  await pag.waitForFunction(() => window.__portada);
+  const viaje = await probarViaje(pag);
+  console.log(`1b · viaje: cada célula recorre en promedio ${Math.round(viaje.promedio)} px; hay alguna en la lupa el ${Math.round(viaje.enLaLupa * 100)} % del tiempo`);
   await probarHover(pag);
   console.log('3 · lupa con mouse y teclado: listo');
 

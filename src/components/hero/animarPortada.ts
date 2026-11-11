@@ -2,34 +2,33 @@
   PORTADA ILUSTRADA · movimiento
 
   Cómo funciona:
-  - GSAP solo cambia números: el estado de cada célula (movimiento.ts), el
-    de la lupa y el de cada científico. Nunca toca React.
-  - Una sola función, `dibujar`, corre una vez por cuadro (gsap.ticker): lee
-    esos números y mueve las imágenes. Así la célula de afuera y su copia
-    ampliada salen del mismo estado en el mismo cuadro y no pueden desfasarse.
+  - Todo se maneja con números: el estado de cada célula, el de la lupa y el
+    de cada científico. GSAP los anima (lupa, científicos, giro y respiro de
+    las células) y, una vez por cuadro (gsap.ticker), las células avanzan por
+    la pantalla (deriva.ts). Nunca se toca React.
+  - Después, en el mismo cuadro, `dibujar` lee esos números y mueve las
+    imágenes. Así la célula de afuera y su copia ampliada salen del mismo
+    estado y no pueden desfasarse.
   - Con "reducir movimiento" (prefers-reduced-motion) no se mueve nada: queda
     la composición quieta, con la lupa ampliando igual.
 */
 import { gsap } from 'gsap';
-import { CELULAS, CIENTIFICOS, ESCENA, LENTE } from './escena';
+import { avanzar, nuevoRumbo, type Mundo, type Rumbo } from './deriva';
+import { CELULAS, CIENTIFICOS, ESCENA, LENTE, RADIO_VIDRIO } from './escena';
 import {
   LUPA_ACTIVA,
   LUPA_REPOSO,
   centroOptico,
   nuevoEstadoCelula,
-  recorridoLibre,
+  salirDeZonas,
   transformAdentro,
   transformAfuera,
   type EstadoCelula,
   type EstadoLupa,
   type Rect,
-  type Recorrido,
 } from './movimiento';
 
 const azar = gsap.utils.random as (min: number, max: number) => number;
-
-/* Profundidad: 0 = célula chica (lejos), 1 = grande (cerca). Las lejanas van más lento. */
-const profundidad = (d: number) => gsap.utils.clamp(0, 1, (d - 36) / (150 - 36));
 
 type EstadoCientifico = { balanceo: number; respiro: number; reaccion: number };
 
@@ -55,7 +54,11 @@ export function animarPortada(raiz: HTMLElement): () => void {
   // la copia ampliada arranca como la dejó React (visible solo si toca el vidrio)
   const visInicial = adentro.map((el) => el?.style.visibility ?? '');
   const visibles = visInicial.map((v) => v !== 'hidden');
-  let recorridos: Recorrido[] = CELULAS.map(() => ({ ox: 0, oy: 0, caja: { izq: 0, der: 0, arr: 0, aba: 0 } }));
+  // para viajar: textos que no se tapan y dónde está la lupa (se actualizan solos)
+  const mundo: Mundo = { zonas: [], lente: { x: LENTE.x, y: LENTE.y }, azar: Math.random };
+  const rumbos: Rumbo[] = CELULAS.map((c) => nuevoRumbo(c, mundo));
+  const fijas = CELULAS.map(() => false); // solo para las pruebas
+  let tiempo = 0;
   let vivo = true;
   const reducido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -63,6 +66,9 @@ export function animarPortada(raiz: HTMLElement): () => void {
   function dibujar() {
     const giro = lupa.giro + lupa.vaiven;
     const ls = centroOptico(giro, lupa.escala);
+    const lente = { ...ls, escala: lupa.escala, aumento: lupa.aumento };
+    mundo.lente = ls;
+    mundo.vista = (RADIO_VIDRIO * lupa.escala) / lupa.aumento;
 
     // la lupa entera gira y crece desde la punta del mango (transform-origin en CSS)
     lupaEl!.style.transform = `rotate(${giro.toFixed(3)}deg) scale(${lupa.escala.toFixed(4)})`;
@@ -79,7 +85,7 @@ export function animarPortada(raiz: HTMLElement): () => void {
       if (a) a.style.transform = transformAfuera(c, e);
       const d = adentro[i];
       if (!d) continue;
-      const t = transformAdentro(c, e, ls);
+      const t = transformAdentro(c, e, lente);
       if (t.visible !== visibles[i]) {
         d.style.visibility = t.visible ? 'visible' : 'hidden';
         visibles[i] = t.visible;
@@ -121,32 +127,32 @@ export function animarPortada(raiz: HTMLElement): () => void {
       }
       if (r.width && r.height) zonas.push(aEscena(r));
     });
-    recorridos = CELULAS.map((c) => recorridoLibre(c, zonas));
+    mundo.zonas = zonas;
     // quieta ("reducir movimiento"): igual se corre la que quedó debajo de un texto
     if (reducido) {
-      recorridos.forEach((rec, i) => Object.assign(estados[i], { dx: rec.ox, dy: rec.oy }));
+      CELULAS.forEach((c, i) => {
+        const { ox, oy } = salirDeZonas(c, zonas);
+        Object.assign(estados[i], { dx: ox, dy: oy });
+      });
       dibujar();
     }
   }
 
   /* ---------- Movimiento de las células ---------- */
   /*
-    Cada eje se mueve por su cuenta, hacia un punto al azar dentro de su caja,
-    con duraciones distintas: el camino es una curva que no se repite y la
-    célula casi nunca se detiene del todo.
+    Una vez por cuadro: avanzan por la pantalla (deriva.ts). Si el cuadro
+    tardó mucho (pestaña oculta, compu lenta), se avanza en pasos chicos para
+    que nadie salte.
   */
-  function derivar(i: number, eje: 'dx' | 'dy') {
-    if (!vivo) return;
-    const c = CELULAS[i];
-    const { ox, oy, caja } = recorridos[i];
-    const [base, menos, mas] = eje === 'dx' ? [ox, caja.izq, caja.der] : [oy, caja.arr, caja.aba];
-    const lento = 1.35 - 0.5 * profundidad(c.d);
-    gsap.to(estados[i], {
-      [eje]: base + azar(-menos, mas),
-      duration: azar(7, 13) * lento,
-      ease: 'sine.inOut',
-      onComplete: () => derivar(i, eje),
-    });
+  function cuadro(_t: number, msDesdeElAnterior: number) {
+    let dt = Math.min(msDesdeElAnterior / 1000, 0.25) * gsap.globalTimeline.timeScale();
+    tiempo += dt;
+    while (dt > 0) {
+      const paso = Math.min(dt, 1 / 30);
+      avanzar(CELULAS, estados, rumbos, paso, tiempo, mundo, fijas);
+      dt -= paso;
+    }
+    dibujar();
   }
   function girar(i: number) {
     if (!vivo) return;
@@ -173,8 +179,11 @@ export function animarPortada(raiz: HTMLElement): () => void {
   function activar() {
     if (activa) return;
     activa = true;
+    mundo.activa = true; // si el vidrio está vacío, enseguida va alguna célula
     raiz.dataset.lupa = 'activa';
-    gsap.to(lupa, { ...LUPA_ACTIVA, duration: 1.3, ease: 'elastic.out(1, 0.9)', overwrite: 'auto' });
+    gsap.to(lupa, { giro: LUPA_ACTIVA.giro, escala: LUPA_ACTIVA.escala, duration: 1.3, ease: 'elastic.out(1, 0.9)', overwrite: 'auto' });
+    // agranda más, sin rebote (el zoom no tiembla)
+    gsap.to(lupa, { aumento: LUPA_ACTIVA.aumento, duration: 1, ease: 'power2.out', overwrite: 'auto' });
     gsap.to(personas, {
       reaccion: (i: number) => REACCION[CIENTIFICOS[i].id] ?? 1.5,
       duration: 0.9,
@@ -186,6 +195,7 @@ export function animarPortada(raiz: HTMLElement): () => void {
   function desactivar() {
     if (!activa) return;
     activa = false;
+    mundo.activa = false;
     delete raiz.dataset.lupa;
     gsap.to(lupa, { ...LUPA_REPOSO, duration: 0.85, ease: 'power3.inOut', overwrite: 'auto' });
     gsap.to(personas, { reaccion: 0, duration: 0.8, ease: 'power2.inOut', stagger: 0.05, overwrite: 'auto' });
@@ -228,15 +238,10 @@ export function animarPortada(raiz: HTMLElement): () => void {
   document.fonts?.ready.then(() => vivo && medir());
 
   if (!reducido) {
-    CELULAS.forEach((_, i) => {
-      const { ox, oy } = recorridos[i];
-      if (ox || oy) {
-        // quedó debajo de un texto (pantalla chica): primero sale, sin saltar
-        gsap.to(estados[i], { dx: ox, dy: oy, duration: 0.9, ease: 'power2.out', onComplete: () => (derivar(i, 'dx'), derivar(i, 'dy')) });
-      } else {
-        derivar(i, 'dx');
-        derivar(i, 'dy');
-      }
+    // las células arrancan en la composición aprobada y salen a recorrer la pantalla
+    // (si alguna quedó debajo de un texto, sale de a poco: ver deriva.ts)
+    CELULAS.forEach((c, i) => {
+      rumbos[i] = nuevoRumbo(c, mundo);
       girar(i);
       respirar(i);
     });
@@ -257,7 +262,7 @@ export function animarPortada(raiz: HTMLElement): () => void {
     window.addEventListener('blur', alSalir);
     entrar?.addEventListener('focus', alEnfocar);
     entrar?.addEventListener('blur', alSalir);
-    gsap.ticker.add(dibujar);
+    gsap.ticker.add(cuadro);
   }
 
   /* Solo en desarrollo: para las pruebas automáticas (pruebas/portada.e2e.mjs). */
@@ -265,13 +270,14 @@ export function animarPortada(raiz: HTMLElement): () => void {
     (window as unknown as Record<string, unknown>).__portada = {
       estados,
       lupa,
-      recorridos: () => recorridos,
+      rumbos,
       activar,
       desactivar,
       // detiene una célula y la pone donde se le pide (para probar trayectorias)
       fijar(id: string, dx: number, dy: number) {
         const i = CELULAS.findIndex((c) => c.id === id);
         gsap.killTweensOf(estados[i]);
+        fijas[i] = true;
         Object.assign(estados[i], { dx, dy, giro: 0, escala: 1 });
       },
       // acelera o frena todo el movimiento (1 = normal)
@@ -284,7 +290,7 @@ export function animarPortada(raiz: HTMLElement): () => void {
   /* ---------- Desarmar (al salir de la portada o si cambia "reducir movimiento") ---------- */
   return () => {
     vivo = false;
-    gsap.ticker.remove(dibujar);
+    gsap.ticker.remove(cuadro);
     gsap.killTweensOf([lupa, ...estados, ...personas]);
     observador.disconnect();
     window.removeEventListener('pointermove', alMover);

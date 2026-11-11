@@ -6,8 +6,8 @@ export const CELULA_SRC = '/illustrations/hero/cells/celula.webp';
 
 /*
   Células alrededor de la escena (capa de afuera).
-  Acá quedan en su lugar; las mueve animarPortada.ts, sin volver a dibujar
-  React en cada cuadro.
+  Acá quedan donde arrancan; después viajan por toda la pantalla
+  (deriva.ts y animarPortada.ts), sin volver a dibujar React en cada cuadro.
 */
 export default function FloatingCells({ celulas }: { celulas: Celula[] }) {
   return (
@@ -31,6 +31,8 @@ export default function FloatingCells({ celulas }: { celulas: Celula[] }) {
               '--d': c.d,
               '--h': c.d * CELULA_ALTO,
               '--giro': `${c.giro}deg`,
+              // las grandes (más cerca) pasan por delante de las chicas
+              zIndex: Math.round(c.d),
             } as CSSProperties
           }
         />

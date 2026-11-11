@@ -8,8 +8,8 @@ Link de prueba (siempre la última versión de la rama): https://pasteur-git-fro
 | --- | --- | --- |
 | A · Diagnóstico | Código, trabajo de Cursor y dibujos | Hecha (10/11) |
 | B · Composición estática | Escena con las ilustraciones reales, sin movimiento | Aprobada (11/11) |
-| C · Movimiento orgánico | Células que flotan, movimientos sutiles de los científicos | Hecha (11/11), **espera la revisión de Sofia** |
-| D · Lupa interactiva | Reposo, hover y aumento real sincronizado | Hecha (11/11), **espera la revisión de Sofia** |
+| C · Movimiento orgánico | Células que recorren toda la pantalla, movimientos sutiles de los científicos | Hecha (11/11; las células viajan por toda la pantalla desde el segundo pedido del 11/11), **espera la revisión de Sofia** |
+| D · Lupa interactiva | Reposo, hover y aumento real sincronizado (1,7; con el mouse encima, 2,3) | Hecha (11/11), **espera la revisión de Sofia** |
 | E · Optimización | Accesibilidad, rendimiento, pruebas y capturas finales | Pruebas y rendimiento hechos; falta la revisión final |
 
 ## Cómo está armada
@@ -19,11 +19,12 @@ Todo está en `src/components/hero/`:
 | Archivo | Qué hace |
 | --- | --- |
 | `escena.ts` | **Única fuente de datos**: medidas de la escena, lupa, células y científicos. También `enLaLente()`, que calcula dónde se ve cada célula dentro de la lupa en reposo. |
-| `movimiento.ts` | Las cuentas del movimiento, sin tocar la página: dónde queda el centro óptico, dónde se ve cada copia ampliada, por dónde puede andar cada célula sin acercarse a los textos. Acá están los valores de la lupa activa. |
+| `movimiento.ts` | Las cuentas de la lupa, sin tocar la página: dónde queda el centro óptico y dónde y de qué tamaño se ve cada copia ampliada. Acá están los valores de la lupa en reposo y activa (giro, escala y aumento). |
+| `deriva.ts` | Cómo viajan las células por toda la pantalla, sin tocar la página: destinos, curvas, distancia entre ellas, textos, bordes y el "turno de la lupa". |
 | `animarPortada.ts` | Pone la escena en movimiento con GSAP. |
 | `HeroEditorial.tsx` | Arma la escena, la ordena en capas y arranca el movimiento. |
 | `HeroTitle.tsx` | Título y «Comenzá a experimentar» (el enlace para entrar). |
-| `FloatingCells.tsx` | Células de afuera. |
+| `FloatingCells.tsx` | Células de afuera. Las grandes pasan por delante de las chicas. |
 | `HeroScientists.tsx` | Los tres científicos y su sombra en el piso. |
 | `InteractiveMagnifier.tsx` | La lupa, en una sola pieza: la ilustración entera; el vidrio con la copia ampliada y los brillos; y otra vez la ilustración recortada al aro, encima del vidrio. |
 | `hero.css` | Estilos aislados: todas las clases empiezan con `hero`. |
@@ -52,7 +53,8 @@ Todo está en `src/components/hero/`:
   - Una célula a medio entrar se ve normal afuera y agrandada adentro.
 - El vidrio tiene el mismo marfil que el fondo, así la célula de atrás no se ve dos veces. Encima va un tinte azul muy leve y los brillos (`lupa-reflejos`).
 - Lo que se ve por el vidrio no gira cuando gira la lupa, como en una lupa real.
-- **Aumento:** 1,7 en reposo. Levantada, 1,87, porque la lupa crece un 10 %.
+- **Aumento:** 1,7 en reposo. Con el mouse encima, 2,3 (pedido de Sofia, 11/11): se agranda en 1 s, sin rebote, mientras la lupa sube.
+- Solo se ve agrandada la célula que pasa **de verdad** por debajo del vidrio. Una que pasa cerca del borde, por afuera, no.
 
 ### La lupa: reposo y activa
 
@@ -68,13 +70,20 @@ Todo está en `src/components/hero/`:
 
 ### Células
 
-- Cada eje (horizontal y vertical) va hacia un punto al azar, con su propio tiempo (7 a 17 s). El camino es una curva que no se repite, y la célula casi nunca se detiene del todo.
-- Además giran apenas: ±4 a 9°, y una de cada cuatro ±14 a 22°. También "respiran" (±2,5 % de tamaño).
-- **Profundidad:** las chicas (más lejos) van más lento y se alejan menos de su lugar.
-- `l`, `m` y `n` se alejan más (`deriva` en `escena.ts`): son las que entran y salen del vidrio.
-- **Textos libres:** cada célula se mueve dentro de un rectángulo que no se acerca a menos de 12 unidades del título, el subtítulo ni "Pedí acceso".
+Arrancan en la composición aprobada y **recorren toda la pantalla** (pedido de Sofia, 11/11). Todo está en `deriva.ts`:
+
+- **Destinos:** cada célula elige adónde ir entre 10 lugares al azar, el más lejos de las otras células y de adonde van las otras. Así se reparten por toda la pantalla y no se amontonan en el medio.
+- **Curvas:** gira de a poco hacia su destino, con una ondulación lenta. Nunca dobla de golpe.
+- **Profundidad:** las chicas (más lejos) van más lento (11 unidades por segundo) que las grandes (26). Las de tamaños muy distintos se pueden cruzar: la grande pasa por delante.
+- **Por la lupa:** una de cada cinco veces, el destino es la lupa. Pasa por el medio del vidrio y sigue de largo.
+- **Turno de la lupa:** si nadie pasa por el vidrio durante 4 s, va la que llegaría primero, un poco más rápido. Con el mouse encima, van una detrás de otra (sin llenar el vidrio), y debajo del vidrio pasan más despacio: se las ve más rato y más grandes.
+- **Textos libres:** esquivan el título, el subtítulo y "Pedí acceso" antes de llegar, y nunca se acercan a menos de 12 unidades.
   - Esos textos están marcados con `data-hero-evitar`, y se miden de nuevo cuando cambia el tamaño de la ventana.
-  - En la Ceibal (1024 × 600), la célula que quedaba debajo de "Pedí acceso" se corre lo justo al cargar.
+  - Si una célula queda debajo de un texto (por ejemplo, al achicar la ventana o en la Ceibal), sale de a poco, sin saltar.
+- **Bordes:** se pueden asomar un poco, pero no se van de la pantalla.
+- Además giran apenas: ±4 a 9°, y una de cada cuatro ±14 a 22°. También "respiran" (±2,5 % de tamaño).
+
+En 10 minutos simulados, cada célula recorre de 1000 a 1700 unidades de ancho; la distancia media a la vecina más cercana queda en unas 200 unidades. En el navegador, el vidrio está vacío menos del 10 % del tiempo.
 
 ### Científicos
 
@@ -84,32 +93,34 @@ Todo está en `src/components/hero/`:
 
 ### Reducir movimiento
 
-Con `prefers-reduced-motion` no se mueve nada: queda la composición quieta, con la lupa agrandando igual.
+Con `prefers-reduced-motion` no se mueve nada: queda la composición quieta, con la lupa agrandando igual. Si alguna célula queda debajo de un texto, se corre lo justo.
 
 ### Valores para ajustar
 
 | Qué | Dónde |
 | --- | --- |
 | Cuánto sube y crece la lupa | `LUPA_ACTIVA` en `movimiento.ts` (giro y escala). La prueba `test:portada` avisa si sale de 40–60 de subida u 8–12 % de crecimiento. |
-| Aumento | `LENTE.aumento` en `escena.ts` |
+| Aumento | En reposo: `LENTE.aumento` en `escena.ts`. Con el mouse encima: `LUPA_ACTIVA.aumento` en `movimiento.ts`. |
 | Rebote y tiempos de la lupa | `activar()` y `desactivar()` en `animarPortada.ts` |
-| Cuánto se mueve cada célula | `deriva` de cada célula en `escena.ts` (si no tiene, depende del tamaño: `derivaDe` en `movimiento.ts`) |
-| Velocidad de las células | `derivar()` en `animarPortada.ts` |
+| Velocidad, curvas, separación, cada cuánto pasan por la lupa | `DERIVA` en `deriva.ts` (cada valor está explicado ahí) |
 | Inclinación de los científicos | `REACCION` en `animarPortada.ts` |
 | Tinte del vidrio | `.hero-lente::before` en `hero.css` |
 
 ## Pruebas
 
 **`npm run test:portada`** (sin navegador)
-- La copia ampliada queda donde la vería una lupa real, en 400 posiciones al azar de células y lupa.
-- La lupa activa sube entre 40 y 60 y crece entre 8 y 12 %.
+- La copia ampliada queda donde la vería una lupa real y del tamaño justo, en 400 posiciones al azar de células y lupa, con aumentos al azar.
+- La lupa activa sube entre 40 y 60, crece entre 8 y 12 % y agranda más.
 - Una célula que cruza la lupa se ve ampliada solo mientras pasa por el vidrio.
-- Las células no se acercan a los textos.
+- 12 minutos de viaje simulado: cada célula recorre la pantalla de punta a punta, todas pasan por la lupa, el vidrio no queda vacío más de 30 s (con el mouse encima, se ve alguna más del 75 % del tiempo), ninguna tapa un texto, van lento y no se van de la pantalla.
+- Si el vidrio está vacío, va la que llega primero, y sigue de largo.
+- Una célula que arranca debajo de un texto sale de a poco, sin saltar.
 
 **`npm run test:portada-navegador`** (con Playwright, en modo desarrollo: usa un acceso de prueba que no existe en producción)
-- Cuadro por cuadro, la copia ampliada está a menos de 1,5 px de donde la vería una lupa real: con las células moviéndose, con la lupa quieta y levantada.
+- Cuadro por cuadro, la copia ampliada está a menos de 1,5 px de donde la vería una lupa real, y agrandada lo justo: con las células moviéndose, con la lupa quieta y levantada.
 - Tres células (chica, mediana, grande) por tres caminos distintos.
-- Hover con mouse y con teclado, sin temblar en el borde.
+- Las células recorren la pantalla y pasan seguido por la lupa (unos 3 minutos acelerados).
+- Hover con mouse y con teclado, sin temblar en el borde, con aumento 2,3.
 - Ninguna célula toca los textos a 1920 × 1080, 1440 × 900 y 1024 × 600.
 - Con "reducir movimiento" no se mueve nada.
 - La lupa lleva a `/rol`.
@@ -124,7 +135,7 @@ Medido con la versión de producción, simulando un procesador 4 y 6 veces más 
 | 1024 × 600 | 6 veces más lento | 60, en reposo y con la lupa subiendo |
 | 1366 × 768 | 4 veces más lento | 60 |
 
-- Con el procesador 6 veces más lento, el hilo principal está ocupado un 24 % en reposo y un 31 % con la lupa activa. Nunca se recalcula el diseño de la página: solo se mueven imágenes, cada una en su propia capa.
+- Con el procesador 6 veces más lento, el hilo principal está ocupado un 35–37 % (antes del viaje por toda la pantalla, 24–31 %: ahora hay más copias ampliadas a la vista). Las cuentas del viaje son un 6 %. Nunca se recalcula el diseño de la página: solo se mueven imágenes, cada una en su propia capa.
 - Si la pestaña no se ve, el movimiento se detiene solo.
 - Falta probarla en una Ceibal real, porque su placa de video es más débil que la de la simulación.
 

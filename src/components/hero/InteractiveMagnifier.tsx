@@ -86,6 +86,7 @@ export default function InteractiveMagnifier({ celulas }: { celulas: Celula[] })
                     '--h': p.d * CELULA_ALTO,
                     '--giro': `${c.giro}deg`,
                     visibility: p.visible ? 'visible' : 'hidden',
+                    zIndex: Math.round(c.d),
                   } as CSSProperties
                 }
               />
