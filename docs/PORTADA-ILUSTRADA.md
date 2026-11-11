@@ -32,7 +32,7 @@ Todo está en `src/components/hero/`:
 - **Capas**, de atrás hacia adelante: células, lupa (mango, vidrio, aro), científicos, textos.
 - **Nadie sostiene la lupa** (decidido por Sofia el 10/11). Está entera detrás de los científicos y se mueve sola. Los científicos van en el orden de las referencias: pelirroja, rulos y rodete.
 - **Para entrar:** «Comenzá a experimentar» y la lupa llevan a "¿Quién explora hoy?" (`/rol`).
-- **Se conservan** el lugar del logo y "Pedí acceso" (solo con el sistema de aulas prendido).
+- **Se conserva** "Pedí acceso" (solo con el sistema de aulas prendido). **Sin logo del Institut Pasteur**: se sacó de toda la web el 11/11, por pedido de Sofia.
 
 ## Movimiento
 
@@ -72,7 +72,7 @@ Todo está en `src/components/hero/`:
 - Además giran apenas: ±4 a 9°, y una de cada cuatro ±14 a 22°. También "respiran" (±2,5 % de tamaño).
 - **Profundidad:** las chicas (más lejos) van más lento y se alejan menos de su lugar.
 - `l`, `m` y `n` se alejan más (`deriva` en `escena.ts`): son las que entran y salen del vidrio.
-- **Textos libres:** cada célula se mueve dentro de un rectángulo que no se acerca a menos de 12 unidades del título, el subtítulo, el logo ni "Pedí acceso".
+- **Textos libres:** cada célula se mueve dentro de un rectángulo que no se acerca a menos de 12 unidades del título, el subtítulo ni "Pedí acceso".
   - Esos textos están marcados con `data-hero-evitar`, y se miden de nuevo cuando cambia el tamaño de la ventana.
   - En la Ceibal (1024 × 600), la célula que quedaba debajo de "Pedí acceso" se corre lo justo al cargar.
 

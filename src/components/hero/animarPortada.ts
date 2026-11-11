@@ -109,7 +109,7 @@ export function animarPortada(raiz: HTMLElement): () => void {
     marco = escena!.getBoundingClientRect();
     if (!marco.width) return;
     const zonas: Rect[] = [];
-    // textos de la portada y de la página (logo, "Pedí acceso"): todo lo marcado con data-hero-evitar
+    // textos de la portada y de la página ("Pedí acceso"): todo lo marcado con data-hero-evitar
     document.querySelectorAll<HTMLElement>('[data-hero-evitar]').forEach((el) => {
       let r = el.getBoundingClientRect();
       // del título: el ancho del texto (la caja ocupa toda la pantalla) y el alto del renglón

@@ -112,8 +112,7 @@ export function derivaDe(c: Pick<Celula, 'd' | 'deriva'>) {
 
 /*
   La caja por la que puede andar la célula: un rectángulo alrededor de su
-  lugar que no se acerca a ningún texto (título, subtítulo, logo, "Pedí
-  acceso"). Como el rectángulo no toca los textos y la célula va en línea
+  lugar que no se acerca a ningún texto (título, subtítulo, "Pedí acceso"). Como el rectángulo no toca los textos y la célula va en línea
   recta de un punto a otro adentro de él, nunca los tapa en el camino.
 */
 export function cajaLibre(c: Pick<Celula, 'x' | 'y' | 'd' | 'deriva'>, zonas: Rect[], margen = MARGEN_TEXTOS): Caja {
@@ -144,7 +143,7 @@ export function cajaLibre(c: Pick<Celula, 'x' | 'y' | 'd' | 'deriva'>, zonas: Re
 
 /*
   Dónde se mueve cada célula en esta pantalla.
-  En pantallas chicas (la Ceibal, 1024 × 600) el logo y "Pedí acceso" ocupan
+  En pantallas chicas (la Ceibal, 1024 × 600) "Pedí acceso" ocupa
   más lugar de la escena y alguna célula puede quedar debajo. En ese caso su
   lugar se corre lo justo para salir (ox, oy) y la caja se arma desde ahí.
 */

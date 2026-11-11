@@ -27,19 +27,6 @@
 .etiqueta--oscura {
   color: var(--tinta);
 }
-.logo-pendiente {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 180px;
-  height: 44px;
-  border-radius: 8px;
-  border: 1.5px dashed rgba(34, 35, 42, 0.4);
-  background: repeating-linear-gradient(135deg, rgba(34, 35, 42, 0.06) 0 8px, rgba(251, 249, 241, 0.7) 8px 16px);
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--tinta);
-}
 .pendiente {
   padding: var(--space-4);
   border-radius: var(--radius-sm);
@@ -179,12 +166,6 @@
 .inicio {
   height: 100vh;
   background: var(--agar);
-}
-.inicio__logo {
-  position: absolute;
-  left: 48px;
-  top: 36px;
-  z-index: 6;
 }
 
 /* ---------- 02 Rol ---------- */
