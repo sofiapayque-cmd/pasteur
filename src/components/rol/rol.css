@@ -1,0 +1,234 @@
+/*
+  PANTALLA 02 · ¿CÓMO QUERÉS EXPLORAR? · estilos (todo empieza con "rol-moli" o "rol-placa")
+
+  Dos capas:
+  - las células: una escena de 1920 × 1080 que CUBRE la pantalla;
+  - la escena (título, placas y Moli): entra entera, centrada. Horizontal
+    1920 × 1080; en un celular parado, vertical 1080 × 1920.
+  Las posiciones están en unidades; --u es lo que vale una unidad.
+*/
+.rol-moli {
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  background: var(--agar);
+}
+.rol-moli > .cabecera {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 5;
+}
+
+/* 1 · Células (las de la portada: FloatingCells) */
+.rol-moli__celulas {
+  --u: max(calc(100vw / 1920), calc(100vh / 1080));
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(1920 * var(--u));
+  height: calc(1080 * var(--u));
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  user-select: none;
+}
+
+/* 2 · La escena */
+.rol-moli__escena {
+  --u: min(calc(100vw / 1920), calc(100vh / 1080));
+  --ancho: 1920;
+  --alto: 1080;
+  --titulo-y: 73;
+  --titulo-t: 85;
+  --placa-y: 753;
+  --maestra-x: 627;
+  --alumno-x: 1293;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 1;
+  width: calc(var(--ancho) * var(--u));
+  height: calc(var(--alto) * var(--u));
+  transform: translate(-50%, -50%);
+}
+/* celular parado: escena vertical, las placas siguen lado a lado */
+@media (orientation: portrait) and (max-aspect-ratio: 3 / 4) {
+  .rol-moli__escena {
+    --u: min(calc(100vw / 1080), calc(100vh / 1920));
+    --ancho: 1080;
+    --alto: 1920;
+    --titulo-y: 380;
+    --titulo-t: 110;
+    --placa-y: 1250;
+    --maestra-x: 295;
+    --alumno-x: 785;
+  }
+}
+
+.rol-moli__titulo {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(var(--titulo-y) * var(--u));
+  margin: 0;
+  padding: 0 calc(40 * var(--u));
+  text-align: center;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: calc(var(--titulo-t) * var(--u));
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+  color: var(--tinta);
+}
+
+/* 3 · Las placas (los dos botones) */
+.rol-placa {
+  --d: 453;
+  position: absolute;
+  left: calc((var(--x) - var(--d) / 2) * var(--u));
+  top: calc((var(--placa-y) - var(--d) / 2) * var(--u));
+  width: calc(var(--d) * var(--u));
+  height: calc(var(--d) * var(--u));
+  padding: calc(52 * var(--u)) 0 0;
+  border: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: calc(13 * var(--u));
+  color: var(--tinta);
+  font: inherit;
+  background: radial-gradient(circle at 50% 42%, #fffffc 0%, var(--agar) 52%, var(--tinte) 100%);
+  box-shadow:
+    0 calc(32 * var(--u)) calc(80 * var(--u)) rgba(47, 74, 133, 0.14),
+    inset 0 0 0 calc(2 * var(--u)) var(--aro),
+    inset 0 0 0 calc(15 * var(--u)) rgba(255, 255, 255, 0.75),
+    inset 0 0 0 calc(17 * var(--u)) var(--aro-suave);
+  transition: box-shadow 0.4s var(--ease-organico);
+}
+.rol-placa--maestra {
+  --x: var(--maestra-x);
+  --tinte: #e3eafa;
+  --aro: rgba(47, 74, 133, 0.22);
+  --aro-suave: rgba(47, 74, 133, 0.1);
+}
+.rol-placa--alumno {
+  --x: var(--alumno-x);
+  --tinte: #ece8fb;
+  --aro: rgba(114, 114, 238, 0.26);
+  --aro-suave: rgba(114, 114, 238, 0.12);
+}
+.rol-placa:hover {
+  box-shadow:
+    0 calc(36 * var(--u)) calc(90 * var(--u)) rgba(47, 74, 133, 0.2),
+    inset 0 0 0 calc(2 * var(--u)) var(--aro),
+    inset 0 0 0 calc(15 * var(--u)) rgba(255, 255, 255, 0.75),
+    inset 0 0 0 calc(17 * var(--u)) var(--aro-suave);
+}
+.rol-placa:focus-visible {
+  outline: 3px solid var(--nucleo);
+  outline-offset: 3px;
+}
+.rol-placa__titulo {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: max(22px, calc(50 * var(--u)));
+  line-height: 1.05;
+  letter-spacing: -0.015em;
+}
+.rol-placa__texto {
+  max-width: 64%;
+  font-size: max(15px, calc(22.7 * var(--u)));
+  line-height: 1.4;
+  color: var(--tinta-suave);
+}
+/* en el celular la placa es chica: solo el título y la flecha */
+@media (orientation: portrait) and (max-aspect-ratio: 3 / 4) {
+  .rol-placa__texto {
+    display: none;
+  }
+}
+.rol-placa__ir {
+  margin-top: calc(10 * var(--u));
+  width: max(36px, calc(64 * var(--u)));
+  height: max(36px, calc(64 * var(--u)));
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--nucleo);
+  color: var(--agar);
+  transition: transform 0.4s var(--ease-organico);
+}
+.rol-placa__ir svg {
+  width: 46%;
+  height: 46%;
+}
+.rol-placa:hover .rol-placa__ir {
+  transform: translateX(calc(6 * var(--u)));
+}
+
+/* adornos de la placa: brillo del vidrio, colonias y la sombra de Moli */
+.rol-placa__brillo,
+.rol-placa__colonia,
+.rol-placa__sombra {
+  position: absolute;
+  pointer-events: none;
+}
+.rol-placa__brillo {
+  inset: 7%;
+  border-radius: 50%;
+  border: calc(3 * var(--u)) solid transparent;
+  border-left-color: rgba(255, 255, 255, 0.7);
+  border-bottom-color: rgba(255, 255, 255, 0.35);
+  transform: rotate(20deg);
+}
+.rol-placa__colonia {
+  border-radius: 50%;
+  width: calc(var(--t) * var(--u));
+  height: calc(var(--t) * var(--u));
+  left: var(--cx);
+  top: var(--cy);
+  background: var(--c);
+}
+.rol-placa__sombra {
+  left: 50%;
+  top: calc(-14 * var(--u));
+  width: calc(210 * var(--u));
+  height: calc(58 * var(--u));
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(47, 74, 133, 0.24) 0%, rgba(47, 74, 133, 0) 70%);
+  opacity: 0;
+}
+.rol-placa[data-con-moli] .rol-placa__sombra {
+  opacity: 1;
+}
+
+/*
+  4 · Moli. Una sola: la imagen de respaldo (mientras carga el 3D, o si no
+  hay WebGL) y el lienzo 3D, en el mismo lugar.
+*/
+.rol-moli__respaldo {
+  /* RESPALDO en escenaRol.ts: cuadrado de 454,4 unidades, asiento en (50 %, 62,26 %) */
+  position: absolute;
+  left: calc((var(--maestra-x) - 227.2) * var(--u));
+  top: calc((var(--placa-y) - 226.5 - 282.9) * var(--u));
+  width: calc(454.4 * var(--u));
+  height: calc(454.4 * var(--u));
+  z-index: 3;
+  pointer-events: none;
+  user-select: none;
+  transition: opacity 0.3s ease;
+}
+.rol-moli__escena[data-moli='3d'] .rol-moli__respaldo {
+  opacity: 0;
+}
+.rol-moli__lienzo {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}

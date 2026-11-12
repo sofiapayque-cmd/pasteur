@@ -30,24 +30,7 @@
   user-select: none;
 }
 
-/* 1 · Células */
-.hero-celulas {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-}
-.hero-celula {
-  position: absolute;
-  display: block;
-  left: calc((var(--x) - var(--d) / 2) * var(--u));
-  top: calc((var(--y) - var(--h) / 2) * var(--u));
-  width: calc(var(--d) * var(--u));
-  height: calc(var(--h) * var(--u));
-  max-width: none;
-  transform: rotate(var(--giro));
-  /* se mueven todo el tiempo: cada una en su propia capa (lo más liviano para la Ceibal) */
-  will-change: transform;
-}
+/* 1 · Células: sus estilos están en celulas.css (los usa también la pantalla de roles) */
 
 /*
   2 · La lupa: una sola pieza, detrás de los científicos. Gira y crece desde

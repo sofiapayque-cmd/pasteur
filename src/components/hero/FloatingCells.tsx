@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-img-element -- imágenes ya optimizadas (WebP a su tamaño) que se escalan con la escena y después anima GSAP; next/image no suma nada acá */
 import type { CSSProperties } from 'react';
+import './celulas.css';
 import { CELULA_ALTO, type Celula } from './escena';
 
 export const CELULA_SRC = '/illustrations/hero/cells/celula.webp';

@@ -168,79 +168,7 @@
   background: var(--agar);
 }
 
-/* ---------- 02 Rol ---------- */
-.rol {
-  background-color: var(--plasma);
-  background-image:
-    radial-gradient(circle, rgba(47, 74, 133, 0.5) 0 4px, transparent 5px),
-    radial-gradient(circle, transparent 0 17px, rgba(47, 74, 133, 0.32) 18px 21px, transparent 22px);
-  background-size: 52px 46px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-.rol__cartel {
-  margin-top: 6vh;
-  padding: 18px 36px;
-  border-radius: var(--radius-md);
-  background: rgba(251, 249, 241, 0.94);
-  text-align: center;
-}
-.rol__cartel h1 {
-  font-size: clamp(36px, 4.5vw, 52px);
-}
-.rol__opciones {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 64px;
-  margin: 7vh 0;
-}
-.rol__celula {
-  width: 300px;
-  height: 300px;
-  border-radius: 50%;
-  border: 0;
-  background: var(--agar);
-  box-shadow: 0 24px 60px rgba(47, 74, 133, 0.25);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 36px;
-  color: var(--tinta);
-  cursor: pointer;
-  transition: transform 0.4s var(--ease-organico);
-}
-.rol__celula:hover {
-  transform: scale(1.05);
-}
-.rol__celula--nino {
-  background: var(--membrana);
-}
-.rol__celula-titulo {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-variation-settings: 'SOFT' 100;
-  font-size: 32px;
-  line-height: 1.1;
-}
-.rol__celula-texto {
-  font-size: 16px;
-  line-height: 1.4;
-}
-.rol__vertical {
-  position: absolute;
-  right: 28px;
-  top: 50%;
-  transform: translateY(-50%) rotate(180deg);
-  writing-mode: vertical-rl;
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-style: italic;
-  font-size: 20px;
-}
+/* ---------- 02 Rol: estilos en src/components/rol/rol.css ---------- */
 
 /* ---------- 03 Panel ---------- */
 .panel__intro {
@@ -1026,9 +954,6 @@
   .panel__actividades {
     padding-right: 220px;
   }
-}
-.rol > .cabecera {
-  align-self: stretch;
 }
 
 /* ---------- Base compartida de actividades ---------- */
