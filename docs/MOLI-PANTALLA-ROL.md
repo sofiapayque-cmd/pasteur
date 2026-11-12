@@ -33,7 +33,7 @@ Rama `frontend/rol-moli`, que sale de `frontend/hero-ilustrado` porque usa las c
 
 ## Cómo se mueve
 
-Todo lo de Moli vive en un solo objeto (`EstadoMoli`, en `moli.ts`). GSAP cambia esos números (`coreografia.ts`) y en cada cuadro se pasan al 3D. React no se vuelve a dibujar.
+Todo lo de Moli vive en un solo objeto (`EstadoMoli`, en `Moli3d.tsx`). GSAP cambia esos números (la coreografía, en el mismo archivo) y en cada cuadro se pasan al 3D. React no se vuelve a dibujar.
 
 - **Reposo:**
   - sentada con las rodillas dobladas, casi de frente (giro de 3°, así se ven las dos rodillas);
@@ -57,17 +57,15 @@ Todo lo de Moli vive en un solo objeto (`EstadoMoli`, en `moli.ts`). GSAP cambia
 
 ## El código
 
-`src/components/rol/`:
+`src/components/rol/`, en tres archivos (12/11, a pedido de Sofia, antes eran siete):
 
 | Archivo | Qué hace |
 | --- | --- |
-| `escenaRol.ts` | Datos: rutas, tamaño de las placas, células de esta pantalla, medidas de Moli y del respaldo. |
-| `EscenaRol.tsx` | La pantalla: células, título, placas y Moli. Elegir, bloquear, ondas, sombras y navegar. |
-| `Placa.tsx` | Cada opción: un `<button>` con forma de placa de Petri (brillo, colonias, sombra de Moli). |
-| `MoliEnEscena.tsx` | Moli 3D (React Three Fiber): luz, lienzo, calidad, y el control para saludar o saltar. Se carga aparte. |
-| `moli.ts` | Partes del modelo, el estado de Moli (con muslos y rodillas) y cómo se pasa al 3D. Las poses de piernas: `PIERNAS_SENTADA`, `PIERNAS_PARADA`. |
-| `coreografia.ts` | Reposo, saludo y salto (GSAP). |
+| `EscenaRol.tsx` | La pantalla. 1 · Datos: rutas, células de esta pantalla, imagen de respaldo. 2 · La escena: células, título, placas y Moli; elegir, bloquear, ondas, sombras y navegar. 3 · `Placa`: cada opción, un `<button>` con forma de placa de Petri (brillo, colonias, sombra de Moli). |
+| `Moli3d.tsx` | Todo Moli 3D. 1 · Medidas. 2 · Partes del modelo, el estado (con muslos y rodillas) y cómo se pasa al 3D; las poses de piernas: `PIERNAS_SENTADA`, `PIERNAS_PARADA`. 3 · Coreografía (GSAP): reposo, saludo y salto. 4 · Luz. 5 · El lienzo (React Three Fiber), la calidad y el control para saludar o saltar. Se carga aparte, después de la página. |
 | `rol.css` | Estilos (`rol-moli…`, `rol-placa…`). |
+
+`Moli3d.tsx` queda aparte de la pantalla a propósito: así three.js (unos 234 KB) se descarga después y la pantalla aparece enseguida.
 
 Compartido con la portada (`src/components/hero/`):
 

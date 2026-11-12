@@ -250,7 +250,7 @@
   hay WebGL) y el lienzo 3D, en el mismo lugar.
 */
 .rol-moli__respaldo {
-  /* RESPALDO en escenaRol.ts: cuadrado de 454,4 unidades, asiento en (50 %, 62,26 %) */
+  /* RESPALDO en EscenaRol.tsx: cuadrado de 454,4 unidades, asiento en (50 %, 62,26 %) */
   position: absolute;
   left: calc((var(--maestra-x) - 227.2) * var(--u));
   top: calc((var(--placa-y) - 226.5 - 282.9) * var(--u));

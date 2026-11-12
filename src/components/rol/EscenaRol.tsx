@@ -4,17 +4,71 @@
 import gsap from 'gsap';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import { useNavigate } from '@/navegacion';
 import { animarCelulas } from '../hero/animarCelulas';
+import type { Celula } from '../hero/escena';
 import FloatingCells from '../hero/FloatingCells';
-import { CELULAS_ROL, DESTINO, RESPALDO, type Rol } from './escenaRol';
-import type { Calidad, ControlMoli } from './MoliEnEscena';
-import Placa from './Placa';
+import type { Calidad, ControlMoli } from './Moli3d';
 import './rol.css';
 
+/*
+  PANTALLA 02 · ¿CÓMO QUERÉS EXPLORAR?
+
+  Este archivo tiene la pantalla entera menos Moli 3D (Moli3d.tsx) y los
+  estilos (rol.css):
+  1. Datos: rutas, células y la imagen de respaldo de Moli.
+  2. La escena: células, título, las dos placas y Moli. Elegir, bloquear,
+     ondas, sombras y navegar.
+  3. Cada placa (Placa).
+
+  Como en la portada, todo se mide en unidades de diseño y en pantalla cada
+  unidad vale var(--u) (ver rol.css). Hay dos escenas:
+  - horizontal: 1920 × 1080 (compu y Ceibal);
+  - vertical: 1080 × 1920 (celular parado).
+  Las dos placas quedan lado a lado en las dos, así Moli salta igual.
+
+  Las células están en otra capa que CUBRE toda la pantalla (siempre
+  1920 × 1080), así no quedan franjas vacías en ningún tamaño.
+*/
+
+/* ─────────────────────────── 1 · Datos ─────────────────────────── */
+
+export type Rol = 'maestra' | 'alumno';
+
+/* Rutas que ya existen (no se crean rutas nuevas). */
+const DESTINO: Record<Rol, string> = {
+  maestra: '/maestra',
+  alumno: '/clase',
+};
+
+/* Células de esta pantalla (capa que cubre, 1920 × 1080). Las mismas de la portada (FloatingCells), en otras posiciones. */
+const CELULAS_ROL: Celula[] = [
+  { id: 'a', x: 240, y: 252, d: 156, giro: -12 },
+  { id: 'b', x: 456, y: 984, d: 115, giro: 20 },
+  { id: 'c', x: 1656, y: 204, d: 134, giro: 24 },
+  { id: 'd', x: 1692, y: 672, d: 180, giro: 9 },
+  { id: 'e', x: 1524, y: 984, d: 77, giro: -8 },
+  { id: 'f', x: 252, y: 672, d: 70, giro: 30 },
+  { id: 'g', x: 960, y: 1008, d: 53, giro: -20 },
+  { id: 'h', x: 1368, y: 396, d: 48, giro: 14 },
+  { id: 'k', x: 492, y: 360, d: 41, giro: -30 },
+  { id: 'i', x: 864, y: 840, d: 84, giro: -18 },
+  { id: 'j', x: 1070, y: 624, d: 62, giro: 16 },
+];
+
+/*
+  Imagen de respaldo de Moli (render del mismo archivo, con Cycles): se ve
+  mientras carga el 3D y queda si el navegador no tiene WebGL. Es un
+  cuadrado de 6,4 unidades de Blender (454,4 de la escena); el asiento cae
+  en (50 %, 62,26 %). Su lugar lo da rol.css.
+*/
+const RESPALDO = '/illustrations/rol/moli-sentada.webp';
+
 /* El 3D se carga aparte, después de la página (y nunca en el servidor). */
-const MoliEnEscena = dynamic(() => import('./MoliEnEscena'), { ssr: false });
+const Moli3d = dynamic(() => import('./Moli3d'), { ssr: false });
+
+/* ────────────────────────── 2 · La escena ────────────────────────── */
 
 /*
   Si por algo la animación no termina (por ejemplo, el 3D se perdió a la
@@ -24,8 +78,6 @@ const MoliEnEscena = dynamic(() => import('./MoliEnEscena'), { ssr: false });
 const PLAZO_S = 3.4;
 
 /*
-  PANTALLA 02 · ¿CÓMO QUERÉS EXPLORAR?
-
   Capas, de atrás hacia adelante:
   1. las células de la portada (FloatingCells), que viajan por toda la
      pantalla (animarCelulas) sin tapar el título;
@@ -150,11 +202,72 @@ export default function EscenaRol() {
         <Placa rol="maestra" titulo="Soy maestra" texto="Preparo y guío la clase" conMoli={moliEn === 'maestra'} eligiendo={eligiendo} onElegir={elegir} />
         <Placa rol="alumno" titulo="Soy alumno" texto="Entro con el código de mi clase" conMoli={moliEn === 'alumno'} eligiendo={eligiendo} onElegir={elegir} />
 
-        <img className="rol-moli__respaldo" src={RESPALDO.src} alt="" aria-hidden="true" width={680} height={680} draggable={false} />
+        <img className="rol-moli__respaldo" src={RESPALDO} alt="" aria-hidden="true" width={680} height={680} draggable={false} />
         {montada && calidad !== 'imagen' && (
-          <MoliEnEscena key={calidad} calidad={calidad} escena={montada} onListo={alListo} onControl={alControl} onLento={alLento} />
+          <Moli3d key={calidad} calidad={calidad} escena={montada} onListo={alListo} onControl={alControl} onLento={alLento} />
         )}
       </div>
     </>
+  );
+}
+
+/* ─────────────────────────── 3 · Placa ─────────────────────────── */
+
+/*
+  Una de las dos opciones: una placa de Petri vista desde arriba (la "placa"
+  del sistema de diseño: círculo que es marco y botón). Es un <button> de
+  verdad: funciona con mouse, teclado y lector de pantalla.
+*/
+
+type Colonia = { t: number; cx: string; cy: string; c: string };
+
+const COLONIAS: Record<Rol, Colonia[]> = {
+  maestra: [
+    { t: 16, cx: '27%', cy: '77%', c: 'rgba(147, 174, 235, 0.55)' },
+    { t: 9, cx: '32%', cy: '82%', c: 'rgba(147, 174, 235, 0.45)' },
+    { t: 12, cx: '70%', cy: '80%', c: 'rgba(142, 213, 195, 0.6)' },
+  ],
+  alumno: [
+    { t: 16, cx: '67%', cy: '76%', c: 'rgba(114, 114, 238, 0.35)' },
+    { t: 9, cx: '62%', cy: '82%', c: 'rgba(114, 114, 238, 0.3)' },
+    { t: 12, cx: '28%', cy: '79%', c: 'rgba(142, 213, 195, 0.6)' },
+  ],
+};
+
+type PropsPlaca = {
+  rol: Rol;
+  titulo: string;
+  texto: string;
+  /** Moli está en esta placa (se ve su sombra) */
+  conMoli?: boolean;
+  /** si ya se eligió una opción (mientras Moli saluda o salta): las dos quedan bloqueadas */
+  eligiendo?: Rol | null;
+  onElegir: (rol: Rol) => void;
+};
+
+function Placa({ rol, titulo, texto, conMoli = false, eligiendo = null, onElegir }: PropsPlaca) {
+  return (
+    <button
+      type="button"
+      className={`rol-placa rol-placa--${rol}`}
+      data-placa={rol}
+      data-con-moli={conMoli ? '' : undefined}
+      data-elegida={eligiendo === rol ? '' : undefined}
+      aria-disabled={eligiendo ? true : undefined}
+      onClick={() => onElegir(rol)}
+    >
+      <span className="rol-placa__sombra" aria-hidden="true" />
+      <span className="rol-placa__brillo" aria-hidden="true" />
+      {COLONIAS[rol].map((c, i) => (
+        <span key={i} className="rol-placa__colonia" aria-hidden="true" style={{ '--t': c.t, '--cx': c.cx, '--cy': c.cy, '--c': c.c } as CSSProperties} />
+      ))}
+      <span className="rol-placa__titulo">{titulo}</span>
+      <span className="rol-placa__texto">{texto}</span>
+      <span className="rol-placa__ir" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M5 12h14M13 6l6 6-6 6" />
+        </svg>
+      </span>
+    </button>
   );
 }
