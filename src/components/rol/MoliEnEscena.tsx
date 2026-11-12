@@ -247,6 +247,19 @@ function Moli({ escena, onListo, onControl, onLento }: Props) {
       window.addEventListener('pointermove', alMover, { passive: true });
     }
 
+    if (process.env.NODE_ENV === 'development') {
+      // solo en desarrollo: para revisar poses desde el navegador
+      (window as unknown as { __moli: unknown }).__moli = {
+        estado: m,
+        quieta() {
+          detenerReposo();
+          gsap.killTweensOf(m);
+          Object.assign(m, estadoSentada(m.x, m.y));
+          pintar();
+        },
+      };
+    }
+
     const terminar = (linea: gsap.core.Timeline) => new Promise<void>((listo) => linea.eventCallback('onComplete', () => listo()));
 
     onControl({

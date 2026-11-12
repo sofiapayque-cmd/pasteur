@@ -15,7 +15,8 @@ Rama `frontend/rol-moli`, que sale de `frontend/hero-ilustrado` porque usa las c
 ## Decisiones de Sofia (12/11)
 
 - **Opción B:** Moli con piernitas. Son dos trazos finos en negro mate, como las "patas" del Moli 2D (`src/components/Moli.jsx`). El resto del modelo queda tal cual.
-- **Se estira y se aplasta un poco, sin exagerar:** como mucho un 10 %, siempre desde los pies y sin cambiar el volumen.
+- **Se estira y se aplasta un poco, sin exagerar:** como mucho un 6 %, siempre desde los pies y sin cambiar el volumen. El resto lo hacen las rodillas.
+- **Sentada, con las piernas dobladas** (12/11): las rodillas hacia afuera y las pantorrillas colgando por delante de la placa.
 - Textos: «Soy maestra» y «Soy alumno». Las rutas son las que ya existen: `/maestra` y `/clase`.
 - Sin el texto vertical «Institut Pasteur de Montevideo» que tenía la pantalla anterior.
 
@@ -24,8 +25,8 @@ Rama `frontend/rol-moli`, que sale de `frontend/hero-ilustrado` porque usa las c
 - Original: `moli.blend` de Sofia. No se toca.
 - `docs/moli/preparar_moli_web.py` arma una **copia**, `docs/moli/moli-web.blend`, y exporta `public/models/moli.glb`. Corre con Blender 4.2 o más, o con el módulo `bpy`:
   - **Boca:** queda una sola salida de material, para todos los motores. Antes había dos, y la del Principled era solo para EEVEE: en la web la boca salía blanca.
-  - **Piernitas:** bisel de 0,036, con el material de la boca y el origen en la cadera.
-  - **Jerarquía:** `MOLI` (piso) › `Cuerpo` (centro del oxígeno) › oxígeno, cara y `Hombro` izquierdo/derecho › hidrógeno; `MOLI` › `Cadera` izquierda/derecha › piernita.
+  - **Piernitas con rodilla:** bisel de 0,036, con el material de la boca. Cada pierna tiene un muslo (0,40) y una pantorrilla con el pie (0,44), unidos por una esferita del mismo grosor, para que doblada quede redonda.
+  - **Jerarquía:** `MOLI` (piso) › `Cuerpo` (centro del oxígeno) › oxígeno, cara y `Hombro` izquierdo/derecho › hidrógeno; `MOLI` › `Cadera` › muslo y `Rodilla` › articulación y pantorrilla.
   - Borra los materiales sin usar.
 - No hace falta rig: Moli son piezas rígidas. Moverla es girar o correr piezas enteras; la malla nunca se deforma.
 - `docs/moli/render_respaldo.py` hace la imagen de respaldo (`public/illustrations/rol/moli-sentada.webp`): Moli sentada, renderizada con Cycles desde la copia.
@@ -35,17 +36,18 @@ Rama `frontend/rol-moli`, que sale de `frontend/hero-ilustrado` porque usa las c
 Todo lo de Moli vive en un solo objeto (`EstadoMoli`, en `moli.ts`). GSAP cambia esos números (`coreografia.ts`) y en cada cuadro se pasan al 3D. React no se vuelve a dibujar.
 
 - **Reposo:**
+  - sentada con las rodillas dobladas, casi de frente (giro de 3°, así se ven las dos rodillas);
   - respira (el cuerpo crece de 1 a 1,025, en unos 5 s);
-  - balancea las piernitas (una adelante y la otra atrás, a veces descansa);
+  - balancea las pantorrillas desde las rodillas (una adelante y la otra atrás, a veces descansa);
   - se ladea apenas y parpadea cada 2 a 5 s (a veces dos veces seguidas);
   - el cuerpo gira un poco hacia el puntero (hasta 12°).
 - **«Soy maestra»:** sigue sentada, mira de frente, levanta un hidrógeno y saluda tres veces. La placa larga una onda. Después, `/maestra`.
 - **«Soy alumno»:**
-  1. Se para: las piernitas bajan debajo del cuerpo.
-  2. Toma envión: se aplasta un 8 %.
-  3. Despega: se estira un 6 %, levanta las manos, recoge las piernitas y se inclina hacia donde va.
-  4. Vuela en arco: x pareja, y en parábola. Sube como mucho 130 unidades, así no pasa por encima del título.
-  5. Aterriza: se aplasta un 10 % y vuelve con un rebote elástico. La sombra pasa a «Soy alumno» y la placa larga una onda.
+  1. Se para: estira las piernas debajo del cuerpo.
+  2. Toma envión: dobla las rodillas (el cuerpo baja, los pies quedan en la placa) y se aplasta un 4 %.
+  3. Despega: estira las piernas de golpe y se estira un 5 %; en el aire levanta las manos, recoge las piernas (rodillas arriba) y se inclina hacia donde va.
+  4. Vuela en arco: x pareja, y en parábola. Sube como mucho 130 unidades, así no pasa por encima del título. Antes de tocar, estira las piernas.
+  5. Aterriza: amortigua con las rodillas, se aplasta un 6 % y vuelve con un rebote elástico. La sombra pasa a «Soy alumno» y la placa larga una onda.
   6. Saluda con el otro hidrógeno.
   7. Navega a `/clase`. En total son unos 2,7 s.
 - **Una sola elección:** al tocar una placa, las dos quedan bloqueadas (`aria-disabled`) y la otra se apaga.
@@ -63,7 +65,7 @@ Todo lo de Moli vive en un solo objeto (`EstadoMoli`, en `moli.ts`). GSAP cambia
 | `EscenaRol.tsx` | La pantalla: células, título, placas y Moli. Elegir, bloquear, ondas, sombras y navegar. |
 | `Placa.tsx` | Cada opción: un `<button>` con forma de placa de Petri (brillo, colonias, sombra de Moli). |
 | `MoliEnEscena.tsx` | Moli 3D (React Three Fiber): luz, lienzo, calidad, y el control para saludar o saltar. Se carga aparte. |
-| `moli.ts` | Partes del modelo, el estado de Moli y cómo se pasa al 3D. |
+| `moli.ts` | Partes del modelo, el estado de Moli (con muslos y rodillas) y cómo se pasa al 3D. Las poses de piernas: `PIERNAS_SENTADA`, `PIERNAS_PARADA`. |
 | `coreografia.ts` | Reposo, saludo y salto (GSAP). |
 | `rol.css` | Estilos (`rol-moli…`, `rol-placa…`). |
 
@@ -95,6 +97,7 @@ Compartido con la portada (`src/components/hero/`):
 - `localStorage.moliCalidad = 'alta'` deja la calidad fija.
 - `localStorage.moliVelocidad = '0.5'` pone todo en cámara lenta (para grabar videos).
 - `window.__moliLuz` sirve para igualar la luz.
+- `window.__moli.quieta()` deja a Moli sentada y quieta, para comparar la pose con el render de Blender.
 
 ## Peso
 

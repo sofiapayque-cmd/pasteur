@@ -1,11 +1,13 @@
 """Prepara una COPIA de moli.blend para la web (moli-web.blend + moli.glb).
 No cambia colores, materiales ni formas de lo que ya existe:
 - boca: una sola salida de material (con dos, el glTF la exportaba blanca);
-- piernitas (opción B): dos trazos finos con el material de la boca, como las "patas" del Moli 2D;
-- jerarquía: MOLI > Cuerpo (respira) > oxígeno, cara y hombros (de donde giran los hidrógenos); MOLI > caderas > piernas;
+- piernitas (opción B): trazos finos con el material de la boca, como las "patas" del Moli 2D,
+  con rodilla (muslo + pantorrilla), para que pueda sentarse con las piernas dobladas;
+- jerarquía: MOLI > Cuerpo (respira) > oxígeno, cara y hombros (de donde giran los hidrógenos);
+  MOLI > Cadera > muslo y Rodilla > articulación y pantorrilla;
 - se borran los materiales que no usa nadie.
 """
-import bpy, sys
+import bpy, bmesh, sys
 from mathutils import Vector
 entrada, salida_blend, salida_glb = sys.argv[-3], sys.argv[-2], sys.argv[-1]
 bpy.ops.wm.open_mainfile(filepath=entrada)
@@ -40,16 +42,32 @@ for n in ['Oxígeno (principal)', 'Ojo izquierdo', 'Ojo derecho', 'Mejilla izqui
 for lado, nombre in [('izquierdo', 'Hidrógeno izquierdo'), ('derecho', 'Hidrógeno derecho')]:
     hombro = vacio('MOLI | Hombro ' + lado, CENTRO); colgar(hombro, cuerpo); colgar(O(nombre), hombro)
 
-# 3 · piernitas: trazo fino (bisel 0,036) con el material de la boca, origen en la cadera
+# 3 · piernitas con rodilla: trazo fino (bisel 0,036) con el material de la boca.
+#     Muslo desde la cadera; en la rodilla, una esferita del mismo grosor (para que doblada quede redonda)
+#     y la pantorrilla con el pie. Cada articulación es un Empty: Cadera (gira el muslo) y Rodilla (gira la pantorrilla).
+MUSLO, PANTORRILLA, GROSOR = 0.40, 0.42, 0.036
+
+def trazo(nombre, puntos, padre):
+    cu = D.curves.new(nombre, 'CURVE'); cu.dimensions = '3D'; cu.bevel_depth = GROSOR; cu.bevel_resolution = 4; cu.use_fill_caps = True; cu.resolution_u = 12
+    sp = cu.splines.new('POLY'); sp.points.add(len(puntos) - 1)
+    for p, c in zip(sp.points, puntos): p.co = (*c, 1)
+    cu.materials.append(boca)
+    ob = D.objects.new('MOLI | ' + nombre, cu); col.objects.link(ob)
+    ob.parent = padre; ob.location = (0, 0, 0)
+    return ob
+
 for lado, s in [('izquierda', -1), ('derecha', 1)]:
     cadera = vacio('MOLI | Cadera ' + lado, Vector((s * 0.22, -0.55, 0.62))); colgar(cadera, raiz)
-    cu = D.curves.new('Pierna ' + lado, 'CURVE'); cu.dimensions = '3D'; cu.bevel_depth = 0.036; cu.bevel_resolution = 4; cu.use_fill_caps = True; cu.resolution_u = 12
-    sp = cu.splines.new('POLY'); pts = [(0, 0, 0), (0, 0, -0.78), (s * 0.16, -0.06, -0.80)]
-    sp.points.add(len(pts) - 1)
-    for p, c in zip(sp.points, pts): p.co = (*c, 1)
-    cu.materials.append(boca)
-    pierna = D.objects.new('MOLI | Pierna ' + lado, cu); col.objects.link(pierna)
-    pierna.parent = cadera; pierna.location = (0, 0, 0)
+    trazo('Muslo ' + lado, [(0, 0, 0), (0, 0, -MUSLO)], cadera)
+    rodilla = D.objects.new('MOLI | Rodilla ' + lado, None); col.objects.link(rodilla); rodilla.empty_display_size = 0.15
+    rodilla.parent = cadera; rodilla.location = (0, 0, -MUSLO)
+    malla = D.meshes.new('Rodilla ' + lado)
+    bm = bmesh.new(); bmesh.ops.create_uvsphere(bm, u_segments=16, v_segments=10, radius=GROSOR); bm.to_mesh(malla); bm.free()
+    for poli in malla.polygons: poli.use_smooth = True
+    malla.materials.append(boca)
+    articulacion = D.objects.new('MOLI | Articulación ' + lado, malla); col.objects.link(articulacion)
+    articulacion.parent = rodilla; articulacion.location = (0, 0, 0)
+    trazo('Pantorrilla ' + lado, [(0, 0, 0), (0, 0, -PANTORRILLA), (s * 0.16, -0.06, -(PANTORRILLA + 0.02))], rodilla)
 
 # 4 · materiales sin usar
 for m in list(D.materials):
