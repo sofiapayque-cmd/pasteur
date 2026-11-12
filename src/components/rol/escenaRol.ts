@@ -44,19 +44,17 @@ export const CELULAS_ROL: Celula[] = [
 
 /*
   MOLI (modelo: public/models/moli.glb, preparado desde moli.blend con
-  docs/moli/preparar_moli_web.py).
+  docs/moli/preparar_moli_web.py). Sus medidas internas (pies, asiento)
+  están en moli.ts.
 
   - ESCALA: cuántas unidades de la escena vale una unidad de Blender
     (Moli mide 3,06 de ancho → unas 217 unidades, la mitad de la placa).
-  - ASIENTO: el punto de Moli que se apoya en el borde de la placa cuando
-    está sentada: la base del oxígeno, 0,31 sobre el piso del modelo.
   - INCLINACION: Moli se inclina 7° hacia la pantalla, como la cámara del
     render de Blender, que la mira apenas desde arriba.
 */
 export const MOLI = {
   modelo: '/models/moli.glb',
   escala: 71,
-  asiento: 0.31,
   inclinacion: 7,
 } as const;
 

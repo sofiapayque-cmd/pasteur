@@ -26,18 +26,22 @@ type Props = {
   rol: Rol;
   titulo: string;
   texto: string;
-  /** Moli está sentada en esta placa (se ve su sombra) */
+  /** Moli está en esta placa (se ve su sombra) */
   conMoli?: boolean;
+  /** si ya se eligió una opción (mientras Moli saluda o salta): las dos quedan bloqueadas */
+  eligiendo?: Rol | null;
   onElegir: (rol: Rol) => void;
 };
 
-export default function Placa({ rol, titulo, texto, conMoli = false, onElegir }: Props) {
+export default function Placa({ rol, titulo, texto, conMoli = false, eligiendo = null, onElegir }: Props) {
   return (
     <button
       type="button"
       className={`rol-placa rol-placa--${rol}`}
       data-placa={rol}
       data-con-moli={conMoli ? '' : undefined}
+      data-elegida={eligiendo === rol ? '' : undefined}
+      aria-disabled={eligiendo ? true : undefined}
       onClick={() => onElegir(rol)}
     >
       <span className="rol-placa__sombra" aria-hidden="true" />

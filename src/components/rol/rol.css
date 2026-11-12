@@ -207,6 +207,44 @@
   opacity: 1;
 }
 
+/* al elegir: la elegida queda marcada, la otra se apaga; ninguna responde más */
+.rol-placa[aria-disabled='true'] {
+  cursor: default;
+}
+.rol-moli__escena[data-eligiendo] .rol-placa:not([data-elegida]) {
+  opacity: 0.55;
+  transition: opacity 0.4s ease;
+}
+.rol-placa[data-elegida] {
+  box-shadow:
+    0 calc(36 * var(--u)) calc(90 * var(--u)) rgba(47, 74, 133, 0.22),
+    inset 0 0 0 calc(3 * var(--u)) var(--nucleo),
+    inset 0 0 0 calc(15 * var(--u)) rgba(255, 255, 255, 0.75),
+    inset 0 0 0 calc(17 * var(--u)) var(--aro-suave);
+}
+
+/* la onda que sale de una placa cuando Moli llega o la saluda */
+.rol-moli__onda {
+  --d: 453;
+  position: absolute;
+  left: calc((var(--x) - var(--d) / 2) * var(--u));
+  top: calc((var(--placa-y) - var(--d) / 2) * var(--u));
+  width: calc(var(--d) * var(--u));
+  height: calc(var(--d) * var(--u));
+  border-radius: 50%;
+  border: calc(3 * var(--u)) solid var(--aro);
+  opacity: 0;
+  pointer-events: none;
+}
+.rol-moli__onda--maestra {
+  --x: var(--maestra-x);
+  --aro: rgba(47, 74, 133, 0.35);
+}
+.rol-moli__onda--alumno {
+  --x: var(--alumno-x);
+  --aro: rgba(114, 114, 238, 0.45);
+}
+
 /*
   4 · Moli. Una sola: la imagen de respaldo (mientras carga el 3D, o si no
   hay WebGL) y el lienzo 3D, en el mismo lugar.
@@ -226,9 +264,21 @@
 .rol-moli__escena[data-moli='3d'] .rol-moli__respaldo {
   opacity: 0;
 }
+/*
+  El lienzo 3D cubre solo por donde Moli puede andar (las dos placas, el
+  salto y un margen), no toda la escena: son muchos menos píxeles para
+  dibujar en la Ceibal.
+*/
 .rol-moli__lienzo {
+  --izq: max(0, var(--maestra-x) - 330);
+  --der: min(var(--ancho), var(--alumno-x) + 330);
+  --arr: calc(var(--placa-y) - 226.5 - 400);
+  --aba: calc(var(--placa-y) - 226.5 + 150);
   position: absolute;
-  inset: 0;
+  left: calc(var(--izq) * var(--u));
+  top: calc(var(--arr) * var(--u));
+  width: calc((var(--der) - var(--izq)) * var(--u));
+  height: calc((var(--aba) - var(--arr)) * var(--u));
   z-index: 3;
   pointer-events: none;
 }

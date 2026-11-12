@@ -105,8 +105,8 @@ export type Mundo = {
   zonas: Rect[];
   /** dónde están y adónde van las células (para elegir destinos despejados) */
   ocupados?: { x: number; y: number }[];
-  /** centro óptico de la lupa ahora */
-  lente: { x: number; y: number };
+  /** centro óptico de la lupa ahora (sin lupa, como en la pantalla de roles: las células solo viajan) */
+  lente?: { x: number; y: number };
   /** cuánto de la escena se ve por el vidrio ahora (radio alrededor del centro óptico) */
   vista?: number;
   /** si el mouse está sobre la lupa */
@@ -156,8 +156,8 @@ export function elegirDestino(c: Celula, rumbo: Rumbo, mundo: Mundo) {
   const { azar } = mundo;
   rumbo.tramos++;
   rumbo.llamada = false;
-  rumbo.aLaLupa = rumbo.tramos % DERIVA.cadaCuantosLaLupa === 0;
-  if (rumbo.aLaLupa) {
+  rumbo.aLaLupa = !!mundo.lente && rumbo.tramos % DERIVA.cadaCuantosLaLupa === 0;
+  if (rumbo.aLaLupa && mundo.lente) {
     const a = azar() * Math.PI * 2;
     const dist = Math.sqrt(azar()) * DERIVA.radioLupa;
     rumbo.destinoX = mundo.lente.x + Math.cos(a) * dist;
@@ -177,8 +177,9 @@ export function elegirDestino(c: Celula, rumbo: Rumbo, mundo: Mundo) {
     for (const o of ocupados) libre = Math.min(libre, Math.hypot(o.x - x, o.y - y));
     if (!mejor || libre > mejor.libre) mejor = { x, y, libre };
   }
-  rumbo.destinoX = mejor ? mejor.x : mundo.lente.x;
-  rumbo.destinoY = mejor ? mejor.y : mundo.lente.y;
+  const sinLugar = mundo.lente ?? { x: ESCENA.ancho / 2, y: ESCENA.alto / 2 };
+  rumbo.destinoX = mejor ? mejor.x : sinLugar.x;
+  rumbo.destinoY = mejor ? mejor.y : sinLugar.y;
 }
 
 export function nuevoRumbo(c: Celula, mundo: Mundo): Rumbo {
@@ -203,7 +204,14 @@ export function nuevoRumbo(c: Celula, mundo: Mundo): Rumbo {
   primero (entre las que no fueron llamadas ya). El destino queda cerca del
   centro, para que se vea entera; al llegar sigue de largo.
 */
-function llamarALaLupa(celulas: Celula[], rumbos: Rumbo[], xs: number[], ys: number[], mundo: Mundo, fijas: boolean[]) {
+function llamarALaLupa(
+  celulas: Celula[],
+  rumbos: Rumbo[],
+  xs: number[],
+  ys: number[],
+  mundo: Mundo & { lente: { x: number; y: number } },
+  fijas: boolean[],
+) {
   if (rumbos.filter((r) => r.llamada).length >= DERIVA.llamadasALaVez) return false;
   let elegida = -1;
   let antes = Infinity;
@@ -251,22 +259,25 @@ export function avanzar(
     ...rumbos.map((r) => ({ x: r.destinoX, y: r.destinoY })),
   ];
 
-  // ¿cuántas se ven por el vidrio? si ninguna, al rato llama a la más cercana
+  // ¿cuántas se ven por el vidrio? si ninguna, al rato llama a la más cercana (solo si hay lupa)
   const vista = mundo.vista ?? DERIVA.vistaLupa;
-  let seVen = 0;
-  for (let i = 0; i < n; i++) {
-    if (Math.hypot(xs[i] - mundo.lente.x, ys[i] - mundo.lente.y) < vista + radioDe(celulas[i]) * 0.25) seVen++;
-  }
-  mundo.vacia = seVen ? 0 : (mundo.vacia ?? 0) + dt;
-  mundo.desdeLlamada = (mundo.desdeLlamada ?? Infinity) + dt;
-  const llamar = mundo.activa
-    ? // con el mouse encima: va una detrás de otra (sin llenar el vidrio), y si se vacía, va otra
-      (seVen < DERIVA.muchasEnLaLupa && !rumbos.some((r) => r.llamada) && mundo.desdeLlamada > DERIVA.intervaloActiva) ||
-      mundo.vacia > DERIVA.esperaLupaActiva
-    : mundo.vacia > DERIVA.esperaLupa;
-  if (llamar && llamarALaLupa(celulas, rumbos, xs, ys, mundo, fijas)) {
-    mundo.vacia = 0;
-    mundo.desdeLlamada = 0;
+  const lente = mundo.lente;
+  if (lente) {
+    let seVen = 0;
+    for (let i = 0; i < n; i++) {
+      if (Math.hypot(xs[i] - lente.x, ys[i] - lente.y) < vista + radioDe(celulas[i]) * 0.25) seVen++;
+    }
+    mundo.vacia = seVen ? 0 : (mundo.vacia ?? 0) + dt;
+    mundo.desdeLlamada = (mundo.desdeLlamada ?? Infinity) + dt;
+    const llamar = mundo.activa
+      ? // con el mouse encima: va una detrás de otra (sin llenar el vidrio), y si se vacía, va otra
+        (seVen < DERIVA.muchasEnLaLupa && !rumbos.some((r) => r.llamada) && mundo.desdeLlamada > DERIVA.intervaloActiva) ||
+        mundo.vacia > DERIVA.esperaLupaActiva
+      : mundo.vacia > DERIVA.esperaLupa;
+    if (llamar && llamarALaLupa(celulas, rumbos, xs, ys, { ...mundo, lente }, fijas)) {
+      mundo.vacia = 0;
+      mundo.desdeLlamada = 0;
+    }
   }
 
   for (let i = 0; i < n; i++) {
@@ -278,7 +289,7 @@ export function avanzar(
     let y = ys[i];
     let vmax = velocidadDe(c) * (rumbo.llamada ? DERIVA.apuro : 1);
     // con el mouse encima, debajo del vidrio van más despacio
-    if (mundo.activa && Math.hypot(x - mundo.lente.x, y - mundo.lente.y) < vista + r) vmax *= DERIVA.lentoBajoLaLupa;
+    if (lente && mundo.activa && Math.hypot(x - lente.x, y - lente.y) < vista + r) vmax *= DERIVA.lentoBajoLaLupa;
 
     // destino: al llegar (o si cruzó la lupa), elige otro
     const llegada = rumbo.aLaLupa ? DERIVA.llegadaLupa : DERIVA.llegada;
