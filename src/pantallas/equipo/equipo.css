@@ -530,3 +530,12 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Curiosidades: barra de tendencia de cada tema */
+.cur-barra {
+  display: block;
+  height: 10px;
+  min-width: 4px;
+  border-radius: 999px;
+  background: var(--plasma);
+}

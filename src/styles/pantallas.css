@@ -1633,3 +1633,55 @@
     padding: 0 var(--space-3);
   }
 }
+
+/* ---------------------------------------------------------------------
+   Curiosidades · "¿Sabías que…?" (etapa 4, src/components/Curiosidades.tsx)
+   La nota de cuaderno de siempre, con la fuente abajo en letra de etiqueta.
+   --------------------------------------------------------------------- */
+.curiosidad {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 560px;
+}
+.curiosidad__fuente {
+  margin: 0 0 0 18px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--tinta-suave, #5a5d6b);
+  overflow-wrap: anywhere;
+}
+.espera__texto .curiosidad {
+  margin-top: 12px;
+}
+.panel__curiosidad {
+  position: relative;
+  z-index: 1;
+  margin: var(--space-4) var(--space-6) 0;
+}
+/* En pantallas bajas (Ceibal, o compu con el navegador abierto) la nota se achica para entrar */
+@media (max-height: 740px) {
+  .espera__texto .curiosidad,
+  .panel__curiosidad .curiosidad {
+    zoom: 0.78;
+  }
+  .espera__texto h1 {
+    font-size: clamp(32px, 4vw, 44px);
+  }
+}
+.ficha-act__curiosidad {
+  margin-top: 20px;
+}
+/* Celular: la sala de espera con menos margen, para que el título y la curiosidad entren */
+@media (max-width: 640px) {
+  .espera {
+    padding: var(--space-4);
+  }
+  .espera__texto h1 {
+    font-size: 34px;
+  }
+  .espera__texto .curiosidad {
+    max-width: 100%;
+  }
+}

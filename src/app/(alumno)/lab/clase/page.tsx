@@ -6,6 +6,7 @@ import { abrirTareaDelAlumno } from '@/datos/tareas';
 import { esActividadDisponible } from '@/lib/aulas/tareas';
 import SoloNavegador from '@/navegacion/SoloNavegador';
 import ClaseAlumno from '@/pantallas/nino/ClaseAlumno';
+import { curiosidadesPara } from '@/datos/curiosidades';
 import '@/pantallas/nino/cuenta.css';
 
 /*
@@ -22,6 +23,8 @@ export default async function Page() {
   const abierta = await abrirTareaDelAlumno(clase.asignacion.id);
   if (!abierta) redirect('/lab');
   const { tarea, avance } = abierta;
+  // "¿Sabías que…?" mientras espera que la maestra empiece (no repite lo que el aula vio en 14 días)
+  const curiosidades = clase.sesion.estado === 'esperando' ? await curiosidadesPara({ aulaId: clase.sesion.aula_id, actividad: tarea.actividad, cuantas: 3 }) : [];
   return (
     <SoloNavegador>
       <ClaseAlumno
@@ -35,6 +38,7 @@ export default async function Page() {
         }}
         inicial={{ etapa: avance.etapa, datos: avance.datos ?? {} }}
         alumno={{ apodo: alumno.apodo, numero: alumno.numero, color: alumno.color }}
+        curiosidades={curiosidades}
       />
     </SoloNavegador>
   );

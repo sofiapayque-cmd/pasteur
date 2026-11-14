@@ -3,6 +3,7 @@
 import { equipoReal } from '@/lib/supabase/config';
 import { crearClienteAdmin } from '@/lib/supabase/admin';
 import { puede } from '@/datos/acceso';
+import { contarRespuestaVista } from '@/datos/curiosidades';
 
 /*
   "PREGUNTAS DEL PASTEUR" DENTRO DE LAS ACTIVIDADES (bloque 4).
@@ -57,4 +58,6 @@ export async function contarVistaEnActividad(fichaId: string): Promise<void> {
   if (!admin) return;
   const { error } = await admin.rpc('contar_vista_respuesta', { p_ficha: fichaId, p_origen: 'actividad' });
   if (error) console.error('[respuestas] vista:', error.code);
+  // Y para las curiosidades: suma al tema de esa respuesta (migración 22)
+  await contarRespuestaVista(admin, fichaId);
 }

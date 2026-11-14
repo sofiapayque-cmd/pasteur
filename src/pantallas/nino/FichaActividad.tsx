@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import Cabecera from '@/components/Cabecera';
+import Curiosidades from '@/components/Curiosidades';
+import type { CuriosidadVisible } from '@/datos/curiosidades';
 import FondoVivo from '@/components/FondoVivo';
 import PieInstitucional from '@/components/PieInstitucional';
 import { ACTIVIDADES } from '@/data/contenido';
@@ -15,7 +17,7 @@ import { INFO_ACTIVIDADES } from '@/actividades/info';
 */
 type Info = { GUIA?: { titulo?: string; objetivos?: string[] }; ETAPAS?: { id: string; nombre: string }[] };
 
-export default function FichaActividad({ act }: { act: string }) {
+export default function FichaActividad({ act, curiosidades = [] }: { act: string; curiosidades?: CuriosidadVisible[] }) {
   // pausa: texto opcional si alguna vez se vuelve a mostrar una actividad en pausa
   const actividad: ((typeof ACTIVIDADES)[number] & { pausa?: string }) | undefined = ACTIVIDADES.find((a) => a.id === act);
   if (!actividad) notFound();
@@ -34,6 +36,8 @@ export default function FichaActividad({ act }: { act: string }) {
           <h1>{actividad.nombre}</h1>
           <p className="ficha-act__bajada">{actividad.bajada}</p>
           {!actividad.disponible && actividad.pausa && <p className="panel__pronto">{actividad.pausa}</p>}
+          {/* Una curiosidad aprobada de esta actividad (etapa 4) */}
+          <Curiosidades curiosidades={curiosidades} cada={0} className="ficha-act__curiosidad" />
         </section>
 
         <section className="tarjeta ficha-act__detalle" aria-labelledby="ficha-act-hacerla">
