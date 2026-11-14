@@ -27,19 +27,6 @@
 .etiqueta--oscura {
   color: var(--tinta);
 }
-.logo-pendiente {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 180px;
-  height: 44px;
-  border-radius: 8px;
-  border: 1.5px dashed rgba(34, 35, 42, 0.4);
-  background: repeating-linear-gradient(135deg, rgba(34, 35, 42, 0.06) 0 8px, rgba(251, 249, 241, 0.7) 8px 16px);
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--tinta);
-}
 .pendiente {
   padding: var(--space-4);
   border-radius: var(--radius-sm);
@@ -175,151 +162,13 @@
 }
 
 /* ---------- 01 Inicio ---------- */
+/* La portada ilustrada tiene sus propios estilos: src/components/hero/hero.css */
 .inicio {
-  display: grid;
-  place-items: center;
-}
-.inicio__textos {
-  position: absolute;
-  inset: 0;
-  transition: opacity 0.35s;
-}
-.inicio__logo {
-  position: absolute;
-  left: 48px;
-  top: 36px;
-}
-.inicio__titulo {
-  position: absolute;
-  top: 12vh;
-  left: 0;
-  right: 0;
-  text-align: center;
-  font-size: clamp(44px, 6vw, 72px);
-}
-.inicio__texto {
-  position: absolute;
-  bottom: 9vh;
-  left: 50%;
-  width: min(600px, 86vw);
-  transform: translateX(-50%);
-  text-align: center;
-}
-.inicio__circulo-zona {
-  position: relative;
-  width: 240px;
-  height: 240px;
-}
-.inicio__circulo,
-.inicio__anillo {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  border: 2px solid var(--nucleo);
-}
-.inicio__circulo {
-  z-index: 3;
-  background: transparent;
-  cursor: pointer;
-  transition: transform 0.95s var(--ease-pantalla), background-color 0.5s, border-color 0.3s;
-}
-.inicio__circulo:hover {
-  background-color: rgba(147, 174, 235, 0.18);
-}
-.inicio__circulo--zoom {
-  transform: scale(9);
-  background-color: var(--plasma);
-  border-color: transparent;
-}
-.inicio__anillo {
-  pointer-events: none;
-  animation: anillo 2.8s ease-out infinite;
-}
-@keyframes anillo {
-  from { transform: scale(1); opacity: 0.55; }
-  to { transform: scale(1.35); opacity: 0; }
-}
-.inicio__pista {
-  color: var(--nucleo);
-  transition: opacity 0.3s;
-}
-.se-desvanece {
-  opacity: 0;
+  height: 100vh;
+  background: var(--agar);
 }
 
-/* ---------- 02 Rol ---------- */
-.rol {
-  background-color: var(--plasma);
-  background-image:
-    radial-gradient(circle, rgba(47, 74, 133, 0.5) 0 4px, transparent 5px),
-    radial-gradient(circle, transparent 0 17px, rgba(47, 74, 133, 0.32) 18px 21px, transparent 22px);
-  background-size: 52px 46px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-.rol__cartel {
-  margin-top: 6vh;
-  padding: 18px 36px;
-  border-radius: var(--radius-md);
-  background: rgba(251, 249, 241, 0.94);
-  text-align: center;
-}
-.rol__cartel h1 {
-  font-size: clamp(36px, 4.5vw, 52px);
-}
-.rol__opciones {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 64px;
-  margin: 7vh 0;
-}
-.rol__celula {
-  width: 300px;
-  height: 300px;
-  border-radius: 50%;
-  border: 0;
-  background: var(--agar);
-  box-shadow: 0 24px 60px rgba(47, 74, 133, 0.25);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 36px;
-  color: var(--tinta);
-  cursor: pointer;
-  transition: transform 0.4s var(--ease-organico);
-}
-.rol__celula:hover {
-  transform: scale(1.05);
-}
-.rol__celula--nino {
-  background: var(--membrana);
-}
-.rol__celula-titulo {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-variation-settings: 'SOFT' 100;
-  font-size: 32px;
-  line-height: 1.1;
-}
-.rol__celula-texto {
-  font-size: 16px;
-  line-height: 1.4;
-}
-.rol__vertical {
-  position: absolute;
-  right: 28px;
-  top: 50%;
-  transform: translateY(-50%) rotate(180deg);
-  writing-mode: vertical-rl;
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-style: italic;
-  font-size: 20px;
-}
+/* ---------- 02 Rol: estilos en src/components/rol/rol.css ---------- */
 
 /* ---------- 03 Panel ---------- */
 .panel__intro {
@@ -1106,9 +955,6 @@
     padding-right: 220px;
   }
 }
-.rol > .cabecera {
-  align-self: stretch;
-}
 
 /* ---------- Base compartida de actividades ---------- */
 .actividad__contenido {
@@ -1181,32 +1027,6 @@
   padding-top: var(--space-3);
 }
 
-/* Organismos que orbitan el círculo del inicio */
-.inicio__orbita {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  animation: orbitar 46s linear infinite;
-  transition: opacity 0.35s;
-}
-.inicio__orbita i {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  margin: -10px 0 0 -10px;
-  border-radius: 50%;
-  box-shadow: inset -3px -3px 0 rgba(47, 74, 133, 0.12);
-}
-@keyframes orbitar {
-  to {
-    transform: rotate(360deg);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .inicio__orbita {
-    animation: none;
-  }
-}
 
 /* Panel: Moli junto a la introducción, sin tapar las actividades */
 .panel__cabeza {
@@ -1456,7 +1276,7 @@
   position: absolute;
   top: 36px;
   right: 48px;
-  z-index: 3;
+  z-index: 6;
   padding: 10px 18px;
   border-radius: var(--radius-pill);
   background: rgba(255, 255, 255, 0.8);
@@ -1731,9 +1551,13 @@
   right: 0;
   bottom: 0;
 }
-/* En el inicio, el texto de abajo sube lo justo para dejarle lugar al pie */
-.inicio:has(.pie-inst) .inicio__texto {
-  bottom: calc(9vh + 44px);
+/* En "¿Cómo querés explorar?" la escena ocupa toda la pantalla: el pie va abajo de todo, encima */
+.rol-moli .pie-inst {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 4;
 }
 @media (max-width: 640px) {
   .pie-inst__nav {
@@ -1796,9 +1620,6 @@
   }
   .inicio:has(.pie-inst) .inicio__acceso {
     bottom: 72px;
-  }
-  .inicio:has(.pie-inst) .inicio__texto {
-    bottom: 128px;
   }
 }
 

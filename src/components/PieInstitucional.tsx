@@ -10,12 +10,15 @@ import { aulasReales, equipoReal } from '@/lib/supabase/config';
   las letras de siempre. Sin el sistema real, esos ingresos no existen y el
   pie no se muestra.
   No usa hooks: sirve igual en pantallas del servidor y del navegador.
+  data-hero-evitar y data-rol-evitar: en la portada y en "¿Cómo querés
+  explorar?" las células que viajan no pasan por debajo del pie (en las
+  demás páginas nadie los lee).
 */
 export default function PieInstitucional() {
   if (!aulasReales && !equipoReal) return null;
   return (
     <footer className="pie-inst">
-      <nav className="pie-inst__nav" aria-label="Accesos institucionales">
+      <nav className="pie-inst__nav" aria-label="Accesos institucionales" data-hero-evitar data-rol-evitar>
         <span className="pie-inst__titulo">Accesos institucionales</span>
         {aulasReales && (
           <Link className="pie-inst__enlace" href="/maestra/entrar">
