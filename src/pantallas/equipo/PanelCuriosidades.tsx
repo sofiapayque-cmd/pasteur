@@ -13,6 +13,7 @@ import {
 import { ACTIVIDADES, ACTIVIDADES_A_ELEGIR } from '@/lib/equipo/comun';
 import type { CuriosidadPanel, SinTema, TemaPanel, TendenciaPanel } from '@/datos/curiosidadesEquipo';
 import { conPregunta } from '@/components/Curiosidades';
+import ConGota from '@/components/ConGota';
 
 /*
   /equipo/curiosidades · Curiosidades según lo más consultado (etapa 4).
@@ -233,13 +234,13 @@ export default function PanelCuriosidades({ rol, temas, tendencia, curiosidades,
             Escribir una curiosidad
           </Link>
         </div>
-        <nav className="eq-pestanas" aria-label="Estado">
+        <ConGota className="eq-pestanas" etiqueta="Estado">
           {ESTADOS.map((e) => (
-            <button key={e.k} type="button" className="enlace" aria-current={ver === e.k ? 'true' : undefined} onClick={() => setVer(e.k)}>
+            <button key={e.k} type="button" aria-current={ver === e.k ? 'true' : undefined} onClick={() => setVer(e.k)}>
               {e.texto} ({curiosidades.filter((c) => c.estado === e.k).length})
             </button>
           ))}
-        </nav>
+        </ConGota>
         {visibles.length === 0 ? (
           <p className="eq-meta">No hay curiosidades en este estado.</p>
         ) : (

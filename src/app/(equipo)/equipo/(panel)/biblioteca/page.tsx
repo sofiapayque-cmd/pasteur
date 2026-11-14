@@ -3,6 +3,7 @@ import { exigirMiembro } from '@/datos/equipo';
 import { listarPublicaciones } from '@/datos/biblioteca';
 import { NOMBRE_ESTADO, fecha } from '@/lib/equipo/comun';
 import Buscador from '@/pantallas/equipo/Buscador';
+import ConGota from '@/components/ConGota';
 
 /* /equipo/biblioteca · Buscar artículos (en vivo) y ver los que ya están en la biblioteca */
 export const maxDuration = 30;
@@ -32,13 +33,13 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ v
       <Buscador />
       <section className="eq-caja">
         <h2>En la biblioteca</h2>
-        <nav className="eq-pestanas" aria-label="Filtrar">
+        <ConGota className="eq-pestanas" etiqueta="Filtrar">
           {FILTROS.map((x) => (
             <Link key={x.clave} href={x.clave ? `/equipo/biblioteca?ver=${x.clave}` : '/equipo/biblioteca'} aria-current={ver === x.clave ? 'true' : undefined}>
               {x.texto}
             </Link>
           ))}
-        </nav>
+        </ConGota>
         {visibles.length === 0 ? (
           <p className="eq-bajada">Nada por acá todavía.</p>
         ) : (

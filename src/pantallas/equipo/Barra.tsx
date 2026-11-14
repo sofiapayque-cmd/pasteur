@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { salirEquipo } from '@/acciones/equipo';
 import { NOMBRE_ROL, type Rol } from '@/lib/equipo/comun';
+import ConGota from '@/components/ConGota';
 
 /* Barra de arriba del panel del equipo: secciones, quién entró y Salir. */
 export default function Barra({
@@ -36,7 +37,7 @@ export default function Barra({
         La ciencia sin límites
         <small>PANEL DEL EQUIPO · INSTITUT PASTEUR</small>
       </Link>
-      <nav className="eq-nav" aria-label="Secciones del panel">
+      <ConGota className="eq-nav" etiqueta="Secciones del panel">
         {secciones.map((s) => {
           const actual = s.exacto ? ruta === s.href : ruta.startsWith(s.href);
           return (
@@ -46,10 +47,11 @@ export default function Barra({
             </Link>
           );
         })}
-      </nav>
+      </ConGota>
       <form action={salirEquipo} className="eq-barra__yo">
         <span>
-          {nombre} · {NOMBRE_ROL[rol]}
+          {nombre}
+          <small>{NOMBRE_ROL[rol]}</small>
         </span>
         <button className="btn btn--claro btn--chico" type="submit">
           Salir

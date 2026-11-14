@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { exigirMiembro } from '@/datos/equipo';
 import { listarFichas, nombresDelEquipo } from '@/datos/fichas';
 import { ACTIVIDADES, NOMBRE_ESTADO, fecha } from '@/lib/equipo/comun';
+import ConGota from '@/components/ConGota';
 
 /* /equipo/fichas · Todas las fichas, filtradas por estado */
 const FILTROS = [
@@ -37,13 +38,13 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ e
           Nueva ficha
         </Link>
       </div>
-      <nav className="eq-pestanas" aria-label="Filtrar por estado">
+      <ConGota className="eq-pestanas" etiqueta="Filtrar por estado">
         {FILTROS.map((x) => (
           <Link key={x.clave} href={x.clave ? `/equipo/fichas?estado=${x.clave}` : '/equipo/fichas'} aria-current={estado === x.clave ? 'true' : undefined}>
             {x.texto}
           </Link>
         ))}
-      </nav>
+      </ConGota>
       <section className="eq-caja">
         {visibles.length === 0 ? (
           <p className="eq-bajada">Todavía no hay fichas acá.</p>

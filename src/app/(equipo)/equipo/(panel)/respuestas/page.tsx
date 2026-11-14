@@ -7,6 +7,7 @@ import { ACTIVIDADES, ACTIVIDADES_A_ELEGIR } from '@/lib/equipo/comun';
 import PedirRespuestas from '@/pantallas/equipo/PedirRespuestas';
 import PreguntasDeClases from '@/pantallas/equipo/PreguntasDeClases';
 import Tarjeta from '@/pantallas/equipo/TarjetaRespuesta';
+import ConGota from '@/components/ConGota';
 
 /*
   /equipo/respuestas · Tablero de respuestas.
@@ -101,14 +102,14 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ v
           Lista de respuestas
         </h2>
         <div className="eq-fila" style={{ alignItems: 'center' }}>
-          <nav className="eq-pestanas" aria-label="Estado">
+          <ConGota className="eq-pestanas" etiqueta="Estado">
             {PESTANAS.map((g) => (
               <Link key={g} href={enlace({ ver: g })} aria-current={ver === g ? 'true' : undefined}>
                 {g === 'todas' ? 'Todas' : `${NOMBRE_GRUPO[g]} (${cuenta(g)})`}
               </Link>
             ))}
-          </nav>
-          <nav className="eq-pestanas" aria-label="Actividad y origen">
+          </ConGota>
+          <ConGota className="eq-pestanas" etiqueta="Actividad y origen">
             <Link href={enlace({ actividad: '' })} aria-current={!actividad ? 'true' : undefined}>
               Todas las actividades
             </Link>
@@ -120,7 +121,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ v
             <Link href={enlace({ origen: soloIa ? '' : 'ia' })} aria-current={soloIa ? 'true' : undefined}>
               Solo las de la IA
             </Link>
-          </nav>
+          </ConGota>
         </div>
 
         {visibles.length === 0 ? (
