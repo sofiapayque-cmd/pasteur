@@ -16,6 +16,12 @@ import type { CuriosidadVisible } from '@/datos/curiosidades';
 */
 type Props = { curiosidades: CuriosidadVisible[]; cada?: number; className?: string };
 
+/** El texto completa "¿Sabías que…": se le pone el comienzo y el signo de cierre si le falta. */
+export function conPregunta(texto: string) {
+  const t = texto.trim().replace(/^¿?\s*sab[ií]as\s+que\s*(\.\.\.|…)?\s*/i, '');
+  return `¿Sabías que ${t.replace(/[.!?¿\s]+$/, '')}?`;
+}
+
 export default function Curiosidades({ curiosidades, cada = 25, className }: Props) {
   const [i, setI] = useState(0);
   const n = curiosidades.length;
@@ -31,14 +37,14 @@ export default function Curiosidades({ curiosidades, cada = 25, className }: Pro
       <Aviso
         key={c.id}
         tipo="dato"
-        encabezado="¿Sabías que…?"
+        encabezado="Curiosidad"
         titulo={c.titulo}
         accion={undefined}
         onAccion={undefined}
         secundaria={n > 1 ? 'Otra curiosidad' : undefined}
         onSecundaria={() => setI((x) => (x + 1) % n)}
       >
-        {c.texto}
+        {conPregunta(c.texto)}
       </Aviso>
       {c.fuentes.length > 0 && (
         <p className="curiosidad__fuente">Fuente: {c.fuentes[0]}</p>

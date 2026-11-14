@@ -1658,8 +1658,30 @@
 .panel__curiosidad {
   position: relative;
   z-index: 1;
-  margin: 0 0 var(--space-5, 32px);
+  margin: var(--space-4) var(--space-6) 0;
+}
+/* En pantallas bajas (Ceibal, o compu con el navegador abierto) la nota se achica para entrar */
+@media (max-height: 740px) {
+  .espera__texto .curiosidad,
+  .panel__curiosidad .curiosidad {
+    zoom: 0.78;
+  }
+  .espera__texto h1 {
+    font-size: clamp(32px, 4vw, 44px);
+  }
 }
 .ficha-act__curiosidad {
   margin-top: 20px;
+}
+/* Celular: la sala de espera con menos margen, para que el título y la curiosidad entren */
+@media (max-width: 640px) {
+  .espera {
+    padding: var(--space-4);
+  }
+  .espera__texto h1 {
+    font-size: 34px;
+  }
+  .espera__texto .curiosidad {
+    max-width: 100%;
+  }
 }

@@ -219,7 +219,7 @@ CAMPOS
 - pregunta: un título corto de la curiosidad, de 3 a 8 palabras, sin signos de pregunta (por ejemplo "Bacterias que aguantan el frío").
 - variantes: lista vacía.
 - explicacion_cientifica: para el equipo, de 40 a 100 palabras, el contexto científico preciso del dato.
-- version_infantil: como máximo ${limite} palabras, una o dos oraciones que completen "¿Sabías que…?" (no repitas esas palabras al principio). Castellano del Uruguay con voseo, palabras de todos los días; si usás una palabra científica, explicala en la misma oración. Podés usar una comparación con algo de todos los días.
+- version_infantil: como máximo ${limite} palabras, una o dos oraciones que completen "¿Sabías que…?" (no repitas esas palabras al principio; empezá en minúscula y terminá con "?"). Castellano del Uruguay con voseo, palabras de todos los días; si usás una palabra científica, explicala en la misma oración. Podés usar una comparación con algo de todos los días.
 - citas: de 1 a 3. articulo es "A1", "A2"…; oraciones son los números de oración de ESE artículo (hasta 3); parafrasis cuenta en castellano, fiel y sin agregar nada, lo que dicen esas oraciones; respalda dice qué parte del dato respaldan.`;
 }
 

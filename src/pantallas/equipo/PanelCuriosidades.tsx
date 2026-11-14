@@ -12,6 +12,7 @@ import {
 } from '@/acciones/curiosidades';
 import { ACTIVIDADES, ACTIVIDADES_A_ELEGIR } from '@/lib/equipo/comun';
 import type { CuriosidadPanel, SinTema, TemaPanel, TendenciaPanel } from '@/datos/curiosidadesEquipo';
+import { conPregunta } from '@/components/Curiosidades';
 
 /*
   /equipo/curiosidades · Curiosidades según lo más consultado (etapa 4).
@@ -253,7 +254,7 @@ export default function PanelCuriosidades({ rol, temas, tendencia, curiosidades,
                   </small>
                 </div>
                 <h3>{c.titulo || 'Sin título'}</h3>
-                <p className="eq-texto-infantil">¿Sabías que {c.texto}</p>
+                <p className="eq-texto-infantil">{conPregunta(c.texto)}</p>
                 <Link className="enlace" href={`/equipo/fichas/${c.id}`}>
                   Ver
                 </Link>
