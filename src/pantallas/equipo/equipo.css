@@ -127,7 +127,7 @@
 .con-gota.lista > [data-gota-aca]:hover {
   color: var(--sobre-nucleo);
   background: transparent;
-  transition: color 0.3s 0.5s, background-color 0.2s;
+  transition: color 0.25s 0.42s, background-color 0.2s;
 }
 /* La que la gota acaba de dejar: blanca hasta que la gota se va */
 .con-gota.lista > [data-gota-sale] {

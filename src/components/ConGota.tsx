@@ -28,7 +28,7 @@ type Caja = { x: number; y: number; w: number; h: number };
 
 const ELEGIDO = '[aria-current]:not([aria-current="false"])';
 // Cuánto tarda la gota en pasar de una opción a otra (milisegundos)
-const DURACION = 1000;
+const DURACION = 850;
 // Arranca rápido y estira con ganas
 const ESTIRA = 'cubic-bezier(.55,0,.25,1)';
 // Se suelta y sale disparada hacia la nueva
