@@ -20,8 +20,9 @@ select set_config('request.jwt.claim.sub', '', false);
 create schema t19;
 create table t19.resultado (n serial, prueba text, ok boolean);
 create table t19.v (k text primary key, val text);
+create table t19.tend (tema_id uuid, nombre text, actividad text, puntaje double precision, consultas bigint, curiosidades bigint);
 grant usage on schema t19 to anon, authenticated, service_role;
-grant all on t19.resultado, t19.resultado_n_seq, t19.v to anon, authenticated, service_role;
+grant all on t19.resultado, t19.resultado_n_seq, t19.v, t19.tend to anon, authenticated, service_role;
 create function t19.falla(sql text) returns boolean language plpgsql as $$
 begin execute sql; return false; exception when others then return true; end $$;
 create function t19.afecta(sql text) returns bigint language plpgsql as $$
@@ -218,14 +219,14 @@ insert into consultas_tema (tema_id, dia, origen, veces) values (t19.val('anti')
 insert into consultas_tema (tema_id, dia, origen, veces) values (t19.val('anti'), current_date - 40, 'asistente', 500);
 reset role;
 set local role authenticated; select set_config('request.jwt.claim.sub', 'f1900000-0000-0000-0000-000000000002', false);
-create temp table t19_tend on commit preserve rows as select * from public.tendencia_temas(30, 7);
+insert into t19.tend select * from public.tendencia_temas(30, 7);
 reset role;
 select t19.ok('tendencia: lo de hoy pesa más que muchas consultas de hace 20 días',
-  (select puntaje from t19_tend where tema_id = t19.val('frio')) > (select puntaje from t19_tend where tema_id = t19.val('anti')));
-select t19.ok('tendencia: lo de hace más de 30 días no cuenta', (select consultas from t19_tend where tema_id = t19.val('anti')) = 12);
+  (select puntaje from t19.tend where tema_id = t19.val('frio')) > (select puntaje from t19.tend where tema_id = t19.val('anti')));
+select t19.ok('tendencia: lo de hace más de 30 días no cuenta', (select consultas from t19.tend where tema_id = t19.val('anti')) = 12);
 select t19.ok('tendencia: cuenta las curiosidades publicadas de cada tema',
-  (select curiosidades from t19_tend where tema_id = t19.val('frio')) = 1 and (select curiosidades from t19_tend where tema_id = t19.val('anti')) = 0);
-select t19.ok('tendencia: los temas apagados no aparecen', not exists (select 1 from t19_tend where tema_id = t19.val('viejo')));
+  (select curiosidades from t19.tend where tema_id = t19.val('frio')) = 1 and (select curiosidades from t19.tend where tema_id = t19.val('anti')) = 0);
+select t19.ok('tendencia: los temas apagados no aparecen', not exists (select 1 from t19.tend where tema_id = t19.val('viejo')));
 
 -- =====================================================================
 -- Curiosidades vistas por aula y limpieza
