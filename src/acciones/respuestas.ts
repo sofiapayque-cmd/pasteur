@@ -12,7 +12,7 @@ import { proponer, responderPregunta, type Resultado } from '@/lib/ia/redactar';
 /*
   ACCIONES DEL TABLERO DE RESPUESTAS (Server Actions del equipo).
   · Pedir respuestas: la IA busca, redacta y manda a revisión (ver
-    src/lib/ia/redactar.ts). Hasta 4 preguntas por vez y 40 por persona
+    src/lib/ia/redactar.ts). Hasta 4 preguntas por vez y 120 por persona
     cada 24 horas, para cuidar el presupuesto.
   · Ideas de preguntas: la IA propone; no se guarda nada.
 */
@@ -20,7 +20,9 @@ export type EstadoPedido = { mensaje: string; ok?: boolean; resultados?: Resulta
 export type EstadoIdeas = { mensaje: string; ok?: boolean; preguntas?: string[] };
 
 const POR_VEZ = 4;
-const POR_DIA = 40;
+// 120 desde el 14/11/2026 (antes 40): pedido de Sofia para pedir de una vez
+// el lote de 100 preguntas. El gasto lo sigue cuidando el límite mensual de OpenAI.
+const POR_DIA = 120;
 const SIN_PERMISO = { mensaje: 'No tenés permiso para hacer eso.' };
 const leer = (f: FormData, k: string) => String(f.get(k) ?? '').trim();
 const actividadDe = (f: FormData) => {
