@@ -123,6 +123,26 @@ Pedido de Sofia (14/11): 100 preguntas nuevas, ligadas a las actividades, para q
 
 ## Seguimiento
 
-| Día | Preguntas pedidas | Quedaron esperando revisión | Sin respuesta (para reformular) |
+**14/11: lote pedido completo.** El límite se subió a 120 por día (PR #4) y se pidieron las 102 el mismo día.
+
+| Actividad | Esperando revisión | Parciales (la IA avisa qué quedó afuera) | Dicen que los artículos no alcanzan |
 | --- | --- | --- | --- |
-| 14/11 | — | — | — |
+| A1 | 40 | 17 | 3 |
+| A2 | 25 | 17 | 1 |
+| A3 | 36 | 20 | 3 |
+| **Total** | **101** | **54** | **7** |
+
+- Junto con las respuestas quedaron **219 artículos** para revisar. Se aprueban con la respuesta, con un clic.
+- **Sin respuesta (1):** "¿Por qué hay que enfocar el microscopio?". Los artículos de biología no explican cómo funciona un microscopio; si hace falta, Eugenia la puede escribir a mano con un libro como fuente.
+- **Reformulada (1):** "¿Las bacterias tienen núcleo?" no salió con los artículos encontrados. Se pidió "¿En qué se diferencia una bacteria de una célula de nuestro cuerpo?", que sí salió.
+- **Reintento (1):** "¿Qué es un fibroblasto?" falló la primera vez porque OpenAI tardó; la segunda salió.
+
+### Para revisar primero: las 7 que dicen que los artículos no alcanzan
+
+Probablemente convenga rechazarlas o pedirle a la IA otra versión con otra búsqueda:
+
+- A1: ¿Cuántas bacterias hay en un puñado de tierra? · ¿Para qué sirve conocer las bacterias de los animales de campo? · ¿Por qué la caca de los pingüinos es rosada?
+- A2: ¿Qué le pasa a una proteína en un lugar muy ácido?
+- A3: ¿Cuánto tiempo vive una célula? · ¿Por qué la clorofila brilla roja en el microscopio de fluorescencia? · ¿Quién vio las células por primera vez?
+
+Las parciales no son un error: la respuesta dice bien lo que los artículos respaldan, y la nota interna cuenta qué quedó afuera. Eugenia decide si alcanza.
