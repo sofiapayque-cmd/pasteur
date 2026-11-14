@@ -24,6 +24,7 @@ export default function Barra({
     { href: '/equipo', texto: 'Inicio', exacto: true },
     { href: '/equipo/respuestas', texto: 'Respuestas', cuenta: rol === 'validador' ? respuestas : 0 },
     { href: '/equipo/fichas', texto: 'Fichas' },
+    { href: '/equipo/curiosidades', texto: 'Curiosidades' },
     ...(rol === 'validador' ? [{ href: '/equipo/revisar', texto: 'Para revisar', cuenta: pendientes }] : []),
     { href: '/equipo/biblioteca', texto: 'Biblioteca' },
     { href: '/equipo/asistente', texto: 'Prueba del asistente' },

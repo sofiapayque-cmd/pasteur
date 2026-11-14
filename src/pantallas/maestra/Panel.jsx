@@ -7,11 +7,12 @@ import FondoVivo from '../../components/FondoVivo';
 import { ACTIVIDADES } from '../../data/contenido';
 import CuentaDocente from '../../components/CuentaDocente';
 import { aulasReales } from '@/lib/supabase/config';
+import Curiosidades from '../../components/Curiosidades';
 
 /* 03 · PANEL DE LA MAESTRA — las actividades aparecen como colonias que crecen.
    cuenta: nombre de la maestra con sesión (sistema de aulas), o null en el prototipo. */
-/** @param {{ cuenta?: string | null }} props */
-export default function Panel({ cuenta = null }) {
+/** @param {{ cuenta?: string | null, curiosidades?: import('@/datos/curiosidades').CuriosidadVisible[] }} props */
+export default function Panel({ cuenta = null, curiosidades = [] }) {
   const navegar = useNavigate();
   return (
     <main className="pantalla panel">
@@ -39,6 +40,12 @@ export default function Panel({ cuenta = null }) {
           <a className="btn btn--primario" href="/maestra/preguntar">
             Hacer una pregunta
           </a>
+        </section>
+      )}
+      {/* Curiosidades aprobadas, según lo que más se consulta (etapa 4) */}
+      {curiosidades.length > 0 && (
+        <section className="panel__curiosidad" aria-label="Curiosidad">
+          <Curiosidades curiosidades={curiosidades} cada={0} />
         </section>
       )}
       <ul className="panel__actividades">

@@ -1,5 +1,6 @@
 import { timingSafeEqual } from 'node:crypto';
 import { crearClienteAdmin } from '@/lib/supabase/admin';
+import { limpiarCuriosidades } from '@/datos/curiosidades';
 
 /*
   /api/latido · Mantiene despierta la base en el plan gratis de Supabase.
@@ -12,6 +13,7 @@ import { crearClienteAdmin } from '@/lib/supabase/admin';
   Solo responde a Vercel: Vercel manda "Authorization: Bearer <CRON_SECRET>"
   y se compara con la variable CRON_SECRET (Sensitive, solo en Vercel). Sin
   esa variable no hace nada. Con el plan pago de Supabase deja de hacer falta.
+  Además borra los conteos viejos de las curiosidades (migración 22).
 */
 export const dynamic = 'force-dynamic';
 
@@ -33,6 +35,8 @@ export async function GET(request: Request) {
     admin.from('licencias').select('codigo', { head: true, count: 'exact' }),
     admin.from('tipos_identificador').select('id', { head: true, count: 'exact' }),
   ]);
+  // De paso, la limpieza diaria de las curiosidades (conteos de más de 90 días, vistas de aulas de más de 30)
+  await limpiarCuriosidades(admin).catch(() => undefined);
   const errores = pedidos.filter((r) => r.error).length;
   if (errores) console.error('[latido] lecturas con error:', errores);
   return Response.json({ ok: errores === 0, cuando: new Date().toISOString() });

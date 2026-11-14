@@ -1633,3 +1633,33 @@
     padding: 0 var(--space-3);
   }
 }
+
+/* ---------------------------------------------------------------------
+   Curiosidades · "¿Sabías que…?" (etapa 4, src/components/Curiosidades.tsx)
+   La nota de cuaderno de siempre, con la fuente abajo en letra de etiqueta.
+   --------------------------------------------------------------------- */
+.curiosidad {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 560px;
+}
+.curiosidad__fuente {
+  margin: 0 0 0 18px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--tinta-suave, #5a5d6b);
+  overflow-wrap: anywhere;
+}
+.espera__texto .curiosidad {
+  margin-top: 12px;
+}
+.panel__curiosidad {
+  position: relative;
+  z-index: 1;
+  margin: 0 0 var(--space-5, 32px);
+}
+.ficha-act__curiosidad {
+  margin-top: 20px;
+}
