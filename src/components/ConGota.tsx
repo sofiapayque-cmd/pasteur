@@ -6,12 +6,14 @@ import { useEffect, useId, useRef, type ReactNode } from 'react';
   MENÚ CON GOTA (panel del equipo, 14/11, pedido de Sofia).
   Un menú de pastillas dentro de un "pozo" hundido. La opción elegida tiene
   debajo una gota azul con relieve. Al pasar de una opción a otra, la gota se
-  estira despacio hacia la nueva como un líquido, se achata apenas en el
-  camino, se asienta suave, y una gotita que se desprende la sigue y se vuelve
-  a unir (filtro "goo": las formas cercanas se funden como líquido).
-  Más lenta y suave desde el 14/11 (pedido de Sofia): DURACION y las curvas
-  de abajo. Si se cambia DURACION, ajustar el retraso de las letras blancas
-  en equipo.css ([data-gota-aca]).
+  estira hacia la nueva como un líquido, se vuelve medio transparente mientras
+  viaja, se pasa un poquito de largo y vuelve con un vaivén de gelatina; una
+  gotita que se desprende la sigue y se vuelve a unir (filtro "goo": las
+  formas cercanas se funden como líquido).
+  Ajustada el 14/11 a pedido de Sofia ("más dinámica, medio transparente
+  cuando pasa"): DURACION, EN_VIAJE y las curvas de abajo. Si se cambia
+  DURACION, ajustar el retraso de las letras blancas en equipo.css
+  ([data-gota-aca]).
 
   · Lo elegido lo dicen los propios hijos, con aria-current (los links del
     menú, o los botones de unas pestañas). Funciona con links del servidor.
@@ -26,11 +28,15 @@ type Caja = { x: number; y: number; w: number; h: number };
 
 const ELEGIDO = '[aria-current]:not([aria-current="false"])';
 // Cuánto tarda la gota en pasar de una opción a otra (milisegundos)
-const DURACION = 1150;
-// Arranca y frena despacio
-const SUAVE = 'cubic-bezier(.45,0,.25,1)';
-// Llega frenando, con un rebote apenas perceptible
-const LLEGA = 'cubic-bezier(.22,1.06,.36,1)';
+const DURACION = 1000;
+// Arranca rápido y estira con ganas
+const ESTIRA = 'cubic-bezier(.55,0,.25,1)';
+// Se suelta y sale disparada hacia la nueva
+const SUELTA = 'cubic-bezier(.3,0,.15,1)';
+// Vaivén de gelatina al llegar
+const VAIVEN = 'cubic-bezier(.45,0,.55,1)';
+// Qué tan transparente se pone mientras viaja (1 = opaca)
+const EN_VIAJE = 0.55;
 const medir = (el: HTMLElement): Caja => ({ x: el.offsetLeft, y: el.offsetTop, w: el.offsetWidth, h: el.offsetHeight });
 const iguales = (a: Caja | null, b: Caja) => Boolean(a) && a!.x === b.x && a!.y === b.y && a!.w === b.w && a!.h === b.h;
 const quieto = () => {
@@ -52,7 +58,8 @@ export default function ConGota({ children, className = '', etiqueta, como = 'na
     const nav = caja.current;
     const g = gota.current;
     const r = resto.current;
-    if (!nav || !g || !r) return undefined;
+    const fondo = g?.parentElement;
+    if (!nav || !g || !r || !fondo) return undefined;
 
     const poner = (b: Caja) => {
       g.style.width = `${b.w}px`;
@@ -80,7 +87,7 @@ export default function ConGota({ children, className = '', etiqueta, como = 'na
         const reloj = window.setTimeout(() => {
           el.removeAttribute('data-gota-sale');
           relojes.delete(reloj);
-        }, DURACION * 0.48);
+        }, DURACION * 0.18);
         relojes.add(reloj);
       });
       destino?.removeAttribute('data-gota-sale');
@@ -100,32 +107,56 @@ export default function ConGota({ children, className = '', etiqueta, como = 'na
       if (iguales(a, b)) return;
       g.getAnimations().forEach((x) => x.cancel());
       r.getAnimations().forEach((x) => x.cancel());
+      fondo.getAnimations().forEach((x) => x.cancel());
       poner(b);
       g.style.opacity = '1';
       actual.current = b;
       nav.classList.add('lista');
       if (!animar || !a || quieto()) return;
 
+      // Mientras viaja, la gota se vuelve medio transparente (como vidrio
+      // líquido) y vuelve a ser opaca al llegar. Se hace sobre la capa, después
+      // del filtro "goo": la opacidad de la gota misma la borraría el filtro.
+      const vidrio = (duracion: number) =>
+        fondo.animate(
+          [
+            { opacity: 1 },
+            { opacity: EN_VIAJE, offset: 0.2 },
+            { opacity: EN_VIAJE, offset: 0.52 },
+            { opacity: 1 },
+          ],
+          { duration: duracion, easing: VAIVEN },
+        );
+
       if (a.y !== b.y) {
-        // Otra fila (menú partido en dos renglones): la gota cae en su lugar
+        // Otra fila (menú partido en dos renglones): la gota cae y rebota en su lugar
+        vidrio(DURACION * 0.7);
         g.animate(
           [
-            { transform: `translate(${b.x}px, ${b.y}px) scale(.7, .5)`, opacity: 0, easing: SUAVE },
-            { transform: `translate(${b.x}px, ${b.y}px) scale(1.02, .97)`, opacity: 1, offset: 0.6, easing: LLEGA },
+            { transform: `translate(${b.x}px, ${b.y}px) scale(.6, .4)`, opacity: 0, easing: SUELTA },
+            { transform: `translate(${b.x}px, ${b.y}px) scale(1.08, .88)`, opacity: 1, offset: 0.5, easing: VAIVEN },
+            { transform: `translate(${b.x}px, ${b.y}px) scale(.96, 1.05)`, opacity: 1, offset: 0.75, easing: VAIVEN },
             { transform: `translate(${b.x}px, ${b.y}px)`, opacity: 1 },
           ],
-          { duration: DURACION * 0.6 },
+          { duration: DURACION * 0.7 },
         );
         return;
       }
       const izq = Math.min(a.x, b.x);
       const der = Math.max(a.x + a.w, b.x + b.w);
-      // 1. se estira despacio hacia la nueva opción (y se achata apenas);
-      // 2. suelta la vieja y se asienta suave en la nueva
+      // Hacia dónde va (+1 derecha, -1 izquierda) y cuánto se pasa de largo
+      const lado = b.x > a.x ? 1 : -1;
+      const pasa = lado * Math.min(12, Math.max(5, Math.abs(b.x - a.x) * 0.05));
+      vidrio(DURACION);
+      // 1. se estira hacia la nueva opción y se afina;
+      // 2. suelta la vieja y sale disparada, se pasa un poquito de largo;
+      // 3. vuelve con un vaivén de gelatina (se aplasta y se estira) y queda quieta
       g.animate(
         [
-          { transform: `translate(${a.x}px, ${a.y}px)`, width: `${a.w}px`, easing: SUAVE },
-          { transform: `translate(${izq}px, ${a.y}px) scaleY(.9)`, width: `${der - izq}px`, offset: 0.5, easing: LLEGA },
+          { transform: `translate(${a.x}px, ${a.y}px)`, width: `${a.w}px`, easing: ESTIRA },
+          { transform: `translate(${izq}px, ${a.y}px) scaleY(.82)`, width: `${der - izq}px`, offset: 0.4, easing: SUELTA },
+          { transform: `translate(${b.x + pasa}px, ${b.y}px) scale(1.05, .86)`, width: `${b.w}px`, offset: 0.68, easing: VAIVEN },
+          { transform: `translate(${b.x - pasa * 0.35}px, ${b.y}px) scale(.97, 1.06)`, width: `${b.w}px`, offset: 0.84, easing: VAIVEN },
           { transform: `translate(${b.x}px, ${b.y}px)`, width: `${b.w}px` },
         ],
         { duration: DURACION },
@@ -137,11 +168,11 @@ export default function ConGota({ children, className = '', etiqueta, como = 'na
       r.style.width = r.style.height = `${d}px`;
       r.animate(
         [
-          { transform: `translate(${desde.x}px, ${desde.y}px) scale(.9)`, opacity: 1 },
-          { transform: `translate(${(desde.x + hasta.x) / 2}px, ${desde.y}px) scale(.7)`, opacity: 1, offset: 0.55 },
+          { transform: `translate(${desde.x}px, ${desde.y}px) scale(.95)`, opacity: 1 },
+          { transform: `translate(${desde.x + (hasta.x - desde.x) * 0.45}px, ${desde.y - 3}px) scale(.75)`, opacity: 1, offset: 0.5 },
           { transform: `translate(${hasta.x}px, ${hasta.y}px) scale(.3)`, opacity: 0 },
         ],
-        { duration: DURACION * 1.05, delay: DURACION * 0.12, easing: SUAVE, fill: 'backwards' },
+        { duration: DURACION * 0.85, delay: DURACION * 0.18, easing: ESTIRA, fill: 'backwards' },
       );
     };
 
