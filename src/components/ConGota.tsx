@@ -6,9 +6,12 @@ import { useEffect, useId, useRef, type ReactNode } from 'react';
   MENÚ CON GOTA (panel del equipo, 14/11, pedido de Sofia).
   Un menú de pastillas dentro de un "pozo" hundido. La opción elegida tiene
   debajo una gota azul con relieve. Al pasar de una opción a otra, la gota se
-  estira hacia la nueva como un líquido, se achata un poco en el camino, llega
-  con un pequeño rebote, y una gotita que se desprende la sigue y se vuelve a
-  unir (filtro "goo": las formas cercanas se funden como líquido).
+  estira despacio hacia la nueva como un líquido, se achata apenas en el
+  camino, se asienta suave, y una gotita que se desprende la sigue y se vuelve
+  a unir (filtro "goo": las formas cercanas se funden como líquido).
+  Más lenta y suave desde el 14/11 (pedido de Sofia): DURACION y las curvas
+  de abajo. Si se cambia DURACION, ajustar el retraso de las letras blancas
+  en equipo.css ([data-gota-aca]).
 
   · Lo elegido lo dicen los propios hijos, con aria-current (los links del
     menú, o los botones de unas pestañas). Funciona con links del servidor.
@@ -22,6 +25,12 @@ type Props = { children: ReactNode; className?: string; etiqueta: string; como?:
 type Caja = { x: number; y: number; w: number; h: number };
 
 const ELEGIDO = '[aria-current]:not([aria-current="false"])';
+// Cuánto tarda la gota en pasar de una opción a otra (milisegundos)
+const DURACION = 1150;
+// Arranca y frena despacio
+const SUAVE = 'cubic-bezier(.45,0,.25,1)';
+// Llega frenando, con un rebote apenas perceptible
+const LLEGA = 'cubic-bezier(.22,1.06,.36,1)';
 const medir = (el: HTMLElement): Caja => ({ x: el.offsetLeft, y: el.offsetTop, w: el.offsetWidth, h: el.offsetHeight });
 const iguales = (a: Caja | null, b: Caja) => Boolean(a) && a!.x === b.x && a!.y === b.y && a!.w === b.w && a!.h === b.h;
 const quieto = () => {
@@ -71,7 +80,7 @@ export default function ConGota({ children, className = '', etiqueta, como = 'na
         const reloj = window.setTimeout(() => {
           el.removeAttribute('data-gota-sale');
           relojes.delete(reloj);
-        }, 520);
+        }, DURACION * 0.48);
         relojes.add(reloj);
       });
       destino?.removeAttribute('data-gota-sale');
@@ -101,24 +110,25 @@ export default function ConGota({ children, className = '', etiqueta, como = 'na
         // Otra fila (menú partido en dos renglones): la gota cae en su lugar
         g.animate(
           [
-            { transform: `translate(${b.x}px, ${b.y}px) scale(.6, .4)`, opacity: 0 },
-            { transform: `translate(${b.x}px, ${b.y}px) scale(1.04, .94)`, opacity: 1, offset: 0.6 },
+            { transform: `translate(${b.x}px, ${b.y}px) scale(.7, .5)`, opacity: 0, easing: SUAVE },
+            { transform: `translate(${b.x}px, ${b.y}px) scale(1.02, .97)`, opacity: 1, offset: 0.6, easing: LLEGA },
             { transform: `translate(${b.x}px, ${b.y}px)`, opacity: 1 },
           ],
-          { duration: 420, easing: 'cubic-bezier(.3,1.3,.5,1)' },
+          { duration: DURACION * 0.6 },
         );
         return;
       }
       const izq = Math.min(a.x, b.x);
       const der = Math.max(a.x + a.w, b.x + b.w);
-      // 1. se estira hacia la nueva opción (y se achata); 2. suelta la vieja y llega con un rebote
+      // 1. se estira despacio hacia la nueva opción (y se achata apenas);
+      // 2. suelta la vieja y se asienta suave en la nueva
       g.animate(
         [
-          { transform: `translate(${a.x}px, ${a.y}px)`, width: `${a.w}px` },
-          { transform: `translate(${izq}px, ${a.y}px) scaleY(.8)`, width: `${der - izq}px`, offset: 0.45, easing: 'cubic-bezier(.25,1.45,.45,1)' },
+          { transform: `translate(${a.x}px, ${a.y}px)`, width: `${a.w}px`, easing: SUAVE },
+          { transform: `translate(${izq}px, ${a.y}px) scaleY(.9)`, width: `${der - izq}px`, offset: 0.5, easing: LLEGA },
           { transform: `translate(${b.x}px, ${b.y}px)`, width: `${b.w}px` },
         ],
-        { duration: 680, easing: 'cubic-bezier(.6,0,.8,.4)' },
+        { duration: DURACION },
       );
       // La gotita que se desprende de donde estaba y la alcanza
       const d = Math.round(b.h * 0.62);
@@ -131,7 +141,7 @@ export default function ConGota({ children, className = '', etiqueta, como = 'na
           { transform: `translate(${(desde.x + hasta.x) / 2}px, ${desde.y}px) scale(.7)`, opacity: 1, offset: 0.55 },
           { transform: `translate(${hasta.x}px, ${hasta.y}px) scale(.3)`, opacity: 0 },
         ],
-        { duration: 720, delay: 90, easing: 'cubic-bezier(.45,0,.3,1)', fill: 'backwards' },
+        { duration: DURACION * 1.05, delay: DURACION * 0.12, easing: SUAVE, fill: 'backwards' },
       );
     };
 
