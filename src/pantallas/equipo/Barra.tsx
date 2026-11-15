@@ -31,17 +31,23 @@ export default function Barra({
     { href: '/equipo/asistente', texto: 'Prueba del asistente' },
     ...(rol === 'admin' ? [{ href: '/equipo/maestras', texto: 'Maestras', cuenta: solicitudes }, { href: '/equipo/miembros', texto: 'Equipo' }] : []),
   ];
+  // Hacia qué lado queda cada sección respecto de la actual: el contenido de
+  // la página nueva entra deslizándose desde ese lado (ver template.tsx)
+  const esActual = (s: (typeof secciones)[number]) => (s.exacto ? ruta === s.href : ruta.startsWith(s.href));
+  const aca = secciones.findIndex(esActual);
+  const lado = (i: number) => (aca < 0 || i === aca ? undefined : [i > aca ? 'eq-derecha' : 'eq-izquierda']);
   return (
-    <header className="eq-barra">
-      <Link className="eq-barra__marca" href="/equipo">
+    // La barra queda quieta durante la transición entre páginas (equipo.css)
+    <header className="eq-barra" style={{ viewTransitionName: 'eq-barra' }}>
+      <Link className="eq-barra__marca" href="/equipo" transitionTypes={lado(0)}>
         La ciencia sin límites
         <small>PANEL DEL EQUIPO · INSTITUT PASTEUR</small>
       </Link>
       <ConGota className="eq-nav" etiqueta="Secciones del panel">
-        {secciones.map((s) => {
-          const actual = s.exacto ? ruta === s.href : ruta.startsWith(s.href);
+        {secciones.map((s, i) => {
+          const actual = esActual(s);
           return (
-            <Link key={s.href} href={s.href} aria-current={actual ? 'page' : undefined}>
+            <Link key={s.href} href={s.href} aria-current={actual ? 'page' : undefined} transitionTypes={lado(i)}>
               {s.texto}
               {'cuenta' in s && s.cuenta ? <span className="eq-nav__cuenta">{s.cuenta}</span> : null}
             </Link>

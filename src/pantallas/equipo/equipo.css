@@ -80,26 +80,32 @@
   inset: 0;
   z-index: 0;
   pointer-events: none;
+  /* Relieve de la gota */
+  filter: drop-shadow(0 6px 9px rgba(47, 74, 133, 0.32)) drop-shadow(0 1px 1px rgba(47, 74, 133, 0.28));
 }
-.gota-filtro {
-  position: absolute;
-  width: 0;
-  height: 0;
-}
+/* La gota está hecha de tres piezas (dos puntas redondas y el medio) que se
+   mueven solo con transform: así la animación la hace la placa de video y
+   sigue suave aunque la página esté ocupada cargando la sección nueva. */
 .gota {
   position: absolute;
   top: 0;
   left: 0;
-  border-radius: 999px;
+  opacity: 0;
+}
+.gota > span {
+  position: absolute;
+  top: 0;
+  left: 0;
   background: var(--eq-azul);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
-  opacity: 0;
-  transform-origin: 50% 50%;
-  will-change: transform, width;
+  will-change: transform;
 }
-.gota--resto {
-  opacity: 0;
-  box-shadow: none;
+.gota__punta {
+  border-radius: 50%;
+}
+.gota__medio {
+  width: 100px;
+  transform-origin: 0 50%;
 }
 .con-gota > a,
 .con-gota > button {
@@ -127,12 +133,7 @@
 .con-gota.lista > [data-gota-aca]:hover {
   color: var(--sobre-nucleo);
   background: transparent;
-  transition: color 0.25s 0.42s, background-color 0.2s;
-}
-/* La que la gota acaba de dejar: blanca hasta que la gota se va */
-.con-gota.lista > [data-gota-sale] {
-  color: var(--sobre-nucleo);
-  background: transparent;
+  transition: color 0.2s 0.26s, background-color 0.2s;
 }
 /* Antes de que cargue la gota (o sin JavaScript): la elegida se ve igual de elegida */
 .con-gota:not(.lista) > [aria-current]:not([aria-current='false']) {
@@ -784,4 +785,103 @@
   border-radius: 999px;
   background: linear-gradient(90deg, var(--plasma), var(--nucleo));
   box-shadow: 0 3px 6px -2px rgba(47, 74, 133, 0.45);
+}
+
+/* ── Transiciones entre páginas (14/11) ───────────────────────────────────
+   Las arma <ViewTransition> de React (template.tsx y CambioSuave.tsx) con las
+   transiciones de vista del navegador. Mismo movimiento que los diseños de
+   Bius: sale rápido, entra suave con la curva .2,.7,.2,1, con un leve
+   desenfoque que se aclara. */
+::view-transition {
+  /* Que se pueda seguir haciendo clic mientras dura */
+  pointer-events: none;
+}
+/* La barra de arriba no se mueve: solo cambia la gota adentro */
+::view-transition-group(eq-barra) {
+  animation: none;
+  z-index: 100;
+}
+::view-transition-old(eq-barra) {
+  display: none;
+}
+::view-transition-new(eq-barra) {
+  animation: none;
+}
+/* Desde el menú: el contenido se desliza hacia el lado de la sección nueva */
+::view-transition-old(.eq-derecha) {
+  --eq-hacia: -32px;
+  animation:
+    170ms cubic-bezier(0.4, 0, 1, 1) both eq-se-va,
+    380ms cubic-bezier(0.2, 0.7, 0.2, 1) both eq-corre-sale;
+}
+::view-transition-new(.eq-derecha) {
+  --eq-desde: 32px;
+  animation:
+    300ms cubic-bezier(0.2, 0.7, 0.2, 1) 110ms both eq-llega,
+    520ms cubic-bezier(0.2, 0.7, 0.2, 1) both eq-corre-entra;
+}
+::view-transition-old(.eq-izquierda) {
+  --eq-hacia: 32px;
+  animation:
+    170ms cubic-bezier(0.4, 0, 1, 1) both eq-se-va,
+    380ms cubic-bezier(0.2, 0.7, 0.2, 1) both eq-corre-sale;
+}
+::view-transition-new(.eq-izquierda) {
+  --eq-desde: -32px;
+  animation:
+    300ms cubic-bezier(0.2, 0.7, 0.2, 1) 110ms both eq-llega,
+    520ms cubic-bezier(0.2, 0.7, 0.2, 1) both eq-corre-entra;
+}
+/* Cualquier otra navegación: fundido y la página nueva sube apenas */
+::view-transition-old(.eq-funde) {
+  animation: 170ms cubic-bezier(0.4, 0, 1, 1) both eq-se-va;
+}
+::view-transition-new(.eq-funde) {
+  animation:
+    320ms cubic-bezier(0.2, 0.7, 0.2, 1) 100ms both eq-llega,
+    500ms cubic-bezier(0.2, 0.7, 0.2, 1) both eq-sube;
+}
+/* Una lista que cambia por una pestaña */
+::view-transition-old(.eq-lista) {
+  animation: 130ms cubic-bezier(0.4, 0, 1, 1) both eq-se-va;
+}
+::view-transition-new(.eq-lista) {
+  animation:
+    280ms cubic-bezier(0.2, 0.7, 0.2, 1) 80ms both eq-llega,
+    440ms cubic-bezier(0.2, 0.7, 0.2, 1) both eq-sube;
+}
+@keyframes eq-se-va {
+  to {
+    opacity: 0;
+    filter: blur(3px);
+  }
+}
+@keyframes eq-llega {
+  from {
+    opacity: 0;
+    filter: blur(3px);
+  }
+}
+@keyframes eq-corre-sale {
+  to {
+    translate: var(--eq-hacia) 0;
+  }
+}
+@keyframes eq-corre-entra {
+  from {
+    translate: var(--eq-desde) 0;
+  }
+}
+@keyframes eq-sube {
+  from {
+    translate: 0 10px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
 }
