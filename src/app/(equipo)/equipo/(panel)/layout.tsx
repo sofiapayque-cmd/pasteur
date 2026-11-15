@@ -22,7 +22,7 @@ export default async function LayoutEquipo({ children }: { children: ReactNode }
     const db = await crearClienteServidor();
     // Lo que espera a la validadora: respuestas (Revisar) y curiosidades
     const enRevision = (formato: 'pregunta' | 'dato') =>
-      db!.from('ficha_versiones').select('id, fichas!inner(formato)', { count: 'exact', head: true }).eq('estado', 'en_revision').eq('fichas.formato', formato);
+      db!.from('ficha_versiones').select('id, fichas!ficha_versiones_ficha_id_fkey!inner(formato)', { count: 'exact', head: true }).eq('estado', 'en_revision').eq('fichas.formato', formato);
     const [r, c] = await Promise.all([enRevision('pregunta'), enRevision('dato')]);
     respuestas = r.count ?? 0;
     pendientes = c.count ?? 0;

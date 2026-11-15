@@ -29,7 +29,7 @@ export async function panelCuriosidades() {
     db.rpc('tendencia_temas', { p_dias: DIAS, p_vida_media: VIDA_MEDIA }),
     db
       .from('fichas')
-      .select('id, tema_id, actividad, estado, ficha_versiones(numero, estado, pregunta, version_infantil, asistida_por_ia)')
+      .select('id, tema_id, actividad, estado, ficha_versiones!ficha_versiones_ficha_id_fkey(numero, estado, pregunta, version_infantil, asistida_por_ia)')
       .eq('formato', 'dato')
       .order('creada_en', { ascending: false })
       .limit(300),

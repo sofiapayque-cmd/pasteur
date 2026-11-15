@@ -232,3 +232,34 @@ test('corregir: el pedido lleva el comentario de la validadora, lo anterior y qu
   // El comentario se recorta: no se le pasa al modelo un texto sin fin
   assert.ok(pedidoDeCorreccion({ formato: 'pregunta', comentario: 'a'.repeat(5000), infantil: '', explicacion: '' }).length < 3000);
 });
+
+test('ninguna consulta une versiones y fichas sin decir por cuál relación', async () => {
+  /*
+    Entre ficha_versiones y fichas hay dos relaciones (la ficha de cada versión
+    y la versión publicada de cada ficha). Un "fichas(...)" o "fichas!inner(...)"
+    sin el nombre de la relación hace fallar la consulta entera (15/11: la
+    corrección con IA decía "No encontré esa respuesta" para todas).
+  */
+  const { readdir, readFile } = await import('node:fs/promises');
+  const { join } = await import('node:path');
+  const archivos = [];
+  const recorrer = async (dir) => {
+    for (const e of await readdir(dir, { withFileTypes: true })) {
+      const ruta = join(dir, e.name);
+      if (e.isDirectory()) await recorrer(ruta);
+      else if (/\.(ts|tsx|js|jsx|mjs)$/.test(e.name)) archivos.push(ruta);
+    }
+  };
+  await recorrer('src');
+  const malas = [];
+  for (const ruta of archivos) {
+    const texto = await readFile(ruta, 'utf8');
+    for (const m of texto.matchAll(/from\('ficha_versiones'\)[\s\S]{0,40}?\.select\(\s*['`]([^'`]*)['`]/g)) {
+      if (/(^|[\s,(])fichas(!inner)?\(/.test(m[1])) malas.push(`${ruta}: ${m[1]}`);
+    }
+    for (const m of texto.matchAll(/from\('fichas'\)[\s\S]{0,40}?\.select\(\s*['`]([^'`]*)['`]/g)) {
+      if (/(^|[\s,(])ficha_versiones(!inner)?\(/.test(m[1])) malas.push(`${ruta}: ${m[1]}`);
+    }
+  }
+  assert.deepEqual(malas, []);
+});
