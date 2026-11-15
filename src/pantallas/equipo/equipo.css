@@ -981,3 +981,18 @@
   font-size: 0.92rem;
   color: var(--tinta-suave);
 }
+
+/* Corregir con la IA (15/11) */
+.eq-tarjeta__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2) var(--space-3);
+}
+.eq-corregir {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}

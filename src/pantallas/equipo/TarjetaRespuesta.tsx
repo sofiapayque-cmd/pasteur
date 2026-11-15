@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { Respuesta } from '@/datos/respuestas';
+import { BotonCorregir } from './CorregirConIa';
 import { ACTIVIDADES, NOMBRE_ESTADO, haceCuanto, palabras } from '@/lib/equipo/comun';
 
 /* Una respuesta en el tablero: estado, pregunta, lo que leen los chicos, fuentes y qué hacer. */
@@ -36,17 +37,29 @@ export default function Tarjeta({ r, nombres, validadora }: { r: Respuesta; nomb
         <span className="eq-ayuda">
           {r.grupo === 'aprobada' && r.ultima
             ? `Aprobó ${nombres[r.ultima.revisorId] ?? '—'} ${haceCuanto(r.ultima.creadaEn)}`
-            : r.grupo === 'espera'
-              ? `Esperando desde ${haceCuanto(r.enviadaEn)}`
-              : `${r.ia ? 'Pedida' : 'Escrita'} por ${nombres[r.autorId] ?? '—'} ${haceCuanto(r.creadaEn)}`}
+            : r.grupo === 'cambios' && r.ultima
+              ? `Cambios pedidos por ${nombres[r.ultima.revisorId] ?? 'la validadora'} ${haceCuanto(r.ultima.creadaEn)}`
+              : r.grupo === 'rechazada' && r.ultima
+                ? `Rechazó ${nombres[r.ultima.revisorId] ?? 'la validadora'} ${haceCuanto(r.ultima.creadaEn)}`
+                : r.grupo === 'espera'
+                  ? `Esperando desde ${haceCuanto(r.enviadaEn)}`
+                  : `${r.ia ? 'Pedida' : 'Escrita'} por ${nombres[r.autorId] ?? '—'} ${haceCuanto(r.creadaEn)}`}
         </span>
         {r.grupo === 'espera' && validadora ? (
           <Link className="btn btn--primario btn--chico" href={`/equipo/revisar/${r.versionId}?desde=revisar`}>
             Revisar
           </Link>
+        ) : r.grupo === 'cambios' && !validadora ? (
+          // La IA la corrige siguiendo el comentario; "a mano" abre la ficha para editarla
+          <div className="eq-tarjeta__acciones">
+            <BotonCorregir versionId={r.versionId} />
+            <Link className="enlace" href={`/equipo/fichas/${r.fichaId}`}>
+              Corregir a mano
+            </Link>
+          </div>
         ) : (
           <Link className="btn btn--claro btn--chico" href={`/equipo/fichas/${r.fichaId}`}>
-            {r.grupo === 'cambios' ? 'Corregir' : 'Ver'}
+            Ver
           </Link>
         )}
       </div>

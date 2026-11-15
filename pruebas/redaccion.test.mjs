@@ -7,7 +7,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  candidatosDeGuardados,
   citaContraResumen,
+  pedidoDeCorreccion,
   dividirOraciones,
   elegirArticulos,
   oracionesDeUbicacion,
@@ -177,4 +179,56 @@ test('elige artículos: usa el resumen de PubMed si está y le da más peso a lo
   assert.equal(cs[0].resumen, RESUMEN_PUBMED, 'el resumen que se cita es el de PubMed');
   assert.deepEqual(cs[0].registros.map((r) => r.proveedor).sort(), ['openalex', 'pubmed']);
   assert.ok(cs[0].puntaje > cs[1].puntaje, 'estar en PubMed suma');
+});
+
+// ---------------------------------------------------------------------
+// Corregir con la IA (15/11)
+// ---------------------------------------------------------------------
+const guardada = (extra) => ({ id: 'p1', titulo: 'How cells divide', anio: 2021, revista: 'Cell Reviews', tipo: 'revision', resumen_interno: RESUMEN, estado: 'aprobada', retractada: false, ...extra });
+
+test('corregir: usa solo los artículos guardados que siguen sirviendo, con las oraciones del resumen guardado', () => {
+  const { candidatos, usadas } = candidatosDeGuardados([
+    guardada(),
+    guardada({ id: 'p2', estado: 'en_revision' }),
+    guardada({ id: 'p3', retractada: true }),
+    guardada({ id: 'p4', estado: 'descartada' }),
+    guardada({ id: 'p5', resumen_interno: null }),
+  ]);
+  assert.deepEqual(usadas.map((p) => p.id), ['p1', 'p2']);
+  assert.equal(candidatos[0].oraciones.length, dividirOraciones(RESUMEN).length);
+  // El texto que ve el modelo lleva el título y las oraciones numeradas
+  const texto = textoDeArticulos(candidatos);
+  assert.match(texto, /\[A1\] "How cells divide" \(2021; Cell Reviews; artículo de revisión\)/);
+  assert.match(texto, /A1\.1 Cells divide to grow and to repair tissues\./);
+});
+
+test('corregir: una cita de la corrección se comprueba contra el mismo resumen guardado', () => {
+  const { candidatos, usadas } = candidatosDeGuardados([guardada()]);
+  const salida = {
+    se_puede_responder: true,
+    motivo: '',
+    pregunta: '¿Por qué se dividen las células?',
+    variantes: [],
+    explicacion_cientifica: 'Las células se dividen para crecer y reparar tejidos; antes copian su ADN.',
+    version_infantil: 'Las células se dividen para que crezcas y para arreglar partes del cuerpo.',
+    citas: [{ articulo: 'A1', oraciones: [1], parafrasis: 'Las células se dividen para crecer y reparar tejidos.', respalda: 'para qué se dividen' }],
+  };
+  const r = revisarSalida(salida, candidatos);
+  assert.equal(r.ok, true);
+  const cita = r.borrador.citas[0];
+  const lista = citaContraResumen(cita.frases, usadas[cita.articulo].resumen_interno, 'textual', cita.parafrasis);
+  assert.ok(lista);
+  assert.equal(lista.ubicacion, ubicacionDe([1]));
+});
+
+test('corregir: el pedido lleva el comentario de la validadora, lo anterior y que su pedido manda', () => {
+  const p = pedidoDeCorreccion({ formato: 'pregunta', comentario: '  Se tiñen para distinguir mejor sus estructuras.  ', infantil: 'Texto viejo para chicos.', explicacion: 'Explicación vieja.' });
+  assert.match(p, /pidió cambios/);
+  assert.match(p, /su pedido manda sobre lo anterior/);
+  assert.match(p, /"""Se tiñen para distinguir mejor sus estructuras\."""/);
+  assert.match(p, /Texto viejo para chicos\./);
+  assert.match(p, /Mantené la misma pregunta/);
+  assert.match(pedidoDeCorreccion({ formato: 'dato', comentario: 'x', infantil: '', explicacion: '' }), /esta curiosidad/);
+  // El comentario se recorta: no se le pasa al modelo un texto sin fin
+  assert.ok(pedidoDeCorreccion({ formato: 'pregunta', comentario: 'a'.repeat(5000), infantil: '', explicacion: '' }).length < 3000);
 });

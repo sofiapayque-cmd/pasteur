@@ -7,6 +7,9 @@ import type { Registro } from '@/lib/ciencia/normalizar';
 import { MODELO_RAPIDO, MODELO_REDACCION, pedirJson, type Uso } from './openai';
 import {
   DESCRIPCION_ACTIVIDAD,
+  candidatosDeGuardados,
+  pedidoDeCorreccion,
+  type PublicacionGuardada,
   ESQUEMA_CONSULTAS,
   ESQUEMA_PREGUNTAS,
   ESQUEMA_REDACCION,
@@ -82,12 +85,12 @@ async function buscar(consultas: string[]) {
   return elegirArticulos(respuestas.map((r) => r.registros));
 }
 
-async function redactar(pregunta: string, actividad: string | null, cs: Candidato[], modo: Modo = RESPUESTA) {
+async function redactar(pregunta: string, actividad: string | null, cs: Candidato[], modo: Modo = RESPUESTA, extra = '') {
   const pedido =
     modo.formato === 'dato'
       ? `Tema de la curiosidad: ${modo.tema}${modo.existentes.length ? `\nCuriosidades que ya existen (no las repitas):\n${modo.existentes.slice(0, 30).map((e) => `- ${e}`).join('\n')}` : ''}`
       : `Pregunta: ${pregunta}`;
-  const base = `${pedido}${actividad ? `\nActividad: ${DESCRIPCION_ACTIVIDAD[actividad] ?? ''}` : ''}\n\nArtículos (resúmenes divididos en oraciones numeradas):\n\n${textoDeArticulos(cs)}`;
+  const base = `${pedido}${actividad ? `\nActividad: ${DESCRIPCION_ACTIVIDAD[actividad] ?? ''}` : ''}${extra ? `\n\n${extra}` : ''}\n\nArtículos (resúmenes divididos en oraciones numeradas):\n\n${textoDeArticulos(cs)}`;
   let uso: Uso = { entrada: 0, salida: 0 };
   let entrada = base;
   for (let intento = 1; intento <= 2; intento++) {
@@ -274,4 +277,111 @@ export async function proponerCuriosidad(
   const pedido = `Un dato curioso sobre: ${tema.nombre}${tema.descripcion ? `. ${tema.descripcion}` : ''}`;
   const r = await responderPregunta(c, pedido, { formato: 'dato', temaId: tema.id, tema: `${tema.nombre}${tema.descripcion ? ` (${tema.descripcion})` : ''}`, existentes });
   return { ...r, pregunta: tema.nombre };
+}
+
+// ---------------------------------------------------------------------
+// Corregir con la IA (15/11, pedido de Sofia)
+// ---------------------------------------------------------------------
+/*
+  Una respuesta (o curiosidad) a la que la validadora le pidió cambios: la IA
+  la reescribe siguiendo el comentario, con los MISMOS artículos que ya cita
+  (sus resúmenes guardados, divididos en oraciones numeradas), y cada cita se
+  vuelve a comprobar contra el resumen guardado, igual que al redactarla.
+  La versión es la misma (volvió a borrador con el pedido de cambios): se
+  cambian sus textos y sus citas, y vuelve a revisión. Decide la validadora,
+  como siempre. Todo con la sesión del miembro que lo pide.
+*/
+type ContextoCorreccion = { db: SupabaseClient; actorId: string };
+type FilaVersion = {
+  id: string;
+  estado: string;
+  pregunta: string;
+  explicacion_cientifica: string;
+  version_infantil: string;
+  nota_interna: string | null;
+  fichas: { formato: 'pregunta' | 'dato'; actividad: string | null } | null;
+};
+type FilaPub = PublicacionGuardada & { licencia_codigo: string | null };
+
+export async function corregirConComentario(c: ContextoCorreccion, versionId: string): Promise<Resultado> {
+  const { data: v } = await c.db
+    .from('ficha_versiones')
+    .select('id, estado, pregunta, explicacion_cientifica, version_infantil, nota_interna, fichas!inner(formato, actividad)')
+    .eq('id', versionId)
+    .maybeSingle<FilaVersion>();
+  const pregunta = v?.pregunta ?? '';
+  if (!v || !v.fichas) return { pregunta, ok: false, mensaje: 'No encontré esa respuesta.' };
+  if (v.estado !== 'borrador') return { pregunta, ok: false, mensaje: 'Esta respuesta ya no está esperando cambios.' };
+
+  const { data: rev } = await c.db
+    .from('revisiones')
+    .select('decision, comentario')
+    .eq('objeto', 'ficha_version')
+    .eq('objeto_id', versionId)
+    .order('creada_en', { ascending: false })
+    .limit(1)
+    .maybeSingle<{ decision: string; comentario: string | null }>();
+  const comentario = (rev?.comentario ?? '').trim();
+  if (rev?.decision !== 'pedir_cambios' || !comentario) return { pregunta, ok: false, mensaje: 'No hay un pedido de cambios con comentario para seguir.' };
+
+  // Los artículos que ya cita, con su resumen guardado
+  const { data: viejas } = await c.db.from('version_fuentes').select('*').eq('version_id', versionId).order('orden');
+  const ids = [...new Set((viejas ?? []).map((x: { publicacion_id: string | null }) => x.publicacion_id).filter((x): x is string => Boolean(x)))];
+  if (!ids.length) return { pregunta, ok: false, mensaje: 'No tiene artículos para corregirla con la IA.' };
+  const { data: pubs } = await c.db.from('publicaciones').select('id, titulo, anio, revista, tipo, resumen_interno, licencia_codigo, estado, retractada').in('id', ids);
+  const { candidatos, usadas } = candidatosDeGuardados((pubs ?? []) as FilaPub[]);
+  const usables = usadas as FilaPub[];
+  if (!usables.length) return { pregunta, ok: false, mensaje: 'Sus artículos ya no se pueden usar (retirados o sin resumen).' };
+
+  const formato = v.fichas.formato;
+  const modo: Modo = formato === 'dato' ? { formato: 'dato', temaId: '', tema: pregunta, existentes: [] } : RESPUESTA;
+  const pedido = pedidoDeCorreccion({ formato, comentario, infantil: v.version_infantil, explicacion: v.explicacion_cientifica });
+  const red = await redactar(pregunta, v.fichas.actividad, candidatos, modo, pedido);
+  if (!red.ok) return { pregunta, ok: false, mensaje: `No la pude corregir: ${red.motivo.replace(/\.+$/, '')}.`, uso: red.uso };
+
+  // Cada cita, comprobada contra el resumen guardado
+  const { data: politicas } = await c.db.from('licencias').select('codigo, pasaje');
+  const politicaDe = (codigo: string | null): Politica =>
+    ((politicas ?? []).find((l: { codigo: string; pasaje: Politica }) => l.codigo === codigo)?.pasaje ?? 'solo_ubicacion') as Politica;
+  const citas: { publicacion_id: string; pasaje: string; pasaje_textual: boolean; ubicacion: string; parafrasis: string; orden: number }[] = [];
+  for (const cita of red.borrador.citas) {
+    const pub = usables[cita.articulo];
+    const lista = pub && citaContraResumen(cita.frases, pub.resumen_interno, politicaDe(pub.licencia_codigo), cita.parafrasis);
+    if (!pub || !lista || citas.some((x) => x.publicacion_id === pub.id)) continue;
+    citas.push({ publicacion_id: pub.id, ...lista, orden: citas.length + 1 });
+  }
+  if (!citas.length) return { pregunta, ok: false, mensaje: 'No la guardé: ninguna cita de la corrección pasó el control.', uso: red.uso };
+
+  const fecha = new Date().toLocaleDateString('es-UY', { timeZone: 'America/Montevideo' });
+  const nota = [
+    `Corregida con IA (${red.modelo}) el ${fecha}, siguiendo el pedido de cambios de la validadora, con los mismos artículos.`,
+    red.borrador.faltante ? `Lo que pidió y no está en los resúmenes: ${red.borrador.faltante}` : '',
+    v.nota_interna ?? '',
+  ]
+    .filter(Boolean)
+    .join('\n')
+    .slice(0, 2000);
+  const { data: cambiada, error } = await c.db
+    .from('ficha_versiones')
+    .update({ explicacion_cientifica: red.borrador.explicacion_cientifica, version_infantil: red.borrador.version_infantil, asistida_por_ia: true, nota_interna: nota })
+    .eq('id', versionId)
+    .eq('estado', 'borrador')
+    .select('id')
+    .maybeSingle();
+  if (error || !cambiada) return { pregunta, ok: false, mensaje: `No se pudo guardar la corrección: ${mensajeDeError(error, 'no tenés permiso para cambiarla')}.`, uso: red.uso };
+
+  // Las citas nuevas reemplazan a las viejas (si algo falla, vuelven las viejas)
+  const { error: errorBorrar } = await c.db.from('version_fuentes').delete().eq('version_id', versionId);
+  if (errorBorrar) return { pregunta, ok: true, uso: red.uso, enRevision: false, mensaje: `El texto quedó corregido pero no pude cambiar sus fuentes: ${mensajeDeError(errorBorrar)}.` };
+  const { error: errorCitas } = await c.db.from('version_fuentes').insert(citas.map((x) => ({ version_id: versionId, ...x })));
+  if (errorCitas) {
+    const CAMPOS = ['version_id', 'publicacion_id', 'fuente_id', 'pasaje', 'pasaje_textual', 'ubicacion', 'parafrasis', 'orden'];
+    const restaurar = (viejas ?? []).map((fila: Record<string, unknown>) => Object.fromEntries(CAMPOS.filter((k) => k in fila).map((k) => [k, fila[k]])));
+    if (restaurar.length) await c.db.from('version_fuentes').insert(restaurar);
+    return { pregunta, ok: true, uso: red.uso, enRevision: false, mensaje: `El texto quedó corregido con sus fuentes de antes: ${mensajeDeError(errorCitas)}.` };
+  }
+
+  const { error: errorEnvio } = await c.db.from('ficha_versiones').update({ estado: 'en_revision' }).eq('id', versionId);
+  if (errorEnvio) return { pregunta, ok: true, uso: red.uso, enRevision: false, mensaje: `Quedó corregida en borrador: ${mensajeDeError(errorEnvio)}.` };
+  return { pregunta, ok: true, enRevision: true, uso: red.uso, mensaje: 'Corregida y otra vez esperando revisión.' };
 }
