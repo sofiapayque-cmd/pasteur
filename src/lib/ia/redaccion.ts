@@ -334,3 +334,46 @@ export function separarPreguntas(texto: string, max = 5): { preguntas: string[];
   const todas = [...new Set(texto.split(/\r?\n/).map((l) => l.replace(/^\s*[-•*\d.)]+\s*/, '').replace(/\s+/g, ' ').trim()).filter((l) => l.length >= 5 && l.length <= 300))];
   return { preguntas: todas.slice(0, max), sobran: Math.max(0, todas.length - max) };
 }
+
+// ---------------------------------------------------------------------
+// Corregir con la IA (15/11): lo que no usa la red
+// ---------------------------------------------------------------------
+export type PublicacionGuardada = {
+  id: string;
+  titulo: string;
+  anio: number | null;
+  revista: string | null;
+  tipo: Registro['tipo'] | null;
+  resumen_interno: string | null;
+  estado: string;
+  retractada: boolean;
+};
+
+/**
+ * Los artículos que ya cita una versión, como candidatos para la redactora:
+ * solo los que siguen sirviendo (aprobados o en revisión, sin retractar y con
+ * resumen guardado). Las oraciones salen del resumen GUARDADO, así cada cita
+ * nueva se puede comprobar después contra el mismo texto.
+ */
+export function candidatosDeGuardados(pubs: PublicacionGuardada[]): { candidatos: Candidato[]; usadas: PublicacionGuardada[] } {
+  const usadas = pubs.filter((p) => !p.retractada && (p.estado === 'aprobada' || p.estado === 'en_revision') && dividirOraciones(p.resumen_interno).length > 0);
+  const candidatos = usadas.map((p) => {
+    const principal = { titulo: p.titulo, anio: p.anio, revista: p.revista ?? '', tipo: p.tipo ?? 'articulo' } as Registro;
+    const resumen = p.resumen_interno ?? '';
+    return { registros: [principal], principal, resumen, oraciones: dividirOraciones(resumen), puntaje: 0 };
+  });
+  return { candidatos, usadas };
+}
+
+/** El pedido de corrección que se le suma a la redactora: el comentario de la validadora manda. */
+export function pedidoDeCorreccion(o: { formato: 'pregunta' | 'dato'; comentario: string; infantil: string; explicacion: string }): string {
+  const que = o.formato === 'dato' ? 'curiosidad' : 'respuesta';
+  return `CORRECCIÓN. Una investigadora del Instituto revisó esta ${que} y pidió cambios.
+Lo que pidió la investigadora (es la experta; su pedido manda sobre lo anterior):
+"""${o.comentario.trim().slice(0, 2000)}"""
+Versión para chicos anterior:
+"""${o.infantil.trim().slice(0, 1200)}"""
+Explicación científica anterior:
+"""${o.explicacion.trim().slice(0, 2000)}"""
+Reescribí siguiendo su pedido. Si ella escribió un texto, usalo como base: mantené lo que dice y adaptalo a chicos de 10 a 12 años (voseo, palabras de todos los días, explicando cualquier palabra científica), dentro del límite de palabras. Mantené la misma pregunta. Citá las oraciones de los resúmenes que respalden cada parte; si alguna parte de lo que ella pide no está en los resúmenes, igual incluila y contalo en "motivo".`;
+}

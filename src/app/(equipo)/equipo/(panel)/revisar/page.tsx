@@ -7,6 +7,7 @@ import { ACTIVIDADES, ACTIVIDADES_A_ELEGIR } from '@/lib/equipo/comun';
 import PedirRespuestas from '@/pantallas/equipo/PedirRespuestas';
 import PreguntasDeClases from '@/pantallas/equipo/PreguntasDeClases';
 import Tarjeta from '@/pantallas/equipo/TarjetaRespuesta';
+import { CorregirTodas } from '@/pantallas/equipo/CorregirConIa';
 import ConGota from '@/components/ConGota';
 import CambioSuave from '@/components/CambioSuave';
 
@@ -99,6 +100,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ v
           </Link>
         </div>
       )}
+
+      {/* Las que tienen cambios pedidos: la IA las corrige siguiendo a la validadora (15/11) */}
+      {!validadora && cuenta('cambios') > 0 && iaConfigurada() && <CorregirTodas cantidad={cuenta('cambios')} />}
 
       {!validadora && pedir}
 

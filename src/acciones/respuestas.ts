@@ -4,10 +4,10 @@ import { refresh } from 'next/cache';
 import { crearClienteServidor } from '@/lib/supabase/servidor';
 import { crearClienteAdmin } from '@/lib/supabase/admin';
 import { miembroCon } from '@/datos/equipo';
-import { pedidasHoy, preguntasDeActividad } from '@/datos/respuestas';
+import { listarRespuestas, pedidasHoy, preguntasDeActividad } from '@/datos/respuestas';
 import { iaConfigurada } from '@/lib/ia/openai';
 import { separarPreguntas } from '@/lib/ia/redaccion';
-import { proponer, responderPregunta, type Resultado } from '@/lib/ia/redactar';
+import { corregirConComentario, proponer, responderPregunta, type Resultado } from '@/lib/ia/redactar';
 
 /*
   ACCIONES DEL TABLERO DE RESPUESTAS (Server Actions del equipo).
@@ -15,6 +15,9 @@ import { proponer, responderPregunta, type Resultado } from '@/lib/ia/redactar';
     src/lib/ia/redactar.ts). Hasta 4 preguntas por vez y 120 por persona
     cada 24 horas, para cuidar el presupuesto.
   · Ideas de preguntas: la IA propone; no se guarda nada.
+  · Corregir con la IA (15/11): las que tienen cambios pedidos, la IA las
+    reescribe siguiendo el comentario de la validadora, con los mismos
+    artículos, y vuelven a revisión (ver corregirConComentario).
 */
 export type EstadoPedido = { mensaje: string; ok?: boolean; resultados?: Resultado[] };
 export type EstadoIdeas = { mensaje: string; ok?: boolean; preguntas?: string[] };
@@ -142,4 +145,68 @@ export async function descartarPregunta(id: string): Promise<void> {
   const db = (await crearClienteServidor())!;
   await db.from('preguntas_sin_respuesta').update({ estado: 'descartada' }).eq('id', id);
   refresh();
+}
+
+// ---------------------------------------------------------------------
+// Corregir con la IA las que tienen cambios pedidos
+// ---------------------------------------------------------------------
+// De a 5 a la vez y hasta 15 por clic: entra en los 5 minutos que tiene la página
+const CORREGIR_POR_VEZ = 15;
+
+async function deACinco<T, R>(items: T[], fn: (t: T) => Promise<R>): Promise<R[]> {
+  const salida: R[] = new Array(items.length);
+  let siguiente = 0;
+  await Promise.all(
+    [0, 1, 2, 3, 4].map(async () => {
+      while (siguiente < items.length) {
+        const i = siguiente++;
+        salida[i] = await fn(items[i]);
+      }
+    }),
+  );
+  return salida;
+}
+
+async function corregirVarias(versionIds: string[]): Promise<EstadoPedido> {
+  const yo = await miembroCon();
+  if (!yo) return SIN_PERMISO;
+  if (!iaConfigurada()) return { mensaje: 'Falta la clave de OpenAI en el servidor (OPENAI_API_KEY).' };
+  const db = (await crearClienteServidor())!;
+  console.info(`[ia] ${yo.id} pidió corregir ${versionIds.length} respuesta(s)`);
+  const resultados = await deACinco(versionIds, async (id) => {
+    try {
+      return await corregirConComentario({ db, actorId: yo.id }, id);
+    } catch (e) {
+      console.error('[ia] error inesperado al corregir:', e instanceof Error ? e.message : e);
+      return { pregunta: '', ok: false, mensaje: 'Algo falló sin aviso. Probá de nuevo.' } satisfies Resultado;
+    }
+  });
+  refresh();
+  const listas = resultados.filter((r) => r.enRevision).length;
+  if (versionIds.length === 1) return { ok: listas === 1, resultados, mensaje: resultados[0].mensaje };
+  return {
+    ok: listas > 0,
+    resultados,
+    mensaje:
+      listas === resultados.length
+        ? `Listo: las ${listas} quedaron corregidas y otra vez esperando revisión.`
+        : `${listas} de ${resultados.length} quedaron corregidas y esperando revisión. Abajo está qué pasó con cada una.`,
+  };
+}
+
+/** Una sola (botón de la tarjeta o de la ficha). */
+export async function corregirConIa(versionId: string): Promise<EstadoPedido> {
+  if (!UUID.test(versionId)) return SIN_PERMISO;
+  return corregirVarias([versionId]);
+}
+
+/** Todas las que tienen cambios pedidos (hasta 15 por vez). */
+export async function corregirTodasConIa(): Promise<EstadoPedido> {
+  const yo = await miembroCon();
+  if (!yo) return SIN_PERMISO;
+  const ids = (await listarRespuestas()).filter((r) => r.grupo === 'cambios').map((r) => r.versionId);
+  if (!ids.length) return { mensaje: 'No hay respuestas con cambios pedidos.' };
+  const estado = await corregirVarias(ids.slice(0, CORREGIR_POR_VEZ));
+  const sobran = ids.length - CORREGIR_POR_VEZ;
+  return sobran > 0 ? { ...estado, mensaje: `${estado.mensaje} Quedan ${sobran}: tocá el botón otra vez.` } : estado;
 }

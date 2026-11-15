@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { Respuesta } from '@/datos/respuestas';
+import { BotonCorregir } from './CorregirConIa';
 import { ACTIVIDADES, NOMBRE_ESTADO, haceCuanto, palabras } from '@/lib/equipo/comun';
 
 /* Una respuesta en el tablero: estado, pregunta, lo que leen los chicos, fuentes y qué hacer. */
@@ -48,9 +49,17 @@ export default function Tarjeta({ r, nombres, validadora }: { r: Respuesta; nomb
           <Link className="btn btn--primario btn--chico" href={`/equipo/revisar/${r.versionId}?desde=revisar`}>
             Revisar
           </Link>
+        ) : r.grupo === 'cambios' && !validadora ? (
+          // La IA la corrige siguiendo el comentario; "a mano" abre la ficha para editarla
+          <div className="eq-tarjeta__acciones">
+            <BotonCorregir versionId={r.versionId} />
+            <Link className="enlace" href={`/equipo/fichas/${r.fichaId}`}>
+              Corregir a mano
+            </Link>
+          </div>
         ) : (
           <Link className="btn btn--claro btn--chico" href={`/equipo/fichas/${r.fichaId}`}>
-            {r.grupo === 'cambios' ? 'Corregir' : 'Ver'}
+            Ver
           </Link>
         )}
       </div>
