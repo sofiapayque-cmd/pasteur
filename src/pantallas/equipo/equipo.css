@@ -304,6 +304,19 @@
   gap: var(--space-3);
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
+/* Las tarjetas de Inicio son links: sin subrayado; se levantan al pasar */
+.eq-grilla > a.eq-caja {
+  color: inherit;
+  text-decoration: none;
+  transition: transform 0.35s var(--ease-organico), box-shadow 0.3s;
+}
+.eq-grilla > a.eq-caja:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--eq-relieve-alto), var(--eq-luz);
+}
+.eq-grilla > a.eq-caja h3 {
+  color: var(--nucleo);
+}
 .eq-dos {
   display: grid;
   gap: var(--space-4);
@@ -712,6 +725,21 @@
   .eq-nav > a {
     padding: 7px 7px;
     font-size: 0.84rem;
+  }
+}
+
+/* Ventanas angostas (641–760 px, como una tablet parada): un poco más
+   compacto, así el menú de la admin entra entero sin deslizarse */
+@media (min-width: 641px) and (max-width: 760px) {
+  .eq-barra {
+    gap: 6px;
+    padding-left: 14px;
+  }
+  .eq-barra__marca {
+    font-size: 0.95rem;
+  }
+  .eq-nav > a {
+    padding: 7px 6px;
   }
 }
 
