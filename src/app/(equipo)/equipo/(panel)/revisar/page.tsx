@@ -1,76 +1,170 @@
 import Link from 'next/link';
 import { exigirMiembro } from '@/datos/equipo';
-import { nombresDelEquipo, pendientesDeRevision } from '@/datos/fichas';
-import { fechaHora } from '@/lib/equipo/comun';
+import { nombresDelEquipo } from '@/datos/fichas';
+import { listarPreguntasSinRespuesta, listarRespuestas, masVistas, NOMBRE_GRUPO, type Grupo } from '@/datos/respuestas';
+import { iaConfigurada } from '@/lib/ia/openai';
+import { ACTIVIDADES, ACTIVIDADES_A_ELEGIR } from '@/lib/equipo/comun';
+import PedirRespuestas from '@/pantallas/equipo/PedirRespuestas';
+import PreguntasDeClases from '@/pantallas/equipo/PreguntasDeClases';
+import Tarjeta from '@/pantallas/equipo/TarjetaRespuesta';
+import ConGota from '@/components/ConGota';
+import CambioSuave from '@/components/CambioSuave';
 
-/* /equipo/revisar · Lo que espera una validadora: fichas y publicaciones en revisión, las más viejas primero */
-export default async function Page() {
+/*
+  /equipo/revisar · Revisar: el tablero de respuestas (antes "Respuestas").
+  Desde el 15/11 junta en una sola sección lo que estaba en Respuestas,
+  Fichas y Para revisar (pedido de Sofia y Eugenia: la validadora solo
+  revisa respuestas; los artículos se aprueban junto con la respuesta que
+  los cita, con aprobar_con_articulos).
+  Arriba, cuántas hay en cada estado; abajo, una tarjeta por respuesta con la
+  pregunta, lo que van a leer los chicos y sus fuentes. La validadora entra
+  acá y revisa; el resto del equipo le pide respuestas nuevas a la IA.
+  Pedir respuestas tarda (buscar + redactar): por eso maxDuration.
+*/
+export const maxDuration = 300;
+
+const PESTANAS: (Grupo | 'todas')[] = ['espera', 'cambios', 'aprobada', 'rechazada', 'borrador', 'todas'];
+const DECISION: Record<string, string> = { aprobar: 'aprobaste', pedir_cambios: 'pediste cambios en', rechazar: 'rechazaste' };
+
+export default async function Page({ searchParams }: { searchParams: Promise<{ ver?: string; actividad?: string; origen?: string; revisada?: string }> }) {
   const yo = await exigirMiembro();
-  const [{ versiones, publicaciones }, nombres] = await Promise.all([pendientesDeRevision(), nombresDelEquipo()]);
+  const sp = await searchParams;
+  const [todas, nombres, deClases, vistas] = await Promise.all([listarRespuestas(), nombresDelEquipo(), listarPreguntasSinRespuesta().catch(() => []), masVistas().catch(() => [])]);
+  const validadora = yo.rol === 'validador';
+
+  const cuenta = (g: Grupo) => todas.filter((r) => r.grupo === g).length;
+  const ver = (PESTANAS as string[]).includes(sp.ver ?? '') ? (sp.ver as Grupo | 'todas') : cuenta('espera') ? 'espera' : 'todas';
+  const actividad = sp.actividad && ACTIVIDADES[sp.actividad] ? sp.actividad : '';
+  const soloIa = sp.origen === 'ia';
+  const visibles = todas
+    .filter((r) => (ver === 'todas' ? r.grupo !== 'retirada' : r.grupo === ver))
+    .filter((r) => !actividad || r.actividad === actividad)
+    .filter((r) => !soloIa || r.ia)
+    // Las que esperan, de la más vieja a la más nueva (así no queda ninguna olvidada)
+    .sort((a, b) => (ver === 'espera' ? (a.enviadaEn ?? '').localeCompare(b.enviadaEn ?? '') : 0));
+  const primera = todas.filter((r) => r.grupo === 'espera').sort((a, b) => (a.enviadaEn ?? '').localeCompare(b.enviadaEn ?? ''))[0];
+
+  const enlace = (cambios: Record<string, string>) => {
+    const p = new URLSearchParams({ ver, actividad, origen: soloIa ? 'ia' : '', ...cambios });
+    for (const [k, v] of [...p.entries()]) if (!v) p.delete(k);
+    const q = p.toString();
+    return q ? `/equipo/revisar?${q}` : '/equipo/revisar';
+  };
+  const pedir = iaConfigurada() ? (
+    <>
+      {deClases.length > 0 && <PreguntasDeClases preguntas={deClases} />}
+      <PedirRespuestas />
+    </>
+  ) : (
+    <p className="eq-caja eq-caja--aviso">Para pedir respuestas a la IA falta cargar la clave de OpenAI en el servidor (OPENAI_API_KEY).</p>
+  );
+
   return (
     <main className="eq-cuerpo">
       <div>
-        <h1>Para revisar</h1>
+        <h1>Revisar</h1>
         <p className="eq-bajada">
-          {yo.rol === 'validador'
-            ? 'Primero las fuentes (los artículos), porque una ficha solo se puede aprobar si sus fuentes están aprobadas.'
-            : 'Solo las validadoras aprueban. Acá ves qué está esperando.'}
+          Lo que van a leer los chicos cuando pregunten. La IA las prepara con artículos científicos y una validadora del Instituto las aprueba: solo las aprobadas llevan
+          el sello.
         </p>
       </div>
-      <section className="eq-caja">
-        <h2>Artículos ({publicaciones.length})</h2>
-        {publicaciones.length === 0 ? (
-          <p className="eq-bajada">Nada esperando.</p>
-        ) : (
-          <table className="eq-tabla">
-            <tbody>
-              {publicaciones.map((p) => (
-                <tr key={p.id}>
-                  <td>
-                    <Link href={`/equipo/biblioteca/${p.id}`}>{p.titulo}</Link>
-                    <span className="eq-tabla__chico">
-                      {[p.revista, p.anio].filter(Boolean).join(', ')} · licencia {p.licencia_codigo ?? 'sin verificar'}
-                      {p.retractada ? ' · RETRACTADA' : ''}
-                    </span>
-                  </td>
-                  <td>
-                    {p.agregada_por ? nombres[p.agregada_por] ?? '—' : '—'}
-                    <span className="eq-tabla__chico">{fechaHora(p.enviada_en)}</span>
-                  </td>
-                </tr>
+
+      {sp.revisada && DECISION[sp.revisada] && (
+        <p className="eq-caja eq-caja--ok" role="status">
+          Listo: {DECISION[sp.revisada]} la respuesta.{' '}
+          {validadora && primera ? (
+            <Link className="enlace" href={`/equipo/revisar/${primera.versionId}?desde=revisar`}>
+              Seguir con la próxima →
+            </Link>
+          ) : null}
+        </p>
+      )}
+
+      <div className="eq-tablero">
+        {(['espera', 'cambios', 'aprobada', 'rechazada'] as Grupo[]).map((g) => (
+          <Link key={g} href={enlace({ ver: g })} className={`eq-tablero__item eq-tablero__item--${g}`} aria-current={ver === g ? 'true' : undefined}>
+            <span className="eq-numero">{cuenta(g)}</span>
+            <span>{NOMBRE_GRUPO[g]}</span>
+          </Link>
+        ))}
+      </div>
+
+      {validadora && primera && !sp.revisada && (
+        <div className="eq-caja eq-caja--aviso eq-fila" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+          <p style={{ margin: 0 }}>
+            {cuenta('espera') === 1 ? 'Hay una respuesta esperando tu revisión.' : `Hay ${cuenta('espera')} respuestas esperando tu revisión.`}
+          </p>
+          <Link className="btn btn--primario btn--chico" href={`/equipo/revisar/${primera.versionId}?desde=revisar`}>
+            Empezar por la más vieja
+          </Link>
+        </div>
+      )}
+
+      {!validadora && pedir}
+
+      <section className="eq-form" aria-labelledby="lista-titulo">
+        <h2 id="lista-titulo" className="solo-lector">
+          Lista de respuestas
+        </h2>
+        <div className="eq-fila" style={{ alignItems: 'center' }}>
+          <ConGota className="eq-pestanas" etiqueta="Estado">
+            {PESTANAS.map((g) => (
+              <Link key={g} href={enlace({ ver: g })} aria-current={ver === g ? 'true' : undefined}>
+                {g === 'todas' ? 'Todas' : `${NOMBRE_GRUPO[g]} (${cuenta(g)})`}
+              </Link>
+            ))}
+          </ConGota>
+          <ConGota className="eq-pestanas" etiqueta="Actividad y origen">
+            <Link href={enlace({ actividad: '' })} aria-current={!actividad ? 'true' : undefined}>
+              Todas las actividades
+            </Link>
+            {ACTIVIDADES_A_ELEGIR.map(([k, v]) => (
+              <Link key={k} href={enlace({ actividad: k })} aria-current={actividad === k ? 'true' : undefined}>
+                {v.split(' · ')[0]}
+              </Link>
+            ))}
+            <Link href={enlace({ origen: soloIa ? '' : 'ia' })} aria-current={soloIa ? 'true' : undefined}>
+              Solo las de la IA
+            </Link>
+          </ConGota>
+        </div>
+
+        <CambioSuave clave={`${ver}-${actividad}-${soloIa ? 'ia' : 'todas'}`}>
+          {visibles.length === 0 ? (
+            <p className="eq-caja eq-bajada">
+              {ver === 'espera' ? 'No hay respuestas esperando revisión.' : 'Todavía no hay respuestas acá.'}
+              {!validadora && ver === 'espera' ? ' Pedile algunas a la IA más arriba.' : ''}
+            </p>
+          ) : (
+            <ul className="eq-tarjetas">
+              {visibles.map((r) => (
+                <Tarjeta key={r.versionId} r={r} nombres={nombres} validadora={validadora} />
               ))}
-            </tbody>
-          </table>
-        )}
+            </ul>
+          )}
+        </CambioSuave>
       </section>
-      <section className="eq-caja">
-        <h2>Fichas ({versiones.length})</h2>
-        {versiones.length === 0 ? (
-          <p className="eq-bajada">Nada esperando.</p>
-        ) : (
-          <table className="eq-tabla">
-            <tbody>
-              {versiones.map((v) => (
-                <tr key={v.id}>
-                  <td>
-                    <Link href={yo.rol === 'validador' ? `/equipo/revisar/${v.id}` : `/equipo/fichas/${v.fichas.id}`}>
-                      {v.pregunta || v.version_infantil.slice(0, 90) || v.fichas.slug}
-                    </Link>
-                    <span className="eq-tabla__chico">
-                      {v.fichas.formato === 'pregunta' ? 'Pregunta' : 'Dato'} · versión {v.numero}
-                      {v.autor_id === yo.id ? ' · la escribiste vos' : ''}
-                    </span>
-                  </td>
-                  <td>
-                    {nombres[v.autor_id] ?? '—'}
-                    <span className="eq-tabla__chico">{fechaHora(v.enviada_en)}</span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </section>
+
+      {vistas.length > 0 && (
+        <details className="eq-caja eq-detalles">
+          <summary>Las más vistas (últimos 30 días)</summary>
+          <p className="eq-ayuda">Cuántas veces se mostró cada respuesta aprobada: en el asistente de las maestras y en &ldquo;Preguntas del Pasteur&rdquo; dentro de las actividades. Sin datos de quién la vio.</p>
+          <ol className="eq-lista">
+            {vistas.map((v) => (
+              <li key={v.fichaId} className="eq-tabla__chico">
+                <strong>{v.pregunta}</strong> · {v.asistente} en clase · {v.actividad} en las actividades
+              </li>
+            ))}
+          </ol>
+        </details>
+      )}
+
+      {validadora && (
+        <details className="eq-caja eq-detalles">
+          <summary>Pedir respuestas nuevas a la IA</summary>
+          <div style={{ marginTop: 'var(--space-3)' }}>{pedir}</div>
+        </details>
+      )}
     </main>
   );
 }

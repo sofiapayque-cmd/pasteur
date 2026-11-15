@@ -43,13 +43,14 @@ export default async function Page({ params, searchParams }: { params: Promise<{
     const texto = nums.map((n) => oraciones[n - 1]).filter(Boolean).join(' ');
     if (texto) evidencia[c.id] = texto;
   }
-  const volver = desde === 'respuestas' ? '/equipo/respuestas' : undefined;
+  // Se entra desde el tablero de Revisar (?desde=respuestas, como antes): al decidir, vuelve ahí
+  const volver = desde === 'respuestas' || desde === 'revisar' ? '/equipo/revisar' : undefined;
 
   return (
     <main className="eq-cuerpo">
       <div>
-        <Link className="enlace" href={volver ?? '/equipo/revisar'}>
-          ← {volver ? 'Respuestas' : 'Para revisar'}
+        <Link className="enlace" href="/equipo/revisar">
+          ← Revisar
         </Link>
         <h1>{version.pregunta || 'Dato'}</h1>
         <p className="eq-bajada">
