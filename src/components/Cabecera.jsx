@@ -2,7 +2,7 @@
 
 import { useNavigate } from '@/navegacion';
 
-/* Barra de arriba: botón Volver, miga de pan y lugar para el logo del instituto. */
+/* Barra de arriba: botón Volver, miga de pan y, a la derecha, lo que pase cada pantalla (por ejemplo la cuenta de la maestra). Sin logo del instituto (pedido de Sofia, 11/11). */
 /** @param {{ volverA?: string, miga?: string, derecha?: import('react').ReactNode }} props */
 export default function Cabecera({ volverA, miga, derecha }) {
   const navegar = useNavigate();
@@ -19,7 +19,7 @@ export default function Cabecera({ volverA, miga, derecha }) {
         )}
         {miga && <span className="etiqueta cabecera__miga">{miga}</span>}
       </div>
-      {derecha || <div className="logo-pendiente">[Logo Institut Pasteur]</div>}
+      {derecha}
     </header>
   );
 }

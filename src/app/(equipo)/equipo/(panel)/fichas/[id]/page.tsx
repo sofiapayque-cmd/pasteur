@@ -4,7 +4,7 @@ import { exigirMiembro } from '@/datos/equipo';
 import { listarFuentes, listarTemas, nombresDelEquipo, obtenerFicha, publicacionesCitables } from '@/datos/fichas';
 import { listarLicencias } from '@/datos/biblioteca';
 import { abrirVersionNueva, cambiarDatosFicha, enviarARevision, retirarEnvio, retirarFicha } from '@/acciones/fichas';
-import { ACTIVIDADES, NOMBRE_ESTADO, fechaHora } from '@/lib/equipo/comun';
+import { ACTIVIDADES, ACTIVIDADES_A_ELEGIR, NOMBRE_ESTADO, fechaHora } from '@/lib/equipo/comun';
 import Forma from '@/pantallas/equipo/Forma';
 import EditorVersion from '@/pantallas/equipo/EditorVersion';
 import Citas from '@/pantallas/equipo/Citas';
@@ -150,7 +150,7 @@ export default async function Page({ params, searchParams }: { params: Promise<{
                 <span className="campo__nombre">Actividad</span>
                 <select className="campo__entrada" name="actividad" defaultValue={ficha.actividad ?? ''}>
                   <option value="">Ninguna en particular</option>
-                  {Object.entries(ACTIVIDADES).map(([k, v]) => (
+                  {ACTIVIDADES_A_ELEGIR.map(([k, v]) => (
                     <option key={k} value={k}>
                       {v}
                     </option>

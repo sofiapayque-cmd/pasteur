@@ -3,10 +3,12 @@ import { exigirMiembro } from '@/datos/equipo';
 import { nombresDelEquipo } from '@/datos/fichas';
 import { listarPreguntasSinRespuesta, listarRespuestas, masVistas, NOMBRE_GRUPO, type Grupo } from '@/datos/respuestas';
 import { iaConfigurada } from '@/lib/ia/openai';
-import { ACTIVIDADES } from '@/lib/equipo/comun';
+import { ACTIVIDADES, ACTIVIDADES_A_ELEGIR } from '@/lib/equipo/comun';
 import PedirRespuestas from '@/pantallas/equipo/PedirRespuestas';
 import PreguntasDeClases from '@/pantallas/equipo/PreguntasDeClases';
 import Tarjeta from '@/pantallas/equipo/TarjetaRespuesta';
+import ConGota from '@/components/ConGota';
+import CambioSuave from '@/components/CambioSuave';
 
 /*
   /equipo/respuestas · Tablero de respuestas.
@@ -101,18 +103,18 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ v
           Lista de respuestas
         </h2>
         <div className="eq-fila" style={{ alignItems: 'center' }}>
-          <nav className="eq-pestanas" aria-label="Estado">
+          <ConGota className="eq-pestanas" etiqueta="Estado">
             {PESTANAS.map((g) => (
               <Link key={g} href={enlace({ ver: g })} aria-current={ver === g ? 'true' : undefined}>
                 {g === 'todas' ? 'Todas' : `${NOMBRE_GRUPO[g]} (${cuenta(g)})`}
               </Link>
             ))}
-          </nav>
-          <nav className="eq-pestanas" aria-label="Actividad y origen">
+          </ConGota>
+          <ConGota className="eq-pestanas" etiqueta="Actividad y origen">
             <Link href={enlace({ actividad: '' })} aria-current={!actividad ? 'true' : undefined}>
               Todas las actividades
             </Link>
-            {Object.entries(ACTIVIDADES).map(([k, v]) => (
+            {ACTIVIDADES_A_ELEGIR.map(([k, v]) => (
               <Link key={k} href={enlace({ actividad: k })} aria-current={actividad === k ? 'true' : undefined}>
                 {v.split(' · ')[0]}
               </Link>
@@ -120,21 +122,23 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ v
             <Link href={enlace({ origen: soloIa ? '' : 'ia' })} aria-current={soloIa ? 'true' : undefined}>
               Solo las de la IA
             </Link>
-          </nav>
+          </ConGota>
         </div>
 
-        {visibles.length === 0 ? (
-          <p className="eq-caja eq-bajada">
-            {ver === 'espera' ? 'No hay respuestas esperando revisión.' : 'Todavía no hay respuestas acá.'}
-            {!validadora && ver === 'espera' ? ' Pedile algunas a la IA más arriba.' : ''}
-          </p>
-        ) : (
-          <ul className="eq-tarjetas">
-            {visibles.map((r) => (
-              <Tarjeta key={r.versionId} r={r} nombres={nombres} validadora={validadora} />
-            ))}
-          </ul>
-        )}
+        <CambioSuave clave={`${ver}-${actividad}-${soloIa ? 'ia' : 'todas'}`}>
+          {visibles.length === 0 ? (
+            <p className="eq-caja eq-bajada">
+              {ver === 'espera' ? 'No hay respuestas esperando revisión.' : 'Todavía no hay respuestas acá.'}
+              {!validadora && ver === 'espera' ? ' Pedile algunas a la IA más arriba.' : ''}
+            </p>
+          ) : (
+            <ul className="eq-tarjetas">
+              {visibles.map((r) => (
+                <Tarjeta key={r.versionId} r={r} nombres={nombres} validadora={validadora} />
+              ))}
+            </ul>
+          )}
+        </CambioSuave>
       </section>
 
       {vistas.length > 0 && (

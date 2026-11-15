@@ -98,12 +98,19 @@ export function useProgresoTarea({
     [programar],
   );
   const guardar = useCallback((datos: Record<string, unknown>) => ir(null, datos), [ir]);
+  // Guardar ya lo que hay (al terminar el tiempo de la clase, 8/11): manda lo último aunque no haya cambios
+  const guardarYa = useCallback(() => {
+    pendiente.current = actual.current;
+    if (reloj.current) clearTimeout(reloj.current);
+    enviar();
+  }, [enviar]);
 
   return {
     etapa: valor.etapa,
     datos: valor.datos,
     ir,
     guardar,
+    guardarYa,
     reiniciar: () => {},
     enClase: false,
     tarea: true,

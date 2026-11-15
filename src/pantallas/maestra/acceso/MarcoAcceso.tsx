@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import Cabecera from '@/components/Cabecera';
 import FondoVivo from '@/components/FondoVivo';
 import Moli from '@/components/Moli';
+import PieInstitucional from '@/components/PieInstitucional';
 
 /* Marco común de las pantallas de acceso de la maestra (ingresar, recuperar, elegir contraseña). */
 export default function MarcoAcceso({ etiqueta, titulo, bajada, children }: { etiqueta: string; titulo: string; bajada?: string; children: ReactNode }) {
@@ -20,6 +21,7 @@ export default function MarcoAcceso({ etiqueta, titulo, bajada, children }: { et
           <Moli estilo="plano" patas tamano={150} />
         </div>
       </div>
+      <PieInstitucional />
     </main>
   );
 }

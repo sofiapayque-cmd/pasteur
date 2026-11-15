@@ -18,15 +18,19 @@ import { actividad as datosActividad } from '@/lib/aulas/tareas';
   del estado de la clase, no de la dirección: si la maestra recarga o entra
   desde otra compu, vuelve al mismo punto.
 */
-export default function ClaseEnVivo({ inicial }: { inicial: Instantanea }) {
-  const { sala, inst, conexion, aviso, acciones } = useClaseMaestra(inicial);
+export default function ClaseEnVivo({ inicial, asistente = false }: { inicial: Instantanea; asistente?: boolean }) {
+  const { sala, inst, conexion, aviso, acciones, tiempo, desfase } = useClaseMaestra(inicial);
   const aulaUrl = `/maestra/aulas/${inst.aula.id}`;
 
   const valor: Clase = {
     real: true,
     // Las pantallas usan la forma de la sala del prototipo
     sala: sala as unknown as Clase['sala'],
-    empezar: () => acciones.mover('empezar'),
+    empezar: () => {
+      acciones.mover('empezar');
+      // Si la maestra puso tiempo en la sala de espera, arranca junto con la clase
+      if (inst.sesion.tiempo_estado === 'listo') tiempo('iniciar');
+    },
     alternarPausa: acciones.alternarPausa,
     desbloquear: acciones.desbloquear,
     irAPuesta: () => acciones.mover('puesta'),
@@ -35,6 +39,13 @@ export default function ClaseEnVivo({ inicial }: { inicial: Instantanea }) {
     aula: { id: inst.aula.id, nombre: inst.aula.nombre },
     conexion,
     aviso,
+    asistente,
+    tiempo: {
+      fila: inst.sesion,
+      desfase,
+      mover: tiempo,
+      actualizaciones: inst.progresos.map((p) => p.actualizado_en),
+    },
   };
 
   return (

@@ -6,9 +6,12 @@ import MarcoActividad from '@/components/MarcoActividad';
 import Cargando from '@/components/Cargando';
 import FondoVivo from '@/components/FondoVivo';
 import Moli from '@/components/Moli';
+import Curiosidades from '@/components/Curiosidades';
+import type { CuriosidadVisible } from '@/datos/curiosidades';
 import { EXPERIENCIAS } from '@/actividades/componentes';
 import { useProgresoTarea } from '@/sala/progresoTarea';
-import { useClaseAlumno } from '@/sala/claseEnVivo';
+import { useClaseAlumno, useDesfase } from '@/sala/claseEnVivo';
+import RelojAlumno from './RelojAlumno';
 import { desbloqueosDeClase, type SesionFila } from '@/lib/aulas/clase';
 
 /*
@@ -26,10 +29,13 @@ type Props = {
   tarea: { id: string; actividad: 'a1' | 'a2' | 'a3' | 'a4'; opciones: Record<string, string[]>; desbloqueos: Record<string, boolean>; abierta: boolean };
   inicial: { etapa: string; datos: Record<string, unknown> };
   alumno: { apodo: string | null; numero: number; color: string | null };
+  /** "¿Sabías que…?" para la espera (las elige el servidor; puede venir vacío). */
+  curiosidades?: CuriosidadVisible[];
 };
 
-export default function ClaseAlumno({ sesion: inicialSesion, tarea, inicial, alumno }: Props) {
+export default function ClaseAlumno({ sesion: inicialSesion, tarea, inicial, alumno, curiosidades = [] }: Props) {
   const { sesion } = useClaseAlumno(inicialSesion);
+  const { desfase } = useDesfase();
   const desbloqueos = desbloqueosDeClase(tarea.desbloqueos, sesion.desbloqueos);
   const nombre = alumno.apodo ?? `número ${alumno.numero}`;
   // Siempre se llama (aunque todavía esté esperando): las reglas de los hooks de React
@@ -55,6 +61,7 @@ export default function ClaseAlumno({ sesion: inicialSesion, tarea, inicial, alu
             <i />
             <i />
           </div>
+          <Curiosidades curiosidades={curiosidades} />
         </section>
         <section className="espera__moli">
           <div className="espera__fondo" aria-hidden="true" />
@@ -95,10 +102,14 @@ export default function ClaseAlumno({ sesion: inicialSesion, tarea, inicial, alu
   }
 
   return (
-    <MarcoActividad actividadId={tarea.actividad} progreso={progreso}>
-      <Suspense fallback={<Cargando />}>
-        <Experiencia progreso={progreso} />
-      </Suspense>
-    </MarcoActividad>
+    <>
+      <MarcoActividad actividadId={tarea.actividad} progreso={progreso}>
+        <Suspense fallback={<Cargando />}>
+          <Experiencia progreso={progreso} />
+        </Suspense>
+      </MarcoActividad>
+      {/* Timer de la clase (8/11): al terminar, guarda en ese momento lo que tiene */}
+      <RelojAlumno fila={sesion} desfase={desfase} alTerminar={base.guardarYa} />
+    </>
   );
 }

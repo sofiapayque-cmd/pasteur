@@ -6,6 +6,7 @@ import { ACTIVIDADES } from '../../data/contenido';
 import { INFO_ACTIVIDADES } from '../../actividades/info';
 import { AMBIENTES } from '../../actividades/a1/datos';
 import { useClase } from '../../sala/contexto';
+import RelojClase from './RelojClase';
 
 const CINCO_MINUTOS = 5 * 60 * 1000;
 
@@ -56,6 +57,13 @@ export default function Tablero() {
       </header>
 
       {real && clase.aviso && <p className="tablero__pausa">{clase.aviso}</p>}
+
+      {/* Timer de la clase (8/11): opcional, lo lleva el servidor */}
+      {real && clase.tiempo && (
+        <div className="tablero__reloj">
+          <RelojClase {...clase.tiempo} modo="clase" />
+        </div>
+      )}
 
       {sala.pausada && <p className="tablero__pausa">Las Ceibal están en pausa: la clase está mirando el pizarrón.</p>}
 

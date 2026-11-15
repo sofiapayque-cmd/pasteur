@@ -64,26 +64,26 @@ export default function MandarActividad({
           <h1>{t.titulo}</h1>
           <p className="aulas__bajada">{t.bajada(aula.nombre)}</p>
         </div>
-        {extra}
-
-        <fieldset className="aulas__bloque mandar__grupo">
-          <legend>Actividad</legend>
-          <div className="mandar__actividades">
-            {ACTIVIDADES_DISPONIBLES.map((a) => (
-              <label key={a.id} className="mandar__actividad">
-                <input type="radio" name="actividad" value={a.id} checked={act === a.id} onChange={() => setAct(a.id)} />
-                <span className="aula__placa" style={{ background: a.placa }} aria-hidden="true" />
-                <strong>
-                  {a.numero} · {a.nombre}
-                </strong>
-                <small>{a.bajada}</small>
-              </label>
-            ))}
-          </div>
-        </fieldset>
+        <section className="aulas__bloque">
+          <fieldset className="mandar__grupo">
+            <legend className="mandar__titulo">Actividad</legend>
+            <div className="mandar__actividades">
+              {ACTIVIDADES_DISPONIBLES.map((a) => (
+                <label key={a.id} className="mandar__actividad">
+                  <input type="radio" name="actividad" value={a.id} checked={act === a.id} onChange={() => setAct(a.id)} />
+                  <span className="aula__placa" style={{ background: a.placa }} aria-hidden="true" />
+                  <strong>
+                    {a.numero} · {a.nombre}
+                  </strong>
+                  <small>{a.bajada}</small>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        </section>
 
         {/* key: al cambiar de actividad, las opciones vuelven a "todas marcadas" */}
-        <div key={act} className="aulas__bloque mandar__grupo">
+        <div key={act} className="aulas__bloque mandar__opciones">
           {opcionesDe(act).map((o) => (
             <fieldset key={o.clave} className="mandar__grupo">
               <legend>{o.etiqueta}</legend>
@@ -100,14 +100,16 @@ export default function MandarActividad({
           {desbloqueosDe(act).map((d) => (
             <fieldset key={d.clave} className="mandar__grupo">
               <legend>{d.etiqueta}</legend>
-              <label className="mandar__item">
-                <input type="radio" name={`des:${d.clave}`} value="inicio" defaultChecked />
-                Disponible desde el principio
-              </label>
-              <label className="mandar__item">
-                <input type="radio" name={`des:${d.clave}`} value="despues" />
-                {t.despues}
-              </label>
+              <div className="mandar__items">
+                <label className="mandar__item">
+                  <input type="radio" name={`des:${d.clave}`} value="inicio" defaultChecked />
+                  Disponible desde el principio
+                </label>
+                <label className="mandar__item">
+                  <input type="radio" name={`des:${d.clave}`} value="despues" />
+                  {t.despues}
+                </label>
+              </div>
             </fieldset>
           ))}
           {opcionesDe(act).length === 0 && desbloqueosDe(act).length === 0 && <p className="aulas__bajada">Esta actividad no tiene opciones para elegir.</p>}
@@ -121,6 +123,9 @@ export default function MandarActividad({
             {mandando ? t.enviando : t.boton}
           </button>
         </div>
+
+        {/* "O hacé en vivo una que ya mandaste": la otra opción, después de la principal (9/11) */}
+        {extra}
       </form>
     </main>
   );

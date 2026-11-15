@@ -6,7 +6,17 @@ import type { SalaReal } from '@/lib/aulas/clase';
 
 /* La puesta en común de una tarea: la misma pantalla, solo para mirar (sin manejar ninguna clase). */
 const nada = () => {};
-export default function PuestaDeTarea({ sala, aula, volverA }: { sala: SalaReal; aula: { id: string; nombre: string }; volverA: string }) {
+export default function PuestaDeTarea({
+  sala,
+  aula,
+  volverA,
+  asistente = false,
+}: {
+  sala: SalaReal;
+  aula: { id: string; nombre: string };
+  volverA: string;
+  asistente?: boolean;
+}) {
   const valor: Clase = {
     real: true,
     soloLectura: true,
@@ -18,6 +28,7 @@ export default function PuestaDeTarea({ sala, aula, volverA }: { sala: SalaReal;
     irAPuesta: nada,
     cerrar: nada,
     aula,
+    asistente,
   };
   return (
     <ProveedorClase valor={valor}>

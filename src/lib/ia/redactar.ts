@@ -14,7 +14,9 @@ import {
   INSTRUCCIONES_PREGUNTAS,
   citaContraResumen,
   elegirArticulos,
+  instruccionesCuriosidad,
   instruccionesRedaccion,
+  LIMITE_DATO,
   revisarSalida,
   textoDeArticulos,
   type Borrador,
@@ -47,6 +49,9 @@ export type Resultado = {
 };
 
 type Contexto = { db: SupabaseClient; admin: SupabaseClient; actorId: string; actividad: string | null };
+/** Qué se redacta: una respuesta (por defecto) o una curiosidad (ficha "dato") de un tema. */
+type Modo = { formato: 'pregunta' } | { formato: 'dato'; temaId: string; tema: string; existentes: string[] };
+const RESPUESTA: Modo = { formato: 'pregunta' };
 const sumar = (a: Uso, b?: Uso): Uso => ({ entrada: a.entrada + (b?.entrada ?? 0), salida: a.salida + (b?.salida ?? 0) });
 
 async function consultasPara(pregunta: string, actividad: string | null) {
@@ -77,14 +82,18 @@ async function buscar(consultas: string[]) {
   return elegirArticulos(respuestas.map((r) => r.registros));
 }
 
-async function redactar(pregunta: string, actividad: string | null, cs: Candidato[]) {
-  const base = `Pregunta: ${pregunta}${actividad ? `\nActividad: ${DESCRIPCION_ACTIVIDAD[actividad] ?? ''}` : ''}\n\nArtículos (resúmenes divididos en oraciones numeradas):\n\n${textoDeArticulos(cs)}`;
+async function redactar(pregunta: string, actividad: string | null, cs: Candidato[], modo: Modo = RESPUESTA) {
+  const pedido =
+    modo.formato === 'dato'
+      ? `Tema de la curiosidad: ${modo.tema}${modo.existentes.length ? `\nCuriosidades que ya existen (no las repitas):\n${modo.existentes.slice(0, 30).map((e) => `- ${e}`).join('\n')}` : ''}`
+      : `Pregunta: ${pregunta}`;
+  const base = `${pedido}${actividad ? `\nActividad: ${DESCRIPCION_ACTIVIDAD[actividad] ?? ''}` : ''}\n\nArtículos (resúmenes divididos en oraciones numeradas):\n\n${textoDeArticulos(cs)}`;
   let uso: Uso = { entrada: 0, salida: 0 };
   let entrada = base;
   for (let intento = 1; intento <= 2; intento++) {
     const r = await pedirJson<SalidaRedaccion>({
       modelo: MODELO_REDACCION,
-      instrucciones: instruccionesRedaccion(),
+      instrucciones: modo.formato === 'dato' ? instruccionesCuriosidad() : instruccionesRedaccion(),
       entrada,
       nombre: 'respuesta',
       esquema: ESQUEMA_REDACCION,
@@ -93,7 +102,7 @@ async function redactar(pregunta: string, actividad: string | null, cs: Candidat
     });
     if (!r.ok) return { ok: false as const, motivo: r.error, uso };
     uso = sumar(uso, r.uso);
-    const revision = revisarSalida(r.datos, cs);
+    const revision = modo.formato === 'dato' ? revisarSalida(r.datos, cs, LIMITE_DATO) : revisarSalida(r.datos, cs);
     if (revision.ok) return { ok: true as const, borrador: revision.borrador, avisos: revision.avisos, uso, modelo: r.modelo };
     if (!revision.reintentar || intento === 2) return { ok: false as const, motivo: revision.motivo, uso };
     entrada = `${base}\n\nTu respuesta anterior no sirvió: ${revision.motivo}. Corregilo y respondé de nuevo siguiendo todas las reglas.`;
@@ -128,12 +137,18 @@ async function guardarArticulo(c: Contexto, registros: Registro[]): Promise<{ pu
   return { pub };
 }
 
-async function crearFicha(c: Contexto, b: Borrador, nota: string): Promise<{ fichaId?: string; versionId?: string; error?: string }> {
-  const base = slugDe(b.pregunta) || 'respuesta';
+async function crearFicha(c: Contexto, b: Borrador, nota: string, modo: Modo = RESPUESTA): Promise<{ fichaId?: string; versionId?: string; error?: string }> {
+  const base = (modo.formato === 'dato' ? slugDe(`dato ${b.pregunta}`) : slugDe(b.pregunta)) || (modo.formato === 'dato' ? 'curiosidad' : 'respuesta');
   let fichaId: string | null = null;
   for (let intento = 1; intento <= 8 && !fichaId; intento++) {
     const slug = intento === 1 ? base : `${base.slice(0, 55)}-${intento}`;
-    const { data, error } = await c.db.from('fichas').insert({ slug, formato: 'pregunta', actividad: c.actividad }).select('id').single();
+    const fila: { slug: string; formato: string; actividad: string | null; tema_id: string | null } = {
+      slug,
+      formato: modo.formato,
+      actividad: c.actividad,
+      tema_id: modo.formato === 'dato' ? modo.temaId : null,
+    };
+    const { data, error } = await c.db.from('fichas').insert(fila).select('id').single();
     if (data) fichaId = data.id;
     else if (!/duplicate key/i.test(error?.message ?? '')) return { error: mensajeDeError(error) };
   }
@@ -143,7 +158,7 @@ async function crearFicha(c: Contexto, b: Borrador, nota: string): Promise<{ fic
     .insert({
       ficha_id: fichaId,
       pregunta: b.pregunta,
-      variantes: b.variantes,
+      variantes: modo.formato === 'dato' ? [] : b.variantes,
       explicacion_cientifica: b.explicacion_cientifica,
       version_infantil: b.version_infantil,
       asistida_por_ia: true,
@@ -155,14 +170,14 @@ async function crearFicha(c: Contexto, b: Borrador, nota: string): Promise<{ fic
   return { fichaId, versionId: v.id };
 }
 
-export async function responderPregunta(c: Contexto, pregunta: string): Promise<Resultado> {
+export async function responderPregunta(c: Contexto, pregunta: string, modo: Modo = RESPUESTA): Promise<Resultado> {
   const q = await consultasPara(pregunta, c.actividad);
   if (q.error) return { pregunta, ok: false, mensaje: `No se pudo preparar la búsqueda: ${q.error}.` };
   if (!q.consultas.length) return { pregunta, ok: false, mensaje: 'No parece una pregunta de ciencia. Probá escribirla de otra manera.', uso: q.uso };
   const candidatos = await buscar(q.consultas);
   if (!candidatos.length) return { pregunta, ok: false, mensaje: `No encontré artículos con resumen (busqué: ${q.consultas.join(' · ')}).`, uso: q.uso };
 
-  const red = await redactar(pregunta, c.actividad, candidatos);
+  const red = await redactar(pregunta, c.actividad, candidatos, modo);
   const uso = sumar(q.uso ?? { entrada: 0, salida: 0 }, red.uso);
   if (!red.ok) return { pregunta, ok: false, mensaje: `No la redacté: ${red.motivo.replace(/\.+$/, '')}. (Busqué: ${q.consultas.join(' · ')}.)`, uso };
 
@@ -196,7 +211,7 @@ export async function responderPregunta(c: Contexto, pregunta: string): Promise<
   const fecha = new Date().toLocaleDateString('es-UY', { timeZone: 'America/Montevideo' });
   const nota = [
     `Redactada con IA (${red.modelo}) el ${fecha}. Revisá cada idea contra la oración del artículo que la respalda.`,
-    `Pregunta pedida: ${pregunta}`,
+    modo.formato === 'dato' ? `Curiosidad pedida para el tema: ${modo.tema}` : `Pregunta pedida: ${pregunta}`,
     `Búsquedas: ${q.consultas.join(' · ')}`,
     red.borrador.faltante ? `Respuesta parcial. Quedó afuera: ${red.borrador.faltante}` : '',
     ...red.borrador.citas.map((x) => (x.respalda ? `A${x.articulo + 1} respalda: ${x.respalda}` : '')).filter(Boolean),
@@ -204,7 +219,7 @@ export async function responderPregunta(c: Contexto, pregunta: string): Promise<
   ]
     .filter(Boolean)
     .join('\n');
-  const f = await crearFicha(c, red.borrador, nota);
+  const f = await crearFicha(c, red.borrador, nota, modo);
   if (!f.versionId) return { pregunta, ok: false, mensaje: `No se pudo crear la ficha: ${f.error}.`, fichaId: f.fichaId, uso };
 
   const { error: errorCitas } = await c.db.from('version_fuentes').insert(citas.map((x) => ({ version_id: f.versionId, ...x })));
@@ -244,4 +259,19 @@ export async function proponer(actividad: string, enfoque: string, existentes: s
   const vistas = new Set(existentes.map((p) => slugDe(p)));
   const preguntas = [...new Set((r.datos.preguntas ?? []).map((p) => String(p).replace(/\s+/g, ' ').trim()).filter((p) => p.length >= 8 && p.length <= 200 && !vistas.has(slugDe(p))))].slice(0, 10);
   return { preguntas };
+}
+
+/**
+ * Curiosidad (ficha "dato") para un tema: busca artículos sobre el tema,
+ * elige un dato que esté en los resúmenes y lo deja esperando revisión, con
+ * el tema puesto. Nada se publica solo.
+ */
+export async function proponerCuriosidad(
+  c: Contexto,
+  tema: { id: string; nombre: string; descripcion: string },
+  existentes: string[],
+): Promise<Resultado> {
+  const pedido = `Un dato curioso sobre: ${tema.nombre}${tema.descripcion ? `. ${tema.descripcion}` : ''}`;
+  const r = await responderPregunta(c, pedido, { formato: 'dato', temaId: tema.id, tema: `${tema.nombre}${tema.descripcion ? ` (${tema.descripcion})` : ''}`, existentes });
+  return { ...r, pregunta: tema.nombre };
 }

@@ -1,0 +1,215 @@
+/*
+  RELIEVE (14/11, pedido de Sofia): la estética del panel del equipo —
+  profundidad y esquinas redondeadas, en la línea de su diseño para Bius —
+  llevada a toda la web. Es una capa que va después de base.css y
+  pantallas.css: cambia sombras, fondos, bordes y radios, pero no la
+  diagramación, ni las ilustraciones (portada, elegir rol), ni el interior de
+  las actividades (escenas, visores, placas), ni las notas de cuaderno.
+  Las pantallas con su propio archivo de estilos (aulas, laboratorio,
+  asistente, puesta, timer) tienen su parte de relieve al final de ese archivo.
+
+  Tres alturas (los valores están en tokens.css):
+  · pozo: hundido (campos y casillas para escribir, lo que está elegido);
+  · superficie: elevada, con luz arriba y sombra suave en capas (tarjetas);
+  · pastilla: botones, con relieve; se levantan al pasar y se hunden al tocar.
+  Al imprimir no se aplica.
+*/
+@media screen {
+  /* ---------- Botones: pastillas con relieve ---------- */
+  .btn {
+    box-shadow: var(--pastilla-clara);
+    transition: transform 0.35s var(--ease-organico), box-shadow 0.25s, filter 0.2s, background-color 0.2s;
+  }
+  .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--pastilla-clara-alta);
+  }
+  .btn:active {
+    transform: translateY(1px) scale(0.98);
+    box-shadow: var(--pozo);
+  }
+  .btn:disabled {
+    transform: none;
+    box-shadow: none;
+  }
+  .btn--primario {
+    background: var(--azul);
+    box-shadow: var(--pastilla);
+  }
+  .btn--primario:hover {
+    filter: brightness(1.08);
+    box-shadow: var(--pastilla-alta);
+  }
+  .btn--primario:active {
+    box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.28);
+  }
+  .btn--secundario {
+    background: linear-gradient(180deg, #e6ebfb 0%, var(--membrana) 100%);
+  }
+  .btn--claro {
+    background: linear-gradient(180deg, #fff 0%, #f6f7fb 100%);
+  }
+  .btn--experimentar {
+    background: linear-gradient(180deg, #ecf4bd 0%, var(--clorofila) 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 10px 18px -10px rgba(90, 110, 20, 0.6), 0 2px 4px rgba(90, 110, 20, 0.18);
+  }
+  .btn--experimentar:hover {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 14px 24px -10px rgba(90, 110, 20, 0.62), 0 3px 6px rgba(90, 110, 20, 0.2);
+  }
+
+  /* Pastillas chicas: volver, salir, chips */
+  .cabecera__volver,
+  .volver-maestra,
+  .clase-vivo__salir,
+  .espera__chip,
+  .chip {
+    background: linear-gradient(180deg, #fff 0%, #f6f7fb 100%);
+    box-shadow: var(--pastilla-clara);
+    transition: transform 0.35s var(--ease-organico), box-shadow 0.25s;
+  }
+  .cabecera__volver:hover,
+  .volver-maestra:hover,
+  .clase-vivo__salir:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--pastilla-clara-alta);
+  }
+  .cabecera__volver:active,
+  .volver-maestra:active,
+  .clase-vivo__salir:active {
+    transform: translateY(1px);
+    box-shadow: var(--pozo);
+  }
+
+  /* Botones grandes del tablero de la clase */
+  .accion {
+    box-shadow: var(--pastilla-clara);
+    transition: transform 0.35s var(--ease-organico), box-shadow 0.25s, filter 0.2s;
+  }
+  .accion:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: var(--pastilla-clara-alta);
+  }
+  .accion:active:not(:disabled),
+  .accion[aria-pressed='true'] {
+    transform: translateY(1px);
+    box-shadow: var(--pozo);
+  }
+
+  /* ---------- Superficies: tarjetas elevadas ---------- */
+  .tarjeta,
+  .acceso__tarjeta,
+  .clase-vivo__tarjeta,
+  .actividad__ambiente {
+    box-shadow: var(--relieve), var(--luz);
+  }
+  .tarjeta,
+  .clase-vivo__tarjeta {
+    border-radius: 28px;
+  }
+  .actividad__ambiente {
+    border-radius: 28px;
+    transition: transform 0.35s var(--ease-organico), box-shadow 0.3s;
+  }
+  .actividad__ambiente:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--relieve-alto), var(--luz);
+  }
+  /* Guía docente y otras tarjetas color membrana */
+  .preparar__guia-tarjeta {
+    border-radius: 28px;
+    background: linear-gradient(180deg, #e3e9fb 0%, var(--membrana) 100%);
+    box-shadow: var(--relieve), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  }
+  .pausa__tarjeta {
+    border-radius: 32px;
+    box-shadow: 0 30px 70px -20px rgba(0, 0, 0, 0.45), var(--luz);
+  }
+  .globo-moli__texto {
+    box-shadow: 0 10px 22px -14px rgba(47, 74, 133, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  }
+
+  /* ---------- Opciones para elegir: en relieve; la elegida, hundida ---------- */
+  .opcion,
+  .preguntas-pasteur__pregunta,
+  .apodo__opcion {
+    border-color: transparent;
+    background: linear-gradient(180deg, #fff 0%, #f8f9fc 100%);
+    box-shadow: var(--pastilla-clara);
+    transition: transform 0.3s var(--ease-organico), box-shadow 0.25s, background-color 0.2s;
+  }
+  .opcion {
+    border-radius: 20px;
+  }
+  .opcion:hover,
+  .preguntas-pasteur__pregunta:hover,
+  .apodo__opcion:hover {
+    box-shadow: var(--pastilla-clara-alta);
+  }
+  .opcion--activa,
+  .preguntas-pasteur__pregunta[aria-expanded='true'],
+  .apodo__opcion--elegida {
+    background: var(--campo);
+    box-shadow: var(--pozo), inset 0 0 0 2px var(--nucleo);
+  }
+  .apodo__color {
+    box-shadow: inset 0 -3px 6px rgba(0, 0, 0, 0.12), inset 0 2px 3px rgba(255, 255, 255, 0.45), 0 6px 12px -6px rgba(47, 74, 133, 0.5);
+  }
+
+  /* ---------- Campos para escribir: hundidos ---------- */
+  .campo__entrada,
+  .casilla {
+    border-color: transparent;
+    background: var(--campo);
+    box-shadow: var(--pozo);
+    transition: box-shadow 0.2s, background-color 0.2s;
+  }
+  .campo__entrada:focus,
+  .casilla:focus {
+    outline: none;
+    border-color: transparent;
+    background: #fff;
+    box-shadow: var(--pozo), var(--anillo-foco), inset 0 0 0 2px var(--nucleo);
+  }
+  .campo__entrada {
+    border-radius: 18px;
+  }
+}
+
+/* ---------- Transiciones entre páginas (toda la web) ----------
+   Las arman los template.tsx de cada parte con <ViewTransition> de React.
+   Liviana para las Ceibal: solo opacidad y un corrimiento corto, sin
+   desenfoque. El panel del equipo tiene las suyas (equipo.css). */
+::view-transition {
+  pointer-events: none;
+}
+::view-transition-old(.pagina) {
+  animation: 160ms cubic-bezier(0.4, 0, 1, 1) both pagina-se-va;
+}
+::view-transition-new(.pagina) {
+  animation:
+    300ms cubic-bezier(0.2, 0.7, 0.2, 1) 90ms both pagina-llega,
+    460ms cubic-bezier(0.2, 0.7, 0.2, 1) both pagina-sube;
+}
+@keyframes pagina-se-va {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes pagina-llega {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes pagina-sube {
+  from {
+    translate: 0 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}

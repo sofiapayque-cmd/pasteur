@@ -1,4 +1,5 @@
 import { primeraEtapa } from './tareas';
+import type { FilaTiempo } from './tiempo';
 
 /*
   CLASE EN VIVO · la parte sin red (se prueba con npm run test:clase).
@@ -25,7 +26,7 @@ export type SesionFila = {
   desbloqueos: Record<string, boolean> | null;
   iniciada_en: string;
   cerrada_en: string | null;
-};
+} & FilaTiempo; // + el timer (migración 21; puede faltar si la base todavía no la tiene)
 export type AsignacionClase = { id: string; actividad: string; opciones: Record<string, string[]> | null; desbloqueos: Record<string, boolean> | null; estado: string };
 export type AlumnoClase = { id: string; numero: number; apodo: string | null; color: string | null; activo: boolean };
 export type ProgresoClase = {

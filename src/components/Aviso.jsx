@@ -14,6 +14,7 @@ import './Aviso.css';
   - children: explicación (una o dos oraciones; puede llevar <b>)
   - accion / onAccion: botón principal (ej. "Probar otra vez")
   - secundaria / onSecundaria: botón opcional
+  - encabezado: para cambiar la palabra de arriba (las curiosidades dicen "¿Sabías que…?")
 */
 const ANIMO = { error: 'duda', acierto: 'alegria', pista: 'piensa', dato: 'eureka' };
 const ENCABEZADO = { error: 'Algo salió distinto', acierto: '¡Funcionó!', pista: 'Pista', dato: 'Anoté esto' };
@@ -108,7 +109,7 @@ export function Escritura({ partes, desde, hasta, letras }) {
   );
 }
 
-export default function Aviso({ tipo = 'pista', titulo, children, accion, onAccion, secundaria, onSecundaria }) {
+export default function Aviso({ tipo = 'pista', titulo, children, accion, onAccion, secundaria, onSecundaria, encabezado }) {
   const titulo_ = useMemo(() => aplanar(titulo), [titulo]);
   const cuerpo = useMemo(() => aplanar(children), [children]);
   const nTitulo = largo(titulo_.partes);
@@ -127,7 +128,7 @@ export default function Aviso({ tipo = 'pista', titulo, children, accion, onAcci
       <span className="solo-lector">{textoCompleto}</span>
       <div className="aviso-moli__texto">
         <p className="aviso-moli__encabezado" aria-hidden="true">
-          {ENCABEZADO[tipo]}
+          {encabezado ?? ENCABEZADO[tipo]}
         </p>
         {titulo && (
           <p className="aviso-moli__titulo" aria-hidden={!titulo_.complejo}>

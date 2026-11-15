@@ -6,12 +6,17 @@ import { obtenerTareaDeMaestra } from '@/datos/tareas';
 import { salaDeTarea } from '@/lib/aulas/clase';
 import SoloNavegador from '@/navegacion/SoloNavegador';
 import PuestaDeTarea from '@/pantallas/maestra/aulas/PuestaDeTarea';
+import { iaConfigurada } from '@/lib/ia/openai';
+import { claveSecretaConfigurada } from '@/lib/supabase/admin';
 
 /*
   /maestra/aulas/[id]/tareas/[tarea]/puesta · Lo que encontró la clase en una
   tarea, con la misma pantalla de la puesta en común (para proyectar y
   conversar, aunque no haya sido en vivo). Solo para mirar.
 */
+// La puesta en común puede abrir "Preguntale al Pasteur", que tarda lo que tarda la IA
+export const maxDuration = 30;
+
 export default async function Page({ params }: { params: Promise<{ id: string; tarea: string }> }) {
   if (!aulasReales) redirect('/maestra');
   await exigirDocenteActiva();
@@ -30,7 +35,12 @@ export default async function Page({ params }: { params: Promise<{ id: string; t
   );
   return (
     <SoloNavegador>
-      <PuestaDeTarea sala={sala} aula={{ id: aula.id, nombre: aula.nombre }} volverA={`/maestra/aulas/${aula.id}/tareas/${tarea.id}`} />
+      <PuestaDeTarea
+        sala={sala}
+        aula={{ id: aula.id, nombre: aula.nombre }}
+        volverA={`/maestra/aulas/${aula.id}/tareas/${tarea.id}`}
+        asistente={iaConfigurada() && claveSecretaConfigurada}
+      />
     </SoloNavegador>
   );
 }

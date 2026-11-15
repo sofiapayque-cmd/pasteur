@@ -10,6 +10,21 @@ import type { AlumnoClase, AsignacionClase, Instantanea, ProgresoClase, SesionFi
   aulas, y al alumno solo la clase de SU aula (migración 2).
 */
 export const COLUMNAS_SESION = 'id, asignacion_id, aula_id, estado, pausada, desbloqueos, iniciada_en, cerrada_en';
+// El timer (migración 21, 8/11)
+export const COLUMNAS_TIEMPO = 'tiempo_estado, tiempo_duracion, tiempo_fin, tiempo_restante, tiempo_terminado_en, cierre';
+
+/**
+ * Lee la sesión con su timer. Si la base todavía no tiene la migración 21
+ * (columna inexistente, 42703), la lee sin timer: así esta versión de la web
+ * anda igual antes y después de aplicarla, en pruebas y en producción.
+ */
+export async function leerSesion<T>(
+  consulta: (columnas: string) => PromiseLike<{ data: T | null; error: { code?: string } | null }>,
+): Promise<T | null> {
+  const conTiempo = await consulta(`${COLUMNAS_SESION}, ${COLUMNAS_TIEMPO}`);
+  if (conTiempo.error?.code === '42703') return (await consulta(COLUMNAS_SESION)).data ?? null;
+  return conTiempo.data ?? null;
+}
 const COLUMNAS_PROGRESO = 'alumno_id, etapa, datos, etapa_desde, actualizado_en, completada_en';
 
 async function db() {
@@ -21,8 +36,8 @@ async function db() {
 /** La clase abierta (no cerrada) de un aula de la maestra, si hay una. */
 export async function claseAbiertaDeAula(aulaId: string): Promise<SesionFila | null> {
   if (!esUuid(aulaId)) return null;
-  const { data } = await (await db()).from('sesiones').select(COLUMNAS_SESION).eq('aula_id', aulaId).neq('estado', 'cerrada').maybeSingle();
-  return (data as SesionFila | null) ?? null;
+  const supabase = await db();
+  return leerSesion<SesionFila>((c) => supabase.from('sesiones').select(c).eq('aula_id', aulaId).neq('estado', 'cerrada').maybeSingle());
 }
 
 /**
@@ -32,9 +47,8 @@ export async function claseAbiertaDeAula(aulaId: string): Promise<SesionFila | n
 export async function instantaneaMaestra(sesionId: string, desde?: string): Promise<Instantanea | null> {
   if (!esUuid(sesionId)) return null;
   const supabase = await db();
-  const { data: sesion } = await supabase.from('sesiones').select(COLUMNAS_SESION).eq('id', sesionId).maybeSingle();
-  if (!sesion) return null;
-  const s = sesion as SesionFila;
+  const s = await leerSesion<SesionFila>((c) => supabase.from('sesiones').select(c).eq('id', sesionId).maybeSingle());
+  if (!s) return null;
   let consultaProgreso = supabase.from('progreso').select(COLUMNAS_PROGRESO).eq('asignacion_id', s.asignacion_id);
   if (desde && !Number.isNaN(Date.parse(desde))) consultaProgreso = consultaProgreso.gt('actualizado_en', desde);
   const [{ data: asignacion }, { data: aula }, { data: alumnos }, { data: progresos }] = await Promise.all([
@@ -58,9 +72,10 @@ export async function claseDelAlumno(): Promise<{ sesion: SesionFila; asignacion
   const alumno = await obtenerAlumno();
   if (!alumno) return null;
   const supabase = await db();
-  const { data: sesion } = await supabase.from('sesiones').select(COLUMNAS_SESION).neq('estado', 'cerrada').order('iniciada_en', { ascending: false }).limit(1).maybeSingle();
-  if (!sesion) return null;
-  const s = sesion as SesionFila;
+  const s = await leerSesion<SesionFila>((c) =>
+    supabase.from('sesiones').select(c).neq('estado', 'cerrada').order('iniciada_en', { ascending: false }).limit(1).maybeSingle(),
+  );
+  if (!s) return null;
   const { data: asignacion } = await supabase.from('asignaciones').select('id, actividad, opciones, desbloqueos, estado').eq('id', s.asignacion_id).maybeSingle();
   return asignacion ? { sesion: s, asignacion: asignacion as AsignacionClase } : null;
 }

@@ -18,9 +18,9 @@ Escrita el 7/11/2026 y actualizada el mismo día con las decisiones de Sofia.
 | 2 · Base de producción | Claude | **Hecho el 7/11** |
 | 3 · Configurar el ingreso en Supabase | Sofia | **Hecho el 7/11** (SMTP, plantillas, Site URL y registro cerrado). Se comprueba con la primera invitación real (paso 7.2) |
 | 4 · Variables de Vercel | Sofia | **Hecho el 8/11** (las 7 necesarias; `ACCESO_SAL` y las de NCBI quedaron sin cargar porque son opcionales) |
-| 5 · Llevar la rama a `main` | Claude prepara, Sofia aprueba | **PR #2 abierto el 8/11**, falta que Sofia lo apruebe |
-| 6 · Dominio | Sofia | **Hecho:** registrado el 2/11 en HostingMontevideo, DNS en Vercel, certificado SSL emitido. Falta solo publicar la versión nueva (paso 5) |
-| 7 · Primeras cuentas | Claude + Sofia | Pendiente |
+| 5 · Llevar la rama a `main` | Claude prepara, Sofia aprueba | **Hecho el 8/11:** Sofia aprobó el PR #2 (merge commit). La web nueva está en www.cienciasinlimites.uy |
+| 6 · Dominio | Sofia | **Hecho:** registrado el 2/11 en HostingMontevideo, DNS en Vercel, certificado SSL emitido |
+| 7 · Primeras cuentas | Claude + Sofia | **En curso:** Sofia ya es admin en producción (8/11). Faltan la validadora y la primera maestra |
 | 8 · Prueba completa | Sofia + Claude | Pendiente |
 
 ## Costos por mes (precios oficiales, noviembre 2026)
@@ -135,6 +135,7 @@ Mientras no se pase la rama a `main` (paso 5), Vercel muestra "No Deployment": l
 
 1. **Claude:** carga en producción la invitación de Sofia como admin del equipo.
 2. **Sofia:** Supabase → Authentication → Users → *Invite user* con su mail. Entra con el link y elige su contraseña.
+   - **Comprobado el 8/11:** la invitación llegó por Resend, Sofia tocó **Entrar**, eligió su contraseña y quedó como admin activa. Prueba también el mail propio, las plantillas, la Site URL y los links de un solo uso en producción.
 3. **Sofia, desde `/equipo`:** invita a Eugenia como validadora.
 4. **Sofia, desde `/equipo/maestras`:** invita a la primera maestra del piloto.
 

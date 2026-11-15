@@ -4,9 +4,11 @@ import { aulasReales } from '@/lib/supabase/config';
 import { crearClienteAdmin } from '@/lib/supabase/admin';
 import { exigirDocenteActiva } from '@/datos/docente';
 import { esUuid } from '@/datos/aulas';
-import { iaConfigurada, moderar } from '@/lib/ia/openai';
+import { embeber, iaConfigurada, moderar } from '@/lib/ia/openai';
 import { indexarPendientes } from '@/lib/ia/indice';
 import { limpiarPregunta, normalizarPregunta } from '@/lib/ia/asistente';
+import { after } from 'next/server';
+import { contarPreguntaAsistente } from '@/datos/curiosidades';
 import { buscarRespuesta } from '@/lib/ia/buscarRespuesta';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
@@ -87,10 +89,22 @@ export async function preguntarAlPasteur(_previo: EstadoAsistente, datos: FormDa
   } catch (e) {
     console.error('[asistente] índice:', e instanceof Error ? e.message : e);
   }
-  const busqueda = await buscarRespuesta(admin, pregunta);
+  // El mismo embedding sirve para buscar la respuesta y para contar el tema (curiosidades)
+  const vector = (await embeber([pregunta]))?.[0] ?? null;
+  const busqueda = await buscarRespuesta(admin, pregunta, vector ?? undefined);
   if (busqueda.error) return { pregunta, mensaje: 'No se pudo buscar ahora. Probá de nuevo en un ratito.' };
   const { decision } = busqueda;
   console.info(`[asistente] ${decision.tipo} (control: ${busqueda.eleccion ?? 'sin respuesta'})`);
+  // Conteo anónimo por tema (migración 22), después de contestar: no demora a la maestra
+  after(() =>
+    contarPreguntaAsistente(admin, {
+      vector,
+      texto: pregunta,
+      normalizada: normalizarPregunta(pregunta),
+      actividad,
+      fichaId: decision.tipo === 'respuesta' ? decision.fichaId : null,
+    }),
+  );
 
   if (decision.tipo !== 'respuesta') {
     const { error: errorAnotar } = await admin.rpc('anotar_pregunta_sin_respuesta', {

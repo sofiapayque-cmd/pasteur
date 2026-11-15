@@ -3,6 +3,8 @@ import { exigirMiembro } from '@/datos/equipo';
 import { listarPublicaciones } from '@/datos/biblioteca';
 import { NOMBRE_ESTADO, fecha } from '@/lib/equipo/comun';
 import Buscador from '@/pantallas/equipo/Buscador';
+import ConGota from '@/components/ConGota';
+import CambioSuave from '@/components/CambioSuave';
 
 /* /equipo/biblioteca · Buscar artículos (en vivo) y ver los que ya están en la biblioteca */
 export const maxDuration = 30;
@@ -32,41 +34,43 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ v
       <Buscador />
       <section className="eq-caja">
         <h2>En la biblioteca</h2>
-        <nav className="eq-pestanas" aria-label="Filtrar">
+        <ConGota className="eq-pestanas" etiqueta="Filtrar">
           {FILTROS.map((x) => (
             <Link key={x.clave} href={x.clave ? `/equipo/biblioteca?ver=${x.clave}` : '/equipo/biblioteca'} aria-current={ver === x.clave ? 'true' : undefined}>
               {x.texto}
             </Link>
           ))}
-        </nav>
-        {visibles.length === 0 ? (
-          <p className="eq-bajada">Nada por acá todavía.</p>
-        ) : (
-          <table className="eq-tabla">
-            <tbody>
-              {visibles.map((p) => (
-                <tr key={p.id}>
-                  <td>
-                    <Link href={`/equipo/biblioteca/${p.id}`}>{p.titulo}</Link>
-                    <span className="eq-tabla__chico">
-                      {[p.revista, p.anio].filter(Boolean).join(', ')}
-                      {p.del_instituto ? ' · Institut Pasteur de Montevideo' : ''}
-                      {p.retractada ? ' · RETRACTADA' : ''}
-                    </span>
-                  </td>
-                  <td>
-                    <span className={`eq-estado eq-estado--${p.estado}`}>{NOMBRE_ESTADO[p.estado]}</span>
-                    {p.estado === 'candidata' && p.vence_en && <span className="eq-tabla__chico">vence {fecha(p.vence_en)}</span>}
-                  </td>
-                  <td>
-                    {p.licencia_codigo ?? 'sin verificar'}
-                    {p.licencia_revisar && <span className="eq-tabla__chico">las fuentes no coinciden</span>}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+        </ConGota>
+        <CambioSuave clave={ver || 'revision'}>
+          {visibles.length === 0 ? (
+            <p className="eq-bajada">Nada por acá todavía.</p>
+          ) : (
+            <table className="eq-tabla">
+              <tbody>
+                {visibles.map((p) => (
+                  <tr key={p.id}>
+                    <td>
+                      <Link href={`/equipo/biblioteca/${p.id}`}>{p.titulo}</Link>
+                      <span className="eq-tabla__chico">
+                        {[p.revista, p.anio].filter(Boolean).join(', ')}
+                        {p.del_instituto ? ' · Institut Pasteur de Montevideo' : ''}
+                        {p.retractada ? ' · RETRACTADA' : ''}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`eq-estado eq-estado--${p.estado}`}>{NOMBRE_ESTADO[p.estado]}</span>
+                      {p.estado === 'candidata' && p.vence_en && <span className="eq-tabla__chico">vence {fecha(p.vence_en)}</span>}
+                    </td>
+                    <td>
+                      {p.licencia_codigo ?? 'sin verificar'}
+                      {p.licencia_revisar && <span className="eq-tabla__chico">las fuentes no coinciden</span>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </CambioSuave>
       </section>
     </main>
   );

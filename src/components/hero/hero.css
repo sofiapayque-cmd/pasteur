@@ -1,0 +1,192 @@
+/*
+  PORTADA ILUSTRADA · estilos aislados
+  Todas las clases empiezan con "hero": no tocan ninguna otra pantalla.
+
+  La escena mide 1920 × 1080 unidades (la referencia 1). --u es lo que vale
+  una unidad en esta pantalla: la escena entera entra siempre, centrada.
+  Las posiciones de cada pieza vienen de escena.ts como variables (--x, --y…).
+*/
+.hero {
+  --u: min(calc(100vw / 1920), calc(100vh / 1080));
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--agar);
+}
+
+.hero__escena {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(1920 * var(--u));
+  height: calc(1080 * var(--u));
+  transform: translate(-50%, -50%);
+}
+
+.hero__ilustracion {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* 1 · Células: sus estilos están en celulas.css (los usa también la pantalla de roles) */
+
+/*
+  2 · La lupa: una sola pieza, detrás de los científicos. Gira y crece desde
+  la punta del mango. Adentro: la ilustración entera, el vidrio y otra vez
+  la ilustración recortada al aro.
+*/
+.hero-lupa {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  transform-origin: var(--punta-x) var(--punta-y);
+  will-change: transform;
+}
+.hero-marco {
+  position: absolute;
+  display: block;
+  left: calc(var(--x) * var(--u));
+  top: calc(var(--y) * var(--u));
+  width: calc(var(--w) * var(--u));
+  height: calc(var(--h) * var(--u));
+  max-width: none;
+}
+.hero-marco--mango {
+  z-index: 1;
+}
+.hero-marco--aro {
+  z-index: 3;
+  clip-path: circle(
+    calc(var(--corte-r) * var(--u)) at calc(var(--corte-x) * var(--u)) calc(var(--corte-y) * var(--u))
+  );
+}
+
+/* 5 · Científicos, delante de toda la lupa */
+.hero-cientificos {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+}
+.hero-cientifico {
+  position: absolute;
+  display: block;
+  left: calc(var(--x) * var(--u));
+  top: calc((var(--abajo) - var(--h)) * var(--u));
+  width: calc(var(--w) * var(--u));
+  height: calc(var(--h) * var(--u));
+  max-width: none;
+  /* se balancean desde los pies, sin despegarse del piso */
+  transform-origin: 50% var(--pies);
+  will-change: transform;
+}
+/* sombra de apoyo, con el grano del suelo de la referencia 2 */
+.hero-cientificos__sombra {
+  position: absolute;
+  left: calc(556 * var(--u));
+  top: calc(938 * var(--u));
+  width: calc(300 * var(--u));
+  height: calc(24 * var(--u));
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(34, 35, 42, 0.17), rgba(34, 35, 42, 0.06) 60%, rgba(34, 35, 42, 0));
+}
+
+/* Vidrio: círculo centrado en el centro óptico, debajo del aro */
+.hero-lente {
+  position: absolute;
+  z-index: 2;
+  left: calc((var(--lente-x) - var(--vidrio-r)) * var(--u));
+  top: calc((var(--lente-y) - var(--vidrio-r)) * var(--u));
+  width: calc(2 * var(--vidrio-r) * var(--u));
+  height: calc(2 * var(--vidrio-r) * var(--u));
+  border-radius: 50%;
+  overflow: hidden;
+  clip-path: circle(50%);
+  /*
+    El fondo marfil tapa las células de atrás tal como son: por el vidrio se
+    ven solo agrandadas (si no, se verían dos veces). Como el fondo de la
+    página es el mismo marfil, el vidrio se ve transparente.
+  */
+  background: var(--agar);
+  /* sombra suave del borde del vidrio */
+  box-shadow: inset 0 0 calc(14 * var(--u)) rgba(0, 40, 60, 0.2);
+}
+/* el vidrio apenas teñido de azul, un poco más en los bordes */
+.hero-lente::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at 44% 40%,
+    rgba(150, 210, 222, 0.06) 0%,
+    rgba(90, 172, 192, 0.16) 62%,
+    rgba(30, 128, 156, 0.36) 100%
+  );
+}
+/* lo que se ve por el vidrio (gira al revés que la lupa, para quedar derecho) */
+.hero-lente__ampliado {
+  position: absolute;
+  inset: 0;
+}
+.hero-lente__reflejos {
+  position: absolute;
+  z-index: 2;
+  display: block;
+  left: calc(var(--x) * var(--u));
+  top: calc(var(--y) * var(--u));
+  width: calc(var(--w) * var(--u));
+  height: calc(var(--h) * var(--u));
+  max-width: none;
+}
+
+/* 5 · Textos */
+.hero-titulo {
+  position: absolute;
+  z-index: 6;
+  left: 0;
+  right: 0;
+  top: calc(136 * var(--u));
+  text-align: center;
+  color: var(--tinta);
+}
+.hero-titulo__principal {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: calc(99 * var(--u));
+  line-height: 1;
+  letter-spacing: -0.025em;
+}
+/* sin subrayado (pedido de Sofia, 11/11); con el teclado se ve el recuadro de foco de toda la web */
+.hero-titulo__entrar {
+  display: inline-block;
+  margin-top: calc(30 * var(--u));
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: calc(42 * var(--u));
+  line-height: 1.1;
+  letter-spacing: -0.005em;
+  color: inherit;
+  text-decoration: none;
+  border-radius: 6px;
+}
+
+/* La lupa también es un enlace para entrar (encima de todo, solo el círculo) */
+.hero__lente-enlace {
+  position: absolute;
+  z-index: 6;
+  left: calc((var(--lente-x) - var(--lente-r)) * var(--u));
+  top: calc((var(--lente-y) - var(--lente-r)) * var(--u));
+  width: calc(2 * var(--lente-r) * var(--u));
+  height: calc(2 * var(--lente-r) * var(--u));
+  border-radius: 50%;
+}
+
+/* Pantallas verticales (celular): la escena ocupa el ancho y los costados se recortan */
+@media (max-aspect-ratio: 4/5) {
+  .hero {
+    --u: calc(100vw / 1100);
+  }
+}
