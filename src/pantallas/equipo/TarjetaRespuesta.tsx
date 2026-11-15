@@ -41,7 +41,7 @@ export default function Tarjeta({ r, nombres, validadora }: { r: Respuesta; nomb
               : `${r.ia ? 'Pedida' : 'Escrita'} por ${nombres[r.autorId] ?? '—'} ${haceCuanto(r.creadaEn)}`}
         </span>
         {r.grupo === 'espera' && validadora ? (
-          <Link className="btn btn--primario btn--chico" href={`/equipo/revisar/${r.versionId}?desde=respuestas`}>
+          <Link className="btn btn--primario btn--chico" href={`/equipo/revisar/${r.versionId}?desde=revisar`}>
             Revisar
           </Link>
         ) : (

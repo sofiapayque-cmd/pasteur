@@ -20,12 +20,12 @@ export default async function LayoutEquipo({ children }: { children: ReactNode }
   const solicitudes = yo.rol === 'admin' ? await solicitudesPendientes().catch(() => 0) : 0;
   if (yo.rol === 'validador') {
     const db = await crearClienteServidor();
-    const [v, p] = await Promise.all([
-      db!.from('ficha_versiones').select('id', { count: 'exact', head: true }).eq('estado', 'en_revision'),
-      db!.from('publicaciones').select('id', { count: 'exact', head: true }).eq('estado', 'en_revision'),
-    ]);
-    pendientes = (v.count ?? 0) + (p.count ?? 0);
-    respuestas = v.count ?? 0;
+    // Lo que espera a la validadora: respuestas (Revisar) y curiosidades
+    const enRevision = (formato: 'pregunta' | 'dato') =>
+      db!.from('ficha_versiones').select('id, fichas!inner(formato)', { count: 'exact', head: true }).eq('estado', 'en_revision').eq('fichas.formato', formato);
+    const [r, c] = await Promise.all([enRevision('pregunta'), enRevision('dato')]);
+    respuestas = r.count ?? 0;
+    pendientes = c.count ?? 0;
   }
   return (
     <div className="eq">
