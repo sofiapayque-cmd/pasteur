@@ -36,9 +36,13 @@ export default function Tarjeta({ r, nombres, validadora }: { r: Respuesta; nomb
         <span className="eq-ayuda">
           {r.grupo === 'aprobada' && r.ultima
             ? `Aprobó ${nombres[r.ultima.revisorId] ?? '—'} ${haceCuanto(r.ultima.creadaEn)}`
-            : r.grupo === 'espera'
-              ? `Esperando desde ${haceCuanto(r.enviadaEn)}`
-              : `${r.ia ? 'Pedida' : 'Escrita'} por ${nombres[r.autorId] ?? '—'} ${haceCuanto(r.creadaEn)}`}
+            : r.grupo === 'cambios' && r.ultima
+              ? `Cambios pedidos por ${nombres[r.ultima.revisorId] ?? 'la validadora'} ${haceCuanto(r.ultima.creadaEn)}`
+              : r.grupo === 'rechazada' && r.ultima
+                ? `Rechazó ${nombres[r.ultima.revisorId] ?? 'la validadora'} ${haceCuanto(r.ultima.creadaEn)}`
+                : r.grupo === 'espera'
+                  ? `Esperando desde ${haceCuanto(r.enviadaEn)}`
+                  : `${r.ia ? 'Pedida' : 'Escrita'} por ${nombres[r.autorId] ?? '—'} ${haceCuanto(r.creadaEn)}`}
         </span>
         {r.grupo === 'espera' && validadora ? (
           <Link className="btn btn--primario btn--chico" href={`/equipo/revisar/${r.versionId}?desde=revisar`}>
