@@ -499,3 +499,51 @@
     border-color: #999;
   }
 }
+
+/* ---------- Relieve (14/11): como el panel del equipo (ver styles/relieve.css) ---------- */
+@media screen {
+  .aulas__bloque {
+    border-radius: 28px;
+    box-shadow: var(--relieve), var(--luz);
+  }
+  .aulas__aula {
+    border-radius: 24px;
+    box-shadow: var(--relieve), var(--luz);
+    transition: transform 0.35s var(--ease-organico), box-shadow 0.3s;
+  }
+  .aulas__aula:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--relieve-alto), var(--luz);
+  }
+  .aula__codigo {
+    background: linear-gradient(180deg, #e3e9fb 0%, var(--membrana) 100%);
+    box-shadow: var(--relieve), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  }
+  .aula__acciones .btn--claro {
+    border-color: transparent;
+  }
+  .aula__tarea,
+  .mandar__actividad,
+  .mandar__item,
+  .cuaderno {
+    border-color: transparent;
+    background: linear-gradient(180deg, #fff 0%, #f8f9fc 100%);
+    box-shadow: var(--pastilla-clara);
+  }
+  .aula__tarea,
+  .mandar__actividad,
+  .cuaderno {
+    border-radius: 20px;
+  }
+  .mandar__actividad:has(input:checked) {
+    border-color: transparent;
+    background: var(--campo);
+    box-shadow: var(--pozo), inset 0 0 0 2px var(--nucleo);
+  }
+  .tarea__barra {
+    box-shadow: var(--pozo);
+  }
+  .aula__tabla-marco {
+    border-radius: 20px;
+  }
+}

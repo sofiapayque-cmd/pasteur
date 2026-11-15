@@ -238,3 +238,18 @@
   font-size: 28px;
   color: var(--nucleo);
 }
+
+/* ---------- Relieve (14/11): como el resto de la web (ver styles/relieve.css) ---------- */
+@media screen {
+  .asis__form,
+  .asis__caja,
+  .asis__respuesta {
+    border-radius: 28px;
+    box-shadow: var(--relieve), var(--luz);
+  }
+  .asis__opcion {
+    border-color: transparent;
+    background: linear-gradient(180deg, #fff 0%, #f8f9fc 100%);
+    box-shadow: var(--pastilla-clara);
+  }
+}
