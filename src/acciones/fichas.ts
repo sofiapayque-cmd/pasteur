@@ -283,7 +283,7 @@ export async function revisarVersion(versionId: string, _p: Estado, datos: FormD
   // Una respuesta de la IA rechazada: sus artículos que nadie más cita salen de la fila de revisión
   if (decision === 'rechazar' && v?.asistida_por_ia) await devolverArticulosSueltos(versionId);
   const volver = leer(datos, 'volver');
-  if (volver === '/equipo/respuestas') redirect(`/equipo/respuestas?revisada=${decision}`);
+  if (volver === '/equipo/revisar' || volver === '/equipo/respuestas') redirect(`/equipo/revisar?revisada=${decision}`);
   redirect(v ? `/equipo/fichas/${v.ficha_id}?revisada=${decision}` : '/equipo/revisar');
 }
 

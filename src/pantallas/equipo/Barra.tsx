@@ -16,24 +16,27 @@ export default function Barra({
 }: {
   nombre: string;
   rol: Rol;
+  /** Curiosidades esperando revisión (solo se muestra a la validadora) */
   pendientes: number;
+  /** Respuestas esperando revisión (solo se muestra a la validadora) */
   respuestas: number;
   solicitudes?: number;
 }) {
   const ruta = usePathname();
-  const secciones = [
-    { href: '/equipo', texto: 'Inicio', exacto: true },
-    { href: '/equipo/respuestas', texto: 'Respuestas', cuenta: rol === 'validador' ? respuestas : 0 },
-    { href: '/equipo/fichas', texto: 'Fichas' },
-    { href: '/equipo/curiosidades', texto: 'Curiosidades' },
-    ...(rol === 'validador' ? [{ href: '/equipo/revisar', texto: 'Para revisar', cuenta: pendientes }] : []),
-    { href: '/equipo/biblioteca', texto: 'Biblioteca' },
-    { href: '/equipo/asistente', texto: 'Prueba del asistente' },
+  // Desde el 15/11 (pedido de Sofia y Eugenia): Revisar junta Respuestas,
+  // Fichas y Para revisar. Biblioteca, todas las fichas y la prueba del
+  // asistente quedan como herramientas de la admin, en Inicio.
+  // (`tambien`: otras páginas que cuentan como esa sección, para que la gota quede ahí)
+  const secciones: { href: string; texto: string; exacto?: boolean; cuenta?: number; tambien?: string[] }[] = [
+    { href: '/equipo', texto: 'Inicio', exacto: true, tambien: ['/equipo/biblioteca', '/equipo/asistente'] },
+    { href: '/equipo/revisar', texto: 'Revisar', cuenta: rol === 'validador' ? respuestas : 0, tambien: ['/equipo/fichas', '/equipo/respuestas'] },
+    { href: '/equipo/curiosidades', texto: 'Curiosidades', cuenta: rol === 'validador' ? pendientes : 0 },
     ...(rol === 'admin' ? [{ href: '/equipo/maestras', texto: 'Maestras', cuenta: solicitudes }, { href: '/equipo/miembros', texto: 'Equipo' }] : []),
   ];
   // Hacia qué lado queda cada sección respecto de la actual: el contenido de
   // la página nueva entra deslizándose desde ese lado (ver template.tsx)
-  const esActual = (s: (typeof secciones)[number]) => (s.exacto ? ruta === s.href : ruta.startsWith(s.href));
+  const esActual = (s: (typeof secciones)[number]) =>
+    (s.exacto ? ruta === s.href : ruta.startsWith(s.href)) || Boolean(s.tambien?.some((t) => ruta.startsWith(t)));
   const aca = secciones.findIndex(esActual);
   const lado = (i: number) => (aca < 0 || i === aca ? undefined : [i > aca ? 'eq-derecha' : 'eq-izquierda']);
   return (
@@ -49,7 +52,7 @@ export default function Barra({
           return (
             <Link key={s.href} href={s.href} aria-current={actual ? 'page' : undefined} transitionTypes={lado(i)}>
               {s.texto}
-              {'cuenta' in s && s.cuenta ? <span className="eq-nav__cuenta">{s.cuenta}</span> : null}
+              {s.cuenta ? <span className="eq-nav__cuenta">{s.cuenta}</span> : null}
             </Link>
           );
         })}
