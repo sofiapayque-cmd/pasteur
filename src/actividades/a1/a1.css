@@ -1251,9 +1251,9 @@
   padding: 22px 14px 16px 52px;
   gap: 4px;
 }
-.a1-resultado__lado .aviso-moli__cara svg {
-  width: 60px;
-  height: 54px;
+.a1-resultado__lado .aviso-moli__cara .moli {
+  width: 60px !important;
+  height: 54px !important;
 }
 .a1-resultado__lado .aviso-moli__titulo {
   font-size: 25px;

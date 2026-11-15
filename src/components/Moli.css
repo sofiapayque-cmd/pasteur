@@ -1,10 +1,54 @@
+/* Moli 3D (fotos del modelo, ver Moli.jsx). El cuerpo se mueve desde los pies. */
 .moli {
+  position: relative;
   display: block;
-  overflow: visible;
+  flex: none;
 }
 .moli__cuerpo {
-  transform-box: view-box;
-  transform-origin: 100px 205px;
+  position: absolute;
+  inset: 0;
+  display: block;
+  transform-origin: 50% 96%;
+}
+.moli__foto {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  /* las fotos dejan lugar para las manos levantadas: un poco más grande, desde los pies */
+  transform: scale(1.18);
+  transform-origin: 50% 96%;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+/* Sombra de apoyo, debajo de los pies */
+.moli__sombra {
+  position: absolute;
+  left: 30%;
+  right: 30%;
+  bottom: 1%;
+  height: 5%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(34, 35, 42, 0.22), rgba(34, 35, 42, 0));
+}
+.moli__detalles {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+/* Hielo: más clara y fría; vapor: transparente y difusa */
+.moli--hielo .moli__foto {
+  filter: saturate(0.55) brightness(1.12);
+}
+.moli--vapor .moli__foto {
+  opacity: 0.62;
+  filter: blur(1px);
+}
+.moli--vapor .moli__sombra {
+  opacity: 0.35;
 }
 .moli--respira { animation: moli-respira 5s ease-in-out infinite; }
 .moli--inclina { animation: moli-inclina 3.2s ease-in-out infinite; }
