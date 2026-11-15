@@ -274,3 +274,36 @@
     display: none;
   }
 }
+
+/* ---------- Relieve (14/11): como el resto de la web (ver styles/relieve.css) ---------- */
+@media screen {
+  .entrar__campo input {
+    border-color: transparent;
+    background: var(--campo);
+    box-shadow: var(--pozo);
+    transition: box-shadow 0.2s, background-color 0.2s;
+  }
+  .entrar__campo input:focus {
+    outline: none;
+    background: #fff;
+    box-shadow: var(--pozo), var(--anillo-foco), inset 0 0 0 2px var(--nucleo);
+  }
+  .entrar__ver {
+    border-color: transparent;
+    background: linear-gradient(180deg, #fff 0%, #f6f7fb 100%);
+    box-shadow: var(--pastilla-clara);
+  }
+  .entrar__ver[aria-pressed='true'] {
+    background: var(--campo);
+    box-shadow: var(--pozo);
+  }
+  .lab__caja {
+    border-radius: 28px;
+    box-shadow: var(--relieve), var(--luz);
+  }
+  .lab__tarea {
+    border-color: transparent;
+    background: linear-gradient(180deg, #fff 0%, #f8f9fc 100%);
+    box-shadow: var(--pastilla-clara);
+  }
+}

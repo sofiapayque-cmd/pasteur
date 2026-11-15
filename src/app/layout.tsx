@@ -12,6 +12,7 @@ import '@fontsource-variable/bricolage-grotesque'; // titulares
 import '@/styles/tokens.css';
 import '@/styles/base.css';
 import '@/styles/pantallas.css';
+import '@/styles/relieve.css'; // profundidad y esquinas redondeadas (14/11)
 
 export const metadata: Metadata = {
   title: 'La ciencia sin límites · Institut Pasteur de Montevideo',
