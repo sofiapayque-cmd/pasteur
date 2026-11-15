@@ -1,0 +1,52 @@
+{
+  "_como": "Poses de Moli 3D para las fotos de cada ánimo (public/illustrations/moli/moli-<ánimo>.webp). Se sacaron el 14/11 con three.js en Chrome, con el modelo public/models/moli.glb, la misma luz de Moli3d.tsx (sección 4) y los mismos nombres de EstadoMoli (sección 2). Todas con el mismo encuadre: 640×575, recortadas juntas.",
+  "feliz": {
+    "giro": 6,
+    "inclina": -2,
+    "manoDer": 84,
+    "manoAdelante": 26,
+    "ola": 10
+  },
+  "escucha": {
+    "giro": -12,
+    "inclina": 9,
+    "manoIzq": 22,
+    "mirarY": 2
+  },
+  "piensa": {
+    "giro": 12,
+    "inclina": -6,
+    "manoDer": 62,
+    "manoAdelante": 55,
+    "mirarY": 6,
+    "parpado": 0.8
+  },
+  "eureka": {
+    "giro": 0,
+    "manoIzq": 74,
+    "manoDer": 74,
+    "manoAdelante": 14,
+    "estira": 1.03,
+    "alto": 0.1,
+    "mirarY": 4
+  },
+  "duda": {
+    "giro": -14,
+    "inclina": -9,
+    "manoIzq": 58,
+    "manoAdelante": 30
+  },
+  "alegria": {
+    "giro": 0,
+    "manoIzq": 82,
+    "manoDer": 82,
+    "manoAdelante": 8,
+    "estira": 1.04,
+    "alto": 0.26,
+    "piernas": 38,
+    "rodillas": 76,
+    "apertura": 8,
+    "cierre": 8,
+    "inclina": 3
+  }
+}
