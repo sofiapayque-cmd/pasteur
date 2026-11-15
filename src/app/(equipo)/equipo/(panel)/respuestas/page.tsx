@@ -8,6 +8,7 @@ import PedirRespuestas from '@/pantallas/equipo/PedirRespuestas';
 import PreguntasDeClases from '@/pantallas/equipo/PreguntasDeClases';
 import Tarjeta from '@/pantallas/equipo/TarjetaRespuesta';
 import ConGota from '@/components/ConGota';
+import CambioSuave from '@/components/CambioSuave';
 
 /*
   /equipo/respuestas · Tablero de respuestas.
@@ -124,18 +125,20 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ v
           </ConGota>
         </div>
 
-        {visibles.length === 0 ? (
-          <p className="eq-caja eq-bajada">
-            {ver === 'espera' ? 'No hay respuestas esperando revisión.' : 'Todavía no hay respuestas acá.'}
-            {!validadora && ver === 'espera' ? ' Pedile algunas a la IA más arriba.' : ''}
-          </p>
-        ) : (
-          <ul className="eq-tarjetas">
-            {visibles.map((r) => (
-              <Tarjeta key={r.versionId} r={r} nombres={nombres} validadora={validadora} />
-            ))}
-          </ul>
-        )}
+        <CambioSuave clave={`${ver}-${actividad}-${soloIa ? 'ia' : 'todas'}`}>
+          {visibles.length === 0 ? (
+            <p className="eq-caja eq-bajada">
+              {ver === 'espera' ? 'No hay respuestas esperando revisión.' : 'Todavía no hay respuestas acá.'}
+              {!validadora && ver === 'espera' ? ' Pedile algunas a la IA más arriba.' : ''}
+            </p>
+          ) : (
+            <ul className="eq-tarjetas">
+              {visibles.map((r) => (
+                <Tarjeta key={r.versionId} r={r} nombres={nombres} validadora={validadora} />
+              ))}
+            </ul>
+          )}
+        </CambioSuave>
       </section>
 
       {vistas.length > 0 && (

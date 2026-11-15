@@ -3,6 +3,7 @@ import { exigirMiembro } from '@/datos/equipo';
 import { listarFichas, nombresDelEquipo } from '@/datos/fichas';
 import { ACTIVIDADES, NOMBRE_ESTADO, fecha } from '@/lib/equipo/comun';
 import ConGota from '@/components/ConGota';
+import CambioSuave from '@/components/CambioSuave';
 
 /* /equipo/fichas · Todas las fichas, filtradas por estado */
 const FILTROS = [
@@ -45,43 +46,45 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ e
           </Link>
         ))}
       </ConGota>
-      <section className="eq-caja">
-        {visibles.length === 0 ? (
-          <p className="eq-bajada">Todavía no hay fichas acá.</p>
-        ) : (
-          <table className="eq-tabla">
-            <thead>
-              <tr>
-                <th>Ficha</th>
-                <th>Estado</th>
-                <th>Actividad</th>
-                <th>Quién</th>
-              </tr>
-            </thead>
-            <tbody>
-              {visibles.map(({ f, muestra, estadoVisible, abierta }) => (
-                <tr key={f.id}>
-                  <td>
-                    <Link href={`/equipo/fichas/${f.id}`}>{muestra?.pregunta || muestra?.version_infantil?.slice(0, 90) || f.slug}</Link>
-                    <span className="eq-tabla__chico">
-                      {f.formato === 'pregunta' ? 'Pregunta' : 'Dato'} · versión {muestra?.numero ?? 1}
-                      {abierta && f.estado === 'publicada' ? ' · hay una versión nueva en curso' : ''}
-                    </span>
-                  </td>
-                  <td>
-                    <span className={`eq-estado eq-estado--${estadoVisible}`}>{NOMBRE_ESTADO[estadoVisible]}</span>
-                  </td>
-                  <td>{f.actividad ? ACTIVIDADES[f.actividad] : '—'}</td>
-                  <td>
-                    {muestra ? nombres[muestra.autor_id] ?? '—' : '—'}
-                    <span className="eq-tabla__chico">{fecha(muestra?.enviada_en ?? muestra?.creada_en)}</span>
-                  </td>
+      <CambioSuave clave={estado || 'todas'}>
+        <section className="eq-caja">
+          {visibles.length === 0 ? (
+            <p className="eq-bajada">Todavía no hay fichas acá.</p>
+          ) : (
+            <table className="eq-tabla">
+              <thead>
+                <tr>
+                  <th>Ficha</th>
+                  <th>Estado</th>
+                  <th>Actividad</th>
+                  <th>Quién</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </section>
+              </thead>
+              <tbody>
+                {visibles.map(({ f, muestra, estadoVisible, abierta }) => (
+                  <tr key={f.id}>
+                    <td>
+                      <Link href={`/equipo/fichas/${f.id}`}>{muestra?.pregunta || muestra?.version_infantil?.slice(0, 90) || f.slug}</Link>
+                      <span className="eq-tabla__chico">
+                        {f.formato === 'pregunta' ? 'Pregunta' : 'Dato'} · versión {muestra?.numero ?? 1}
+                        {abierta && f.estado === 'publicada' ? ' · hay una versión nueva en curso' : ''}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`eq-estado eq-estado--${estadoVisible}`}>{NOMBRE_ESTADO[estadoVisible]}</span>
+                    </td>
+                    <td>{f.actividad ? ACTIVIDADES[f.actividad] : '—'}</td>
+                    <td>
+                      {muestra ? nombres[muestra.autor_id] ?? '—' : '—'}
+                      <span className="eq-tabla__chico">{fecha(muestra?.enviada_en ?? muestra?.creada_en)}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </section>
+      </CambioSuave>
     </main>
   );
 }
