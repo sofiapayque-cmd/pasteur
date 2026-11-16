@@ -19,8 +19,12 @@ import { DIAS, NO_REPETIR_DIAS, VIDA_MEDIA, elegir, type Curiosidad, type Tenden
   Si algo falla, no se rompe nada: no se cuenta o no se muestra curiosidad.
 */
 
-/** Parecido mínimo para que una pregunta cuente para un tema (calibrar con datos reales). */
-export const UMBRAL_TEMA = Number(process.env.CURIOSIDADES_UMBRAL_TEMA) || 0.45;
+/**
+ * Parecido mínimo para que una pregunta cuente para un tema (calibrar con datos reales).
+ * 0,35 desde el 15/11: con 6 temas grandes (migración 24), sus descripciones son más
+ * generales y el parecido baja (medido con las 75 aprobadas: entre 0,38 y 0,75).
+ */
+export const UMBRAL_TEMA = Number(process.env.CURIOSIDADES_UMBRAL_TEMA) || 0.35;
 
 export type CuriosidadVisible = { id: string; titulo: string; texto: string; actividad: string | null; tema: string | null; fuentes: string[] };
 
