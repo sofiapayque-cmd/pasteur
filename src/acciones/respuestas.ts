@@ -167,23 +167,25 @@ async function deACinco<T, R>(items: T[], fn: (t: T) => Promise<R>): Promise<R[]
   return salida;
 }
 
-async function corregirVarias(versionIds: string[]): Promise<EstadoPedido> {
+async function corregirVarias(versiones: { id: string; pregunta?: string }[]): Promise<EstadoPedido> {
   const yo = await miembroCon();
   if (!yo) return SIN_PERMISO;
   if (!iaConfigurada()) return { mensaje: 'Falta la clave de OpenAI en el servidor (OPENAI_API_KEY).' };
   const db = (await crearClienteServidor())!;
-  console.info(`[ia] ${yo.id} pidió corregir ${versionIds.length} respuesta(s)`);
-  const resultados = await deACinco(versionIds, async (id) => {
+  console.info(`[ia] ${yo.id} pidió corregir ${versiones.length} respuesta(s)`);
+  const resultados = await deACinco(versiones, async ({ id, pregunta = '' }) => {
     try {
-      return await corregirConComentario({ db, actorId: yo.id }, id);
+      const r = await corregirConComentario({ db, actorId: yo.id }, id, pregunta);
+      if (!r.ok) console.warn(`[ia] no se corrigió ${id}: ${r.mensaje}`);
+      return r;
     } catch (e) {
       console.error('[ia] error inesperado al corregir:', e instanceof Error ? e.message : e);
-      return { pregunta: '', ok: false, mensaje: 'Algo falló sin aviso. Probá de nuevo.' } satisfies Resultado;
+      return { pregunta, ok: false, mensaje: 'Algo falló sin aviso. Probá de nuevo.' } satisfies Resultado;
     }
   });
   refresh();
   const listas = resultados.filter((r) => r.enRevision).length;
-  if (versionIds.length === 1) return { ok: listas === 1, resultados, mensaje: resultados[0].mensaje };
+  if (versiones.length === 1) return { ok: listas === 1, resultados, mensaje: resultados[0].mensaje };
   return {
     ok: listas > 0,
     resultados,
@@ -197,16 +199,16 @@ async function corregirVarias(versionIds: string[]): Promise<EstadoPedido> {
 /** Una sola (botón de la tarjeta o de la ficha). */
 export async function corregirConIa(versionId: string): Promise<EstadoPedido> {
   if (!UUID.test(versionId)) return SIN_PERMISO;
-  return corregirVarias([versionId]);
+  return corregirVarias([{ id: versionId }]);
 }
 
 /** Todas las que tienen cambios pedidos (hasta 15 por vez). */
 export async function corregirTodasConIa(): Promise<EstadoPedido> {
   const yo = await miembroCon();
   if (!yo) return SIN_PERMISO;
-  const ids = (await listarRespuestas()).filter((r) => r.grupo === 'cambios').map((r) => r.versionId);
-  if (!ids.length) return { mensaje: 'No hay respuestas con cambios pedidos.' };
-  const estado = await corregirVarias(ids.slice(0, CORREGIR_POR_VEZ));
-  const sobran = ids.length - CORREGIR_POR_VEZ;
+  const todas = (await listarRespuestas()).filter((r) => r.grupo === 'cambios').map((r) => ({ id: r.versionId, pregunta: r.pregunta }));
+  if (!todas.length) return { mensaje: 'No hay respuestas con cambios pedidos.' };
+  const estado = await corregirVarias(todas.slice(0, CORREGIR_POR_VEZ));
+  const sobran = todas.length - CORREGIR_POR_VEZ;
   return sobran > 0 ? { ...estado, mensaje: `${estado.mensaje} Quedan ${sobran}: tocá el botón otra vez.` } : estado;
 }

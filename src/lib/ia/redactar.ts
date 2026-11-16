@@ -299,18 +299,30 @@ type FilaVersion = {
   explicacion_cientifica: string;
   version_infantil: string;
   nota_interna: string | null;
-  fichas: { formato: 'pregunta' | 'dato'; actividad: string | null } | null;
+  ficha_id: string;
 };
 type FilaPub = PublicacionGuardada & { licencia_codigo: string | null };
 
-export async function corregirConComentario(c: ContextoCorreccion, versionId: string): Promise<Resultado> {
-  const { data: v } = await c.db
+export async function corregirConComentario(c: ContextoCorreccion, versionId: string, preguntaConocida = ''): Promise<Resultado> {
+  /*
+    La versión y su ficha por separado: entre ficha_versiones y fichas hay dos
+    relaciones (la ficha de cada versión y la versión publicada de cada ficha),
+    y un "fichas(...)" sin decir cuál hace fallar la consulta entera.
+  */
+  const { data: v, error: errorVersion } = await c.db
     .from('ficha_versiones')
-    .select('id, estado, pregunta, explicacion_cientifica, version_infantil, nota_interna, fichas!inner(formato, actividad)')
+    .select('id, estado, pregunta, explicacion_cientifica, version_infantil, nota_interna, ficha_id')
     .eq('id', versionId)
     .maybeSingle<FilaVersion>();
-  const pregunta = v?.pregunta ?? '';
-  if (!v || !v.fichas) return { pregunta, ok: false, mensaje: 'No encontré esa respuesta.' };
+  const pregunta = v?.pregunta || preguntaConocida;
+  if (errorVersion) return { pregunta, ok: false, mensaje: `No pude leerla: ${mensajeDeError(errorVersion)}.` };
+  if (!v) return { pregunta, ok: false, mensaje: 'Ya no existe o no tenés permiso para verla.' };
+  const { data: ficha, error: errorFicha } = await c.db
+    .from('fichas')
+    .select('formato, actividad')
+    .eq('id', v.ficha_id)
+    .maybeSingle<{ formato: 'pregunta' | 'dato'; actividad: string | null }>();
+  if (errorFicha || !ficha) return { pregunta, ok: false, mensaje: `No pude leer su ficha: ${mensajeDeError(errorFicha, 'no aparece')}.` };
   if (v.estado !== 'borrador') return { pregunta, ok: false, mensaje: 'Esta respuesta ya no está esperando cambios.' };
 
   const { data: rev } = await c.db
@@ -333,10 +345,10 @@ export async function corregirConComentario(c: ContextoCorreccion, versionId: st
   const usables = usadas as FilaPub[];
   if (!usables.length) return { pregunta, ok: false, mensaje: 'Sus artículos ya no se pueden usar (retirados o sin resumen).' };
 
-  const formato = v.fichas.formato;
+  const formato = ficha.formato;
   const modo: Modo = formato === 'dato' ? { formato: 'dato', temaId: '', tema: pregunta, existentes: [] } : RESPUESTA;
   const pedido = pedidoDeCorreccion({ formato, comentario, infantil: v.version_infantil, explicacion: v.explicacion_cientifica });
-  const red = await redactar(pregunta, v.fichas.actividad, candidatos, modo, pedido);
+  const red = await redactar(pregunta, ficha.actividad, candidatos, modo, pedido);
   if (!red.ok) return { pregunta, ok: false, mensaje: `No la pude corregir: ${red.motivo.replace(/\.+$/, '')}.`, uso: red.uso };
 
   // Cada cita, comprobada contra el resumen guardado

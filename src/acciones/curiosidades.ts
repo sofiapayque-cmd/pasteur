@@ -107,7 +107,7 @@ export async function pedirCuriosidades(_previo: EstadoCuriosidades, datos: Form
   const { data: tema } = await db.from('temas').select('id, nombre, descripcion, actividad').eq('id', temaId).eq('activo', true).maybeSingle<{ id: string; nombre: string; descripcion: string; actividad: string | null }>();
   if (!tema) return { mensaje: 'Ese tema no está (o está apagado).' };
   // Las que ya hay del tema (publicadas o no), para no repetirlas
-  const { data: previas } = await db.from('fichas').select('ficha_versiones(version_infantil)').eq('tema_id', tema.id).eq('formato', 'dato');
+  const { data: previas } = await db.from('fichas').select('ficha_versiones!ficha_versiones_ficha_id_fkey(version_infantil)').eq('tema_id', tema.id).eq('formato', 'dato');
   const existentes = ((previas ?? []) as unknown as { ficha_versiones: { version_infantil: string }[] }[]).flatMap((f) => f.ficha_versiones.map((v) => v.version_infantil)).filter(Boolean);
 
   const contexto = { db, admin, actorId: yo.id, actividad: tema.actividad };

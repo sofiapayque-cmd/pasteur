@@ -38,7 +38,7 @@ export function CorregirTodas({ cantidad }: { cantidad: number }) {
           {cantidad === 1 ? 'Hay 1 respuesta con cambios pedidos' : `Hay ${cantidad} respuestas con cambios pedidos`}
         </h2>
         <p className="eq-bajada">
-          La IA las reescribe siguiendo lo que pidió la validadora, con los mismos artículos, y las vuelve a mandar a revisión. No hace falta que escribas nada.
+          La IA las reescribe siguiendo lo que pidió la validadora, con los mismos artículos, y las vuelve a mandar a revisión.
         </p>
       </div>
       <form action={accion}>

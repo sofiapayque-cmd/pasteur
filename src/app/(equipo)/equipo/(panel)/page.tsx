@@ -19,7 +19,7 @@ export default async function Page() {
   const [respuestas, curiosidadesEnRevision] = await Promise.all([
     listarRespuestas(),
     contar(
-      db.from('ficha_versiones').select('id, fichas!inner(formato)', { count: 'exact', head: true }).eq('estado', 'en_revision').eq('fichas.formato', 'dato'),
+      db.from('ficha_versiones').select('id, fichas!ficha_versiones_ficha_id_fkey!inner(formato)', { count: 'exact', head: true }).eq('estado', 'en_revision').eq('fichas.formato', 'dato'),
     ),
   ]);
   const cuenta = (g: Grupo) => respuestas.filter((r) => r.grupo === g).length;
