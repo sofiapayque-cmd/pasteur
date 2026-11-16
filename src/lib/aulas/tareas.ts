@@ -6,7 +6,7 @@
 import { ACTIVIDADES } from '@/data/contenido';
 import { INFO_ACTIVIDADES } from '@/actividades/info';
 
-export type IdActividad = 'a1' | 'a2' | 'a3' | 'a4';
+export type IdActividad = 'a1' | 'a2' | 'a3';
 type Etapa = { id: string; nombre: string };
 type Opcion = { clave: string; etiqueta: string; items: { id: string; nombre: string; detalle?: string }[] };
 type Desbloqueo = { clave: string; etiqueta: string; explicacion?: string };

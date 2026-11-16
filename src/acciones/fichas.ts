@@ -34,7 +34,7 @@ export async function crearFicha(_previo: Estado, datos: FormData): Promise<Esta
   const tema = leer(datos, 'tema') || null;
   if (formato !== 'pregunta' && formato !== 'dato') return { mensaje: 'Elegí si es una pregunta o un dato.' };
   if (titulo.length < 3 || titulo.length > 300) return { mensaje: formato === 'pregunta' ? 'Escribí la pregunta (de 3 a 300 letras).' : 'Escribí de qué trata el dato (de 3 a 300 letras).' };
-  if (actividad && !/^a[1-4]$/.test(actividad)) return { mensaje: 'Actividad desconocida.' };
+  if (actividad && !/^a[1-3]$/.test(actividad)) return { mensaje: 'Actividad desconocida.' };
   if (tema && !esUuid(tema)) return { mensaje: 'Tema desconocido.' };
 
   const db = await supabase();
@@ -142,7 +142,7 @@ export async function cambiarDatosFicha(fichaId: string, _p: Estado, datos: Form
   if (!yo || !esUuid(fichaId)) return SIN_PERMISO;
   const actividad = leer(datos, 'actividad') || null;
   const tema = leer(datos, 'tema') || null;
-  if (actividad && !/^a[1-4]$/.test(actividad)) return { mensaje: 'Actividad desconocida.' };
+  if (actividad && !/^a[1-3]$/.test(actividad)) return { mensaje: 'Actividad desconocida.' };
   if (tema && !esUuid(tema)) return { mensaje: 'Tema desconocido.' };
   const db = await supabase();
   const { data, error } = await db.from('fichas').update({ actividad, tema_id: tema }).eq('id', fichaId).select('id').maybeSingle();

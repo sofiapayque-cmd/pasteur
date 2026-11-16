@@ -11,8 +11,6 @@ export const ACTIVIDADES = [
     placa: 'radial-gradient(circle at 45% 45%, #2F4A85 0 12%, #8ED5C3 13% 45%, #E3F3EE 46% 100%)' },
   { id: 'a3', numero: '03', nombre: 'Bioimagenología', bajada: 'Manejá un microscopio de verdad: enfocá, cambiá el aumento y encendé luces de colores.', color: 'var(--filamento)', fondo: 'var(--a3-fondo)', disponible: true,
     placa: 'radial-gradient(circle at 50% 45%, #FBF9F1 0 10%, #9C9CF5 11% 44%, #EEEEFD 45% 100%)' },
-  // A4 · Evolución de Virus: retirada de la plataforma el 9/11 (pedido de Sofia). El código sigue en
-  // src/actividades/a4 por si vuelve; para mostrarla otra vez, agregar acá su ficha.
 ];
 
 // Apodos científicos: los chicos eligen uno, nunca escriben su nombre

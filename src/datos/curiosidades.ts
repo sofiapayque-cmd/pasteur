@@ -118,7 +118,7 @@ export async function curiosidadesPara(o: { aulaId?: string | null; actividad?: 
   if (!admin) return [];
   try {
     const cuantas = Math.min(Math.max(o.cuantas ?? 1, 1), 6);
-    const actividad = o.actividad && /^a[1-4]$/.test(o.actividad) ? o.actividad : null;
+    const actividad = o.actividad && /^a[1-3]$/.test(o.actividad) ? o.actividad : null;
     let q = admin.from('fichas_validadas').select('ficha_id, version_id, tema_id, actividad, pregunta, version_infantil').eq('formato', 'dato');
     if (actividad) q = q.or(`actividad.eq.${actividad},actividad.is.null`);
     const [{ data: fichas }, autos] = await Promise.all([q, automaticas(admin, actividad).catch(() => [] as Item[])]);

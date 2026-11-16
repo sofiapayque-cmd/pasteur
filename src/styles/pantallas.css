@@ -481,7 +481,7 @@
   transition: width 0.4s var(--ease-organico);
 }
 .tablero__ayuda {
-  background: var(--a4-fondo);
+  background: var(--rosa-fondo);
   display: flex;
   flex-direction: column;
   gap: 10px;

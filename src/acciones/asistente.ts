@@ -76,7 +76,7 @@ export async function preguntarAlPasteur(_previo: EstadoAsistente, datos: FormDa
   const pregunta = limpiarPregunta(String(datos.get('pregunta') ?? ''));
   if (pregunta.length < 5) return { mensaje: 'Escribí la pregunta de la clase.' };
   const act = String(datos.get('actividad') ?? '');
-  const actividad = /^a[1-4]$/.test(act) ? act : null;
+  const actividad = /^a[1-3]$/.test(act) ? act : null;
   // La clase (opcional) y la pregunta de un chico (si vino de su cuaderno): solo si son de esta maestra
   const aulaId = await aulaDeLaMaestra(admin, docente.id, datos.get('aula'));
   const notaId = aulaId ? await notaDelAula(admin, aulaId, datos.get('nota')) : null;

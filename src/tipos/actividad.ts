@@ -4,9 +4,9 @@
   (ver también actividades/info.js y docs/GUIA-ACTIVIDADES.md).
 */
 
-export type IdActividad = 'a1' | 'a2' | 'a3' | 'a4';
+export type IdActividad = 'a1' | 'a2' | 'a3';
 
-export const IDS_ACTIVIDAD: readonly IdActividad[] = ['a1', 'a2', 'a3', 'a4'];
+export const IDS_ACTIVIDAD: readonly IdActividad[] = ['a1', 'a2', 'a3'];
 
 /** Una etapa del recorrido del niño (la maestra las ve en el tablero). */
 export interface Etapa {

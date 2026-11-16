@@ -14,7 +14,7 @@ import { useProgresoTarea } from '@/sala/progresoTarea';
 */
 type Props = {
   tareaId: string;
-  actividad: 'a1' | 'a2' | 'a3' | 'a4';
+  actividad: 'a1' | 'a2' | 'a3';
   inicial: { etapa: string; datos: Record<string, unknown> };
   opciones: Record<string, string[]>;
   desbloqueos: Record<string, boolean>;
