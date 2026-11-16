@@ -110,3 +110,80 @@ test('60 días simulados: cuando sube un tema, en pocos días aparecen más curi
   assert.ok(despues >= 8, `después de subir, antibióticos sale casi un día sí y uno no (salió ${despues}/20)`);
   for (let i = 1; i < porDia.length; i++) assert.notEqual(porDia[i], porDia[i - 1], 'nunca el mismo tema dos días seguidos');
 });
+
+// ---------------------------------------------------------------------
+// Curiosidades automáticas (migración 23)
+// ---------------------------------------------------------------------
+import { agruparPreguntas, oracionesElegidas, paraSabiasQue, sirveSola, temaNombrado, MIN_VECES_GRUPO } from '../src/lib/curiosidades/automaticas.ts';
+
+test('automáticas: el texto sale tal cual de la respuesta aprobada, solo con la primera letra en minúscula', () => {
+  const oraciones = [
+    'Las bacterias del suelo ayudan a que las plantas crezcan.',
+    'Eso pasa porque desarman las hojas muertas.',
+    '¿Te imaginás cuántas hay?',
+    'En un puñado de tierra puede haber más bacterias que personas en todo el planeta.',
+    'ADN es la sigla de ácido desoxirribonucleico, la molécula de la herencia.',
+  ];
+  // La IA solo da números: los inválidos, repetidos o que no sirven solos se descartan
+  assert.deepEqual(oracionesElegidas(oraciones, [2, 3, 1, 1, 99, 'x']), [{ oracion: 1, texto: 'las bacterias del suelo ayudan a que las plantas crezcan.' }]);
+  // Como mucho 2, y la sigla queda en mayúscula
+  assert.deepEqual(
+    oracionesElegidas(oraciones, [4, 5, 1]).map((x) => x.texto),
+    ['en un puñado de tierra puede haber más bacterias que personas en todo el planeta.', 'ADN es la sigla de ácido desoxirribonucleico, la molécula de la herencia.'],
+  );
+  assert.deepEqual(oracionesElegidas(oraciones, null), []);
+  // Cada texto elegido está, letra por letra, en la respuesta (salvo la primera letra)
+  for (const e of oracionesElegidas(oraciones, [1, 4, 5])) {
+    const original = oraciones[e.oracion - 1];
+    assert.equal(e.texto.slice(1), original.slice(1));
+    assert.equal(e.texto[0].toLowerCase(), original[0].toLowerCase());
+  }
+});
+
+test('automáticas: qué oraciones sirven solas', () => {
+  assert.equal(sirveSola('Las mitocondrias le dan energía a la célula para que funcione.'), true);
+  assert.equal(sirveSola('Así las bacterias se defienden de los antibióticos que las atacan.'), false);
+  assert.equal(sirveSola('También hay bacterias que viven en lugares muy fríos.'), false);
+  assert.equal(sirveSola('¿Sabés cuántas células tiene tu cuerpo, más o menos?'), false);
+  assert.equal(sirveSola('Imaginá una ciudad chiquita adentro de cada célula.'), false);
+  assert.equal(sirveSola('Corto.'), false);
+  assert.equal(sirveSola('No todas las bacterias son malas: muchas nos ayudan a digerir.'), true);
+  // Las que remiten a otra oración, en cualquier lugar, o empiezan contestando
+  assert.equal(sirveSola('Dentro de ella se forma una parte que produce esa luz verde.'), false);
+  assert.equal(sirveSola('Si te hacés una herida, también participan en su reparación.'), false);
+  assert.equal(sirveSola('Las luciérnagas, por ejemplo, producen su luz de esta manera.'), false);
+  assert.equal(sirveSola('Sí, las células pueden moverse de un lugar a otro.'), false);
+  // "está" (verbo) no es "esta"
+  assert.equal(sirveSola('El ADN de la célula está guardado sobre todo en el núcleo.'), true);
+  assert.equal(paraSabiasQue('Uruguay tiene una base científica en la Antártida.'), 'Uruguay tiene una base científica en la Antártida.');
+  assert.equal(paraSabiasQue('El núcleo guarda el ADN.'), 'el núcleo guarda el ADN.');
+});
+
+test('automáticas: las preguntas sin tema parecidas se agrupan en un tema nuevo', () => {
+  const v = (x, y) => [x, y, 0];
+  const preguntas = [
+    { id: '1', texto: '¿Los peces tienen bacterias?', actividad: 'a1', veces: 2, vector: v(1, 0) },
+    { id: '2', texto: '¿Hay bacterias en el mar?', actividad: 'a1', veces: 1, vector: v(0.95, 0.1) },
+    { id: '3', texto: '¿Qué comen los tiburones?', actividad: null, veces: 1, vector: v(0, 1) },
+    { id: '4', texto: '¿Cómo brillan las medusas?', actividad: 'a3', veces: 1, vector: v(-1, 0) },
+  ];
+  const grupos = agruparPreguntas(preguntas);
+  assert.equal(grupos.length, 1);
+  assert.deepEqual(grupos[0].preguntas.map((p) => p.id), ['1', '2']);
+  assert.equal(grupos[0].veces, 3);
+  assert.equal(grupos[0].actividad, 'a1');
+  // Una sola pregunta hecha muchas veces también arma tema
+  assert.equal(agruparPreguntas([{ id: '9', texto: 'x', actividad: null, veces: MIN_VECES_GRUPO * 2, vector: v(1, 1) }]).length, 1);
+  // Pocas veces: no
+  assert.equal(agruparPreguntas([{ id: '9', texto: 'x', actividad: null, veces: 2, vector: v(1, 1) }]).length, 0);
+});
+
+test('automáticas: el nombre del tema nuevo se limpia o se descarta', () => {
+  assert.deepEqual(temaNombrado({ es_ciencia: true, nombre: '¿bacterias del mar?', descripcion: ' Qué bacterias viven en el mar. ' }), {
+    nombre: 'Bacterias del mar',
+    descripcion: 'Qué bacterias viven en el mar.',
+  });
+  assert.equal(temaNombrado({ es_ciencia: false, nombre: 'Saludos', descripcion: '' }), null);
+  assert.equal(temaNombrado({ es_ciencia: true, nombre: 'Un nombre que es demasiado largo para ser un tema de verdad', descripcion: '' }), null);
+  assert.equal(temaNombrado(null), null);
+});

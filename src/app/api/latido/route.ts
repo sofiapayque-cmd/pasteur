@@ -1,6 +1,8 @@
 import { timingSafeEqual } from 'node:crypto';
 import { crearClienteAdmin } from '@/lib/supabase/admin';
 import { limpiarCuriosidades } from '@/datos/curiosidades';
+import { actualizarCuriosidades } from '@/datos/curiosidadesAutomaticas';
+import { iaConfigurada } from '@/lib/ia/openai';
 
 /*
   /api/latido · Mantiene despierta la base en el plan gratis de Supabase.
@@ -13,9 +15,13 @@ import { limpiarCuriosidades } from '@/datos/curiosidades';
   Solo responde a Vercel: Vercel manda "Authorization: Bearer <CRON_SECRET>"
   y se compara con la variable CRON_SECRET (Sensitive, solo en Vercel). Sin
   esa variable no hace nada. Con el plan pago de Supabase deja de hacer falta.
-  Además borra los conteos viejos de las curiosidades (migración 22).
+  Además borra los conteos viejos de las curiosidades (migración 22) y arma
+  las curiosidades automáticas del día (migración 23): temas nuevos con las
+  preguntas sin tema y curiosidades de las respuestas aprobadas nuevas.
 */
 export const dynamic = 'force-dynamic';
+// Las curiosidades automáticas le piden a la IA (unos segundos por respuesta nueva)
+export const maxDuration = 300;
 
 function autorizado(cabecera: string | null) {
   const secreto = process.env.CRON_SECRET ?? '';
@@ -37,7 +43,12 @@ export async function GET(request: Request) {
   ]);
   // De paso, la limpieza diaria de las curiosidades (conteos de más de 90 días, vistas de aulas de más de 30)
   await limpiarCuriosidades(admin).catch(() => undefined);
+  const curiosidades = iaConfigurada() ? await actualizarCuriosidades(admin).catch(() => null) : null;
   const errores = pedidos.filter((r) => r.error).length;
   if (errores) console.error('[latido] lecturas con error:', errores);
-  return Response.json({ ok: errores === 0, cuando: new Date().toISOString() });
+  return Response.json({
+    ok: errores === 0,
+    cuando: new Date().toISOString(),
+    curiosidades: curiosidades && { temasNuevos: curiosidades.temasNuevos.length, curiosidadesNuevas: curiosidades.curiosidadesNuevas, errores: curiosidades.errores.length },
+  });
 }

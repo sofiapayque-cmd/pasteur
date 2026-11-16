@@ -6,6 +6,7 @@ import { crearClienteAdmin } from '@/lib/supabase/admin';
 import { miembroCon } from '@/datos/equipo';
 import { pedidasHoy } from '@/datos/respuestas';
 import { indexarTemas } from '@/datos/curiosidades';
+import { actualizarCuriosidades } from '@/datos/curiosidadesAutomaticas';
 import { iaConfigurada } from '@/lib/ia/openai';
 import { slugDe } from '@/lib/equipo/comun';
 import { proponerCuriosidad, type Resultado } from '@/lib/ia/redactar';
@@ -22,6 +23,8 @@ import { TEMAS_INICIALES } from '@/lib/curiosidades/temasIniciales';
   · Ubicar en un tema una pregunta que no se parecía a ninguno, o descartarla.
   · Pedirle a la IA borradores de curiosidades para un tema: quedan esperando
     revisión, como las respuestas. Cuentan para el mismo límite diario.
+  · Curiosidades automáticas (15/11): actualizar ahora (admin) y ocultar una
+    (admin o validadora). Ver src/datos/curiosidadesAutomaticas.ts.
 */
 export type EstadoCuriosidades = { mensaje: string; ok?: boolean; resultados?: Resultado[] };
 
@@ -133,4 +136,39 @@ export async function pedirCuriosidades(_previo: EstadoCuriosidades, datos: Form
     resultados,
     mensaje: listas ? `Listo: ${listas === 1 ? 'una curiosidad quedó esperando' : `${listas} curiosidades quedaron esperando`} revisión.` : 'No salió ninguna. Abajo está qué pasó.',
   };
+}
+
+// ---------------------------------------------------------------------
+// Curiosidades automáticas (migración 23, pedido de Sofia del 15/11)
+// ---------------------------------------------------------------------
+
+/** Hace ahora lo que el trabajo diario hace solo (temas nuevos, curiosidades de las aprobadas). Admin. */
+export async function actualizarCuriosidadesAhora(): Promise<EstadoCuriosidades> {
+  const yo = await miembroCon('admin');
+  if (!yo) return SIN_PERMISO;
+  if (!iaConfigurada()) return { mensaje: 'Falta la clave de OpenAI en el servidor (OPENAI_API_KEY).' };
+  const admin = crearClienteAdmin();
+  if (!admin) return { mensaje: 'Falta la clave secreta de Supabase en el servidor (SUPABASE_SECRET_KEY).' };
+  const i = await actualizarCuriosidades(admin);
+  refresh();
+  const partes = [
+    i.respuestasMiradas ? `Miré ${i.respuestasMiradas} ${i.respuestasMiradas === 1 ? 'respuesta aprobada' : 'respuestas aprobadas'} y saqué ${i.curiosidadesNuevas} ${i.curiosidadesNuevas === 1 ? 'curiosidad' : 'curiosidades'}.` : 'No había respuestas aprobadas nuevas para mirar.',
+    i.temasNuevos.length ? `Temas nuevos: ${i.temasNuevos.join(', ')}.` : '',
+    i.errores.length ? `Quedaron ${i.errores.length} sin hacer (se reintentan mañana).` : '',
+  ];
+  return { ok: i.errores.length === 0, mensaje: partes.filter(Boolean).join(' ') };
+}
+
+/** Ocultar (o volver a mostrar) una curiosidad automática. Admin o validadora. */
+export async function ocultarCuriosidadAuto(id: string, oculta: boolean): Promise<EstadoCuriosidades> {
+  const yo = await miembroCon();
+  if (!yo || (yo.rol !== 'admin' && yo.rol !== 'validador')) return SIN_PERMISO;
+  if (!UUID.test(id)) return SIN_PERMISO;
+  const admin = crearClienteAdmin();
+  if (!admin) return { mensaje: 'Falta la clave secreta de Supabase en el servidor.' };
+  const { error } = await admin.from('curiosidades_auto').update({ oculta: Boolean(oculta) }).eq('id', id);
+  if (error) return { mensaje: 'No se pudo cambiar.' };
+  console.info(`[curiosidades] ${yo.id} ${oculta ? 'ocultó' : 'volvió a mostrar'} la automática ${id}`);
+  refresh();
+  return { ok: true, mensaje: oculta ? 'Oculta: no se muestra más.' : 'Se vuelve a mostrar.' };
 }

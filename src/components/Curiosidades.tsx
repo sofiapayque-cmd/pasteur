@@ -6,9 +6,10 @@ import type { CuriosidadVisible } from '@/datos/curiosidades';
 
 /*
   CURIOSIDADES · "¿Sabías que…?"
-  Muestra curiosidades aprobadas por una investigadora (fichas "dato"
-  publicadas; las elige el servidor según lo más consultado, ver
-  src/datos/curiosidades.ts). Sin el sello: un dato no lo lleva solo
+  Muestra curiosidades con texto aprobado por una investigadora: fichas
+  "dato" publicadas y las automáticas (una oración tal cual de una respuesta
+  aprobada). Las elige el servidor según lo más consultado, ver
+  src/datos/curiosidades.ts. Sin el sello: un dato no lo lleva solo
   (decisión del 5/11); sí su fuente. Usa la nota de cuaderno de siempre (Aviso, tipo
   "dato"), que se escribe letra por letra.
   Si hay más de una, cambia sola cada `cada` segundos (o con "Otra
