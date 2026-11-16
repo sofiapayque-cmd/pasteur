@@ -2,16 +2,16 @@ import Link from 'next/link';
 import type { Alumno } from '@/datos/alumno';
 import type { Avance, Tarea } from '@/datos/tareas';
 import { actividad as datosActividad, dondeVa } from '@/lib/aulas/tareas';
-import { salirAlumno } from '@/acciones/alumno';
 import Moli from '@/components/Moli';
 import FondoVivo from '@/components/FondoVivo';
 import ElegirApodo from './ElegirApodo';
+import { CabeceraLab, PestanasLab } from './PestanasLab';
 import './cuenta.css';
 
 /*
   El laboratorio del alumno (etapa 4): saludo, apodo científico y color,
-  explorar las actividades y salir. Las tareas de la maestra y el avance
-  guardado llegan en las etapas 5 y 7.
+  sus actividades, explorar y salir. La otra pestaña es "Mi cuaderno"
+  (/lab/cuaderno, 16/11).
 */
 export default function Laboratorio({
   alumno,
@@ -27,14 +27,7 @@ export default function Laboratorio({
   return (
     <main className="pantalla lab">
       <FondoVivo semilla={7} opacidad={0.3} />
-      <header className="lab__cabecera">
-        <span className="etiqueta">La ciencia sin límites · {aula}</span>
-        <form action={salirAlumno}>
-          <button className="btn btn--claro" type="submit">
-            Salir
-          </button>
-        </form>
-      </header>
+      <CabeceraLab aula={aula} />
 
       <section className="lab__saludo">
         <div aria-hidden="true">
@@ -51,6 +44,8 @@ export default function Laboratorio({
           <p>Este es tu laboratorio. Cuando termines, tocá Salir, sobre todo si la computadora es de la escuela.</p>
         </div>
       </section>
+
+      <PestanasLab activa="actividades" />
 
       {/* Clase en vivo abierta por la maestra (etapa 5, parte 2) */}
       {clase && (

@@ -19,7 +19,7 @@ import { useMediaQuery } from '../hooks/navegador';
   En pantallas grandes no cambia nada.
 */
 const SEGUNDOS = 7;
-export const PANTALLA_CHICA = '(max-width: 1100px), (max-height: 740px)';
+const PANTALLA_CHICA = '(max-width: 1100px), (max-height: 740px)';
 
 export default function GloboMoli({ texto, animo = 'feliz', tamano = 120 }) {
   const chica = useMediaQuery(PANTALLA_CHICA);

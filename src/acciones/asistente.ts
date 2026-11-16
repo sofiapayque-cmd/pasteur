@@ -23,6 +23,11 @@ import type { SupabaseClient } from '@supabase/supabase-js';
      ofrecen las parecidas; si no hay nada, se dice que todavía no la tenemos.
   4. Si no fue "la misma", la pregunta se anota para el equipo del Pasteur
      (sin maestra, sin aula, sin hora). Nunca se inventa una respuesta.
+  5. Aparte, para el cuaderno de la maestra (migración 25, 16/11): cada
+     pregunta (menos las delicadas) queda en preguntas_maestras, con su
+     clase si la eligió. Si no tenía respuesta, cuando el equipo la responda
+     le aparece el aviso en su panel. Si vino del cuaderno de un chico, la
+     nota del chico queda unida a esa pregunta (así le llega la respuesta).
   Usa la clave secreta (lee la vista del sello y el índice), siempre después
   de verificar que quien llama es una maestra activa.
 */
@@ -35,7 +40,7 @@ export type Resultado =
   | { tipo: 'parecidas'; opciones: { fichaId: string; pregunta: string }[] }
   | { tipo: 'nada' }
   | { tipo: 'cuidado' };
-export type EstadoAsistente = { mensaje?: string; pregunta?: string; resultado?: Resultado };
+export type EstadoAsistente = { mensaje?: string; pregunta?: string; resultado?: Resultado; guardada?: boolean };
 
 /** Historial anónimo (migración 20): solo la ficha y el día. Si falla, no importa. */
 async function contarVista(admin: SupabaseClient, fichaId: string) {
@@ -72,6 +77,9 @@ export async function preguntarAlPasteur(_previo: EstadoAsistente, datos: FormDa
   if (pregunta.length < 5) return { mensaje: 'Escribí la pregunta de la clase.' };
   const act = String(datos.get('actividad') ?? '');
   const actividad = /^a[1-4]$/.test(act) ? act : null;
+  // La clase (opcional) y la pregunta de un chico (si vino de su cuaderno): solo si son de esta maestra
+  const aulaId = await aulaDeLaMaestra(admin, docente.id, datos.get('aula'));
+  const notaId = aulaId ? await notaDelAula(admin, aulaId, datos.get('nota')) : null;
 
   const { data: hayCupo, error: errorCupo } = await admin.rpc('usar_cupo_asistente', { p_docente: docente.id, p_limite: CUPO_DIARIO });
   if (errorCupo) {
@@ -106,6 +114,16 @@ export async function preguntarAlPasteur(_previo: EstadoAsistente, datos: FormDa
     }),
   );
 
+  const guardada = await anotarEnElCuaderno(admin, {
+    docenteId: docente.id,
+    aulaId,
+    notaId,
+    texto: pregunta,
+    actividad,
+    resultado: decision.tipo === 'respuesta' ? 'respuesta' : decision.tipo === 'parecidas' ? 'parecidas' : 'sin_respuesta',
+    fichaId: decision.tipo === 'respuesta' ? decision.fichaId : null,
+  });
+
   if (decision.tipo !== 'respuesta') {
     const { error: errorAnotar } = await admin.rpc('anotar_pregunta_sin_respuesta', {
       p_texto: pregunta,
@@ -118,18 +136,67 @@ export async function preguntarAlPasteur(_previo: EstadoAsistente, datos: FormDa
     const respuesta = await tarjeta(admin, decision.fichaId);
     if (respuesta) {
       await contarVista(admin, respuesta.fichaId);
-      return { pregunta, resultado: { tipo: 'respuesta', respuesta } };
+      return { pregunta, guardada, resultado: { tipo: 'respuesta', respuesta } };
     }
-    return { pregunta, resultado: { tipo: 'nada' } };
+    return { pregunta, guardada, resultado: { tipo: 'nada' } };
   }
   if (decision.tipo === 'parecidas') {
     const opciones = decision.fichas
       .map((f) => busqueda.candidatas.find((c) => c.fichaId === f.fichaId))
       .filter((c): c is NonNullable<typeof c> => Boolean(c))
       .map((c) => ({ fichaId: c.fichaId, pregunta: c.pregunta }));
-    if (opciones.length) return { pregunta, resultado: { tipo: 'parecidas', opciones } };
+    if (opciones.length) return { pregunta, guardada, resultado: { tipo: 'parecidas', opciones } };
   }
-  return { pregunta, resultado: { tipo: 'nada' } };
+  return { pregunta, guardada, resultado: { tipo: 'nada' } };
+}
+
+// ---------------------------------------------------------------------
+// Cuaderno de la maestra (migración 25)
+// ---------------------------------------------------------------------
+
+/** El aula elegida, solo si es de esta maestra y no está archivada. */
+async function aulaDeLaMaestra(admin: SupabaseClient, docenteId: string, valor: FormDataEntryValue | null): Promise<string | null> {
+  const id = String(valor ?? '');
+  if (!esUuid(id)) return null;
+  const { data } = await admin.from('aulas').select('id').eq('id', id).eq('docente_id', docenteId).is('archivada_en', null).maybeSingle();
+  return data ? id : null;
+}
+
+/** La pregunta de un chico de esa aula, si todavía no se mandó. */
+async function notaDelAula(admin: SupabaseClient, aulaId: string, valor: FormDataEntryValue | null): Promise<string | null> {
+  const id = String(valor ?? '');
+  if (!esUuid(id)) return null;
+  const { data } = await admin.from('notas_alumnos').select('id').eq('id', id).eq('aula_id', aulaId).eq('tipo', 'pregunta').maybeSingle();
+  return data ? id : null;
+}
+
+/** Deja la pregunta en el cuaderno de la maestra (y une la del chico). Sin la migración 25, no hace nada. */
+async function anotarEnElCuaderno(
+  admin: SupabaseClient,
+  p: { docenteId: string; aulaId: string | null; notaId: string | null; texto: string; actividad: string | null; resultado: 'respuesta' | 'parecidas' | 'sin_respuesta'; fichaId: string | null },
+): Promise<boolean> {
+  const { data, error } = await admin
+    .from('preguntas_maestras')
+    .insert({
+      docente_id: p.docenteId,
+      aula_id: p.aulaId,
+      texto: p.texto.slice(0, 300),
+      normalizada: normalizarPregunta(p.texto).slice(0, 300) || p.texto.slice(0, 300),
+      actividad: p.actividad,
+      resultado: p.resultado,
+      ficha_id: p.fichaId,
+    })
+    .select('id')
+    .single();
+  if (error || !data) {
+    if (error && error.code !== '42P01') console.error('[asistente] cuaderno:', error.code);
+    return false;
+  }
+  if (p.notaId) {
+    const { error: e } = await admin.from('notas_alumnos').update({ estado: 'enviada', pregunta_maestra_id: data.id }).eq('id', p.notaId);
+    if (e) console.error('[asistente] nota del chico:', e.code);
+  }
+  return true;
 }
 
 /** Una respuesta aprobada elegida entre las parecidas (no gasta cupo). */

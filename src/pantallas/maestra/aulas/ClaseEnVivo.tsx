@@ -63,7 +63,7 @@ export default function ClaseEnVivo({ inicial, asistente = false }: { inicial: I
   );
 }
 
-export function ClaseCerrada({ inst, aulaUrl }: { inst: Instantanea; aulaUrl: string }) {
+function ClaseCerrada({ inst, aulaUrl }: { inst: Instantanea; aulaUrl: string }) {
   const act = datosActividad(inst.asignacion.actividad);
   const entraron = inst.progresos.length;
   const terminaron = inst.progresos.filter((p) => p.completada_en).length;

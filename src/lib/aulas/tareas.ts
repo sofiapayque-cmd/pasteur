@@ -17,10 +17,15 @@ const info = (act: string): Info => (INFO_ACTIVIDADES as Record<string, Info>)[a
 
 export const ACTIVIDADES_DISPONIBLES = (ACTIVIDADES as Actividad[]).filter((a) => a.disponible);
 export const actividad = (act: string) => (ACTIVIDADES as Actividad[]).find((a) => a.id === act) ?? null;
+/** "01 · Genómica Microbiana", o null si no es una actividad. */
+export const nombreActividad = (act: string | null | undefined) => {
+  const a = act ? actividad(act) : null;
+  return a ? `${a.numero} · ${a.nombre}` : null;
+};
 export const esActividadDisponible = (act: unknown): act is IdActividad =>
   typeof act === 'string' && ACTIVIDADES_DISPONIBLES.some((a) => a.id === act);
 
-export const etapasDe = (act: string): Etapa[] => info(act).ETAPAS ?? [];
+const etapasDe = (act: string): Etapa[] => info(act).ETAPAS ?? [];
 export const opcionesDe = (act: string): Opcion[] => info(act).OPCIONES ?? [];
 export const desbloqueosDe = (act: string): Desbloqueo[] => info(act).DESBLOQUEOS ?? [];
 export const primeraEtapa = (act: string) => etapasDe(act)[0]?.id ?? 'inicio';
@@ -35,7 +40,7 @@ export function dondeVa(act: string, etapa: string | null | undefined): { indice
 }
 
 /** Deja solo claves e ítems que existen en la actividad (lo que manda el formulario no se cree). */
-export function limpiarOpciones(act: string, pedidas: Record<string, string[]>): Record<string, string[]> {
+function limpiarOpciones(act: string, pedidas: Record<string, string[]>): Record<string, string[]> {
   const limpias: Record<string, string[]> = {};
   for (const o of opcionesDe(act)) {
     const validos = new Set(o.items.map((i) => i.id));

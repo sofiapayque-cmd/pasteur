@@ -12,7 +12,7 @@ import { useSala } from '../sala/sala';
   salvo cuando la maestra está probando una actividad desde su panel
   (llega con ?desde=… y entonces se pasa `destino`).
 */
-export function rutaMaestra(sala) {
+function rutaMaestra(sala) {
   if (sala?.actividad && sala.estado && sala.estado !== 'cerrada') {
     if (sala.estado === 'puesta') return `/maestra/${sala.actividad}/puesta`;
     if (sala.estado === 'esperando') return `/maestra/${sala.actividad}/sala`;

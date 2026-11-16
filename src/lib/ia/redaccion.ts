@@ -12,7 +12,7 @@
 import { agrupar, type Registro } from '../ciencia/normalizar';
 
 
-export const LIMITE_INFANTIL = 90; // migración 9 (formato pregunta)
+const LIMITE_INFANTIL = 90; // migración 9 (formato pregunta)
 const MAX_ARTICULOS = 8;
 const MAX_CITAS = 4;
 const MAX_ORACIONES_POR_CITA = 3;
@@ -25,7 +25,7 @@ export const DESCRIPCION_ACTIVIDAD: Record<string, string> = {
   a4: 'Evolución de virus: cómo los virus se copian, se equivocan (mutaciones) y forman variantes.',
 };
 
-export const palabras = (t: string) => (t.trim() ? t.trim().split(/\s+/).length : 0);
+const palabras = (t: string) => (t.trim() ? t.trim().split(/\s+/).length : 0);
 const comparable = (t: string) =>
   t
     .normalize('NFKC')

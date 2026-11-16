@@ -11,8 +11,8 @@ import { useRef } from 'react';
   frío hasta 12 °C · templado de 13 a 30 °C · tibio desde 31 °C.
   VALIDAR con el laboratorio: rangos y temperaturas de referencia.
 */
-export const MIN = 4;
-export const MAX = 40;
+const MIN = 4;
+const MAX = 40;
 export const zonaDe = (g) => (g == null ? null : g <= 12 ? 'frio' : g <= 30 ? 'templado' : 'tibio');
 
 export const REFERENCIAS = [

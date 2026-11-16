@@ -31,6 +31,3 @@ export const COLORES_ALUMNO = [
   { id: 'menta', nombre: 'Menta', valor: '#8ED5C3' },
   { id: 'azul', nombre: 'Azul', valor: '#93AEEB' },
 ];
-
-export const TEXTO_INICIO =
-  'Muchos científicos imaginan el infinito como un círculo: sin principio ni final. ¿Y si la ciencia también fuera así? Un mundo de descubrimientos que nunca termina. ¡Comenzá a explorar la infinidad de la ciencia!';

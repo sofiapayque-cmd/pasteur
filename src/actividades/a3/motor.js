@@ -10,12 +10,11 @@
                 cw (color con luz blanca), modo ('fill' | 'stroke' | 'ambos'), ...geometría }
 */
 
-export const AUMENTOS = [4, 10, 40, 100];
 export const PLANOS = 5;
 // Diámetro del campo en µm para cada objetivo (simplificado para que todo entre en la pantalla)
 export const CAMPO = { 4: 420, 10: 170, 40: 42, 100: 17 };
 // Profundidad de campo en planos: [nítido hasta, se ve como fantasma hasta]
-export const DOF = { 4: [1.2, 2.6], 10: [1.0, 2.4], 40: [0.55, 1.6], 100: [0.35, 1.1] };
+const DOF = { 4: [1.2, 2.6], 10: [1.0, 2.4], 40: [0.55, 1.6], 100: [0.35, 1.1] };
 // Cuánto se desenfoca por cada punto de perilla
 const SENSIBILIDAD = { 4: 0.12, 10: 0.2, 40: 0.32, 100: 0.45 };
 export const FOCO_OK = 1.5; // px de desenfoque aceptables
@@ -23,7 +22,7 @@ export const FOCO_OK = 1.5; // px de desenfoque aceptables
 const GASTO = { 4: 0.3, 10: 0.55, 40: 1, 100: 1.5 };
 const TAU = 40;
 
-export const COLOR_CANAL = { b: '95,140,255', g: '80,235,130', r: '255,85,75' };
+const COLOR_CANAL = { b: '95,140,255', g: '80,235,130', r: '255,85,75' };
 const IDX = { b: 0, g: 1, r: 2 };
 
 /* ---------- Azar con semilla ---------- */
@@ -454,7 +453,7 @@ export function escenaDe(id) {
 }
 
 /* ---------- Enfoque ---------- */
-export function focoIdeal(escena, z, a) {
+function focoIdeal(escena, z, a) {
   return Math.max(8, Math.min(92, 50 + escena.focoZ[z] + escena.focoA[a]));
 }
 export function desenfoque(escena, vista) {
@@ -783,12 +782,12 @@ function centroY(p) {
 
 const PRIORIDAD = { lineas: 0, capsulas: 0, circulos: 0, elipses: 0, polilinea: 1, blob: 1, region: 3 };
 
-export function seVe(p, foto) {
+function seVe(p, foto) {
   if (p.t === 'region') return Boolean(foto.l);
   const luces = foto.l === 'w' ? ['w'] : foto.l.split('');
   return luces.some((c) => (p.a[c] || 0) * (c === 'w' ? 1 : foto.bl[IDX[c]]) > 0.15);
 }
-export function nitida(p, foto) {
+function nitida(p, foto) {
   return distZ(p, foto.z) <= DOF[foto.a][0];
 }
 

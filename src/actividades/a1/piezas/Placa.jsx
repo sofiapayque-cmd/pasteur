@@ -144,7 +144,7 @@ function polvo(t) {
 }
 
 /* Agar nutritivo: ámbar claro y translúcido (sobre él, las colonias opacas se notan) */
-export const AGAR = '#D9BB78';
+const AGAR = '#D9BB78';
 
 export const PlacaVidrio = forwardRef(function PlacaVidrio({ tamano = 320, tapa = false, children, etiqueta, className = '', agar = AGAR, ...resto }, ref) {
   const uid = useId().replace(/:/g, '');

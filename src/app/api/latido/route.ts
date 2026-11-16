@@ -2,6 +2,7 @@ import { timingSafeEqual } from 'node:crypto';
 import { crearClienteAdmin } from '@/lib/supabase/admin';
 import { limpiarCuriosidades } from '@/datos/curiosidades';
 import { actualizarCuriosidades } from '@/datos/curiosidadesAutomaticas';
+import { revisarPreguntasPendientes } from '@/datos/cuadernos';
 import { iaConfigurada } from '@/lib/ia/openai';
 
 /*
@@ -18,6 +19,8 @@ import { iaConfigurada } from '@/lib/ia/openai';
   Además borra los conteos viejos de las curiosidades (migración 22) y arma
   las curiosidades automáticas del día (migración 23): temas nuevos con las
   preguntas sin tema y curiosidades de las respuestas aprobadas nuevas.
+  Y busca otra vez las preguntas de maestras que seguían sin respuesta
+  (migración 25): si ya hay una aprobada, le aparece el aviso en su panel.
 */
 export const dynamic = 'force-dynamic';
 // Las curiosidades automáticas le piden a la IA (unos segundos por respuesta nueva)
@@ -44,11 +47,13 @@ export async function GET(request: Request) {
   // De paso, la limpieza diaria de las curiosidades (conteos de más de 90 días, vistas de aulas de más de 30)
   await limpiarCuriosidades(admin).catch(() => undefined);
   const curiosidades = iaConfigurada() ? await actualizarCuriosidades(admin).catch(() => null) : null;
+  const preguntas = await revisarPreguntasPendientes(admin).catch(() => null);
   const errores = pedidos.filter((r) => r.error).length;
   if (errores) console.error('[latido] lecturas con error:', errores);
   return Response.json({
     ok: errores === 0,
     cuando: new Date().toISOString(),
     curiosidades: curiosidades && { temasNuevos: curiosidades.temasNuevos.length, curiosidadesNuevas: curiosidades.curiosidadesNuevas, errores: curiosidades.errores.length },
+    preguntasRespondidas: preguntas?.respondidas ?? null,
   });
 }

@@ -56,9 +56,9 @@ export type SalaReal = {
   alumnos: { id: string; apodo: string; color: string; etapa: string; datos: Record<string, unknown>; desde: number; numero: number; terminada: boolean }[];
 };
 
-export const COLORES = ['#EF6F5E', '#F4A6BD', '#F2B13B', '#8ED5C3', '#93AEEB', '#A9A9F4'];
-export const nombreDeAlumno = (a: Pick<AlumnoClase, 'apodo' | 'numero'>) => a.apodo || `N.º ${a.numero}`;
-export const colorDeAlumno = (a: Pick<AlumnoClase, 'color' | 'numero'>) => a.color || COLORES[(a.numero - 1) % COLORES.length];
+const COLORES = ['#EF6F5E', '#F4A6BD', '#F2B13B', '#8ED5C3', '#93AEEB', '#A9A9F4'];
+const nombreDeAlumno = (a: Pick<AlumnoClase, 'apodo' | 'numero'>) => a.apodo || `N.º ${a.numero}`;
+const colorDeAlumno = (a: Pick<AlumnoClase, 'color' | 'numero'>) => a.color || COLORES[(a.numero - 1) % COLORES.length];
 
 /**
  * Lo habilitado en la clase: lo de la actividad (true = desde el principio,
@@ -147,7 +147,7 @@ export type Paso = keyof typeof PASOS;
 export const esPaso = (p: unknown): p is Paso => typeof p === 'string' && Object.hasOwn(PASOS, p);
 
 /** Una clase que quedó abierta de otro día ya no lleva directo a los chicos. */
-export const HORAS_RECIENTE = 4;
+const HORAS_RECIENTE = 4;
 export const esReciente = (iniciadaEn: string, ahora = Date.now()) => ahora - Date.parse(iniciadaEn) < HORAS_RECIENTE * 3600 * 1000;
 
 /**

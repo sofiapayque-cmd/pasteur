@@ -187,31 +187,3 @@ export async function nombresDelEquipo(): Promise<Record<string, string>> {
   return Object.fromEntries((data ?? []).map((m) => [m.id, m.nombre_visible || 'Sin nombre']));
 }
 
-/** Lo que espera una validadora: versiones y publicaciones en revisión. */
-export async function pendientesDeRevision() {
-  const supabase = await crearClienteServidor();
-  const [{ data: versiones }, { data: publicaciones }] = await Promise.all([
-    supabase!
-      .from('ficha_versiones')
-      .select('id, numero, pregunta, version_infantil, autor_id, enviada_en, fichas!ficha_versiones_ficha_id_fkey(id, slug, formato)')
-      .eq('estado', 'en_revision')
-      .order('enviada_en'),
-    supabase!.from('publicaciones').select('id, titulo, anio, revista, agregada_por, enviada_en, licencia_codigo, retractada').eq('estado', 'en_revision').order('enviada_en'),
-  ]);
-  return {
-    versiones: (versiones ?? []) as unknown as (Pick<Version, 'id' | 'numero' | 'pregunta' | 'version_infantil' | 'autor_id' | 'enviada_en'> & {
-      fichas: Pick<Ficha, 'id' | 'slug' | 'formato'>;
-    })[],
-    publicaciones: (publicaciones ?? []) as {
-      id: string;
-      titulo: string;
-      anio: number | null;
-      revista: string;
-      agregada_por: string | null;
-      enviada_en: string | null;
-      licencia_codigo: string | null;
-      retractada: boolean;
-    }[],
-  };
-}
-

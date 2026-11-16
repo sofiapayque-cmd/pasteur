@@ -15,6 +15,7 @@ export type Alumno = {
   usuario: string;
   apodo: string | null;
   color: string | null;
+  aulaId: string;
   aula: { nombre: string; grado: number | null; anio_lectivo: number };
 };
 
@@ -25,6 +26,7 @@ type Fila = {
   apodo: string | null;
   color: string | null;
   activo: boolean;
+  aula_id: string;
   aulas: { nombre: string; grado: number | null; anio_lectivo: number; archivada_en: string | null } | null;
 };
 
@@ -37,12 +39,12 @@ export const obtenerAlumno = cache(async (): Promise<Alumno | null> => {
   if (!claims?.sub || (claims.app_metadata as { rol?: string } | undefined)?.rol !== 'alumno') return null;
   const { data: fila } = await supabase
     .from('alumnos')
-    .select('id, numero, usuario, apodo, color, activo, aulas(nombre, grado, anio_lectivo, archivada_en)')
+    .select('id, numero, usuario, apodo, color, activo, aula_id, aulas(nombre, grado, anio_lectivo, archivada_en)')
     .eq('id', claims.sub)
     .maybeSingle<Fila>();
   if (!fila || !fila.activo || !fila.aulas || fila.aulas.archivada_en) return null;
   const { aulas, ...resto } = fila;
-  return { id: resto.id, numero: resto.numero, usuario: resto.usuario, apodo: resto.apodo, color: resto.color, aula: aulas };
+  return { id: resto.id, numero: resto.numero, usuario: resto.usuario, apodo: resto.apodo, color: resto.color, aulaId: resto.aula_id, aula: aulas };
 });
 
 /** Para las pantallas del alumno: sin sistema de aulas → 404; sin alumno → a /clase. */

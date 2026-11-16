@@ -105,7 +105,7 @@ export default function Puesta() {
           </>
         )}
       </aside>
-      {asistenteAbierto && <PanelAsistente actividad={sala.actividad} onCerrar={cerrarAsistente} />}
+      {asistenteAbierto && <PanelAsistente actividad={sala.actividad} aulaId={clase.aula?.id} onCerrar={cerrarAsistente} />}
     </main>
   );
 }

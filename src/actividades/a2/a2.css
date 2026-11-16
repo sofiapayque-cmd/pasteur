@@ -141,11 +141,6 @@
   background: var(--cilio);
   transform: scale(1.08);
 }
-.a2-ctrl--texto {
-  padding: 0 16px;
-  font-size: 15px;
-  font-weight: 600;
-}
 .a2-visor--mini {
   height: 170px;
   border-radius: var(--radius-md);
@@ -815,7 +810,6 @@
 }
 .a2-veredicto__fila {
   display: grid;
-  grid-template-columns: 1fr 1fr auto;
   gap: 18px;
   align-items: center;
 }

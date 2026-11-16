@@ -8,10 +8,6 @@ export type IdActividad = 'a1' | 'a2' | 'a3' | 'a4';
 
 export const IDS_ACTIVIDAD: readonly IdActividad[] = ['a1', 'a2', 'a3', 'a4'];
 
-export function esIdActividad(valor: unknown): valor is IdActividad {
-  return typeof valor === 'string' && (IDS_ACTIVIDAD as readonly string[]).includes(valor);
-}
-
 /** Una etapa del recorrido del niño (la maestra las ve en el tablero). */
 export interface Etapa {
   id: string;

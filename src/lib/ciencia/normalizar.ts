@@ -258,7 +258,7 @@ export function deEuropePmc(r: unknown): Registro | null {
 const ETIQUETA = (tag: string) => new RegExp(`<${tag}(\\s[^>]*)?>([\\s\\S]*?)</${tag}>`, 'g');
 
 /** Todas las apariciones de <tag …>…</tag>: atributos y contenido. */
-export function etiquetas(xml: string, tag: string): { attrs: string; texto: string }[] {
+function etiquetas(xml: string, tag: string): { attrs: string; texto: string }[] {
   return [...xml.matchAll(ETIQUETA(tag))].map((m) => ({ attrs: m[1] ?? '', texto: m[2] ?? '' }));
 }
 const primera = (xml: string, tag: string) => etiquetas(xml, tag)[0]?.texto ?? '';
@@ -351,7 +351,7 @@ export function dePubMed(articulo: string): Registro | null {
 // El mismo trabajo desde varias fuentes
 // ---------------------------------------------------------------------
 /** Todas las claves con las que se puede reconocer un trabajo (DOI, PMID, PMC, id de la fuente). */
-export function clavesDe(r: Registro): string[] {
+function clavesDe(r: Registro): string[] {
   const i = r.identificadores;
   return [i.doi && `doi:${i.doi}`, i.pmid && `pmid:${i.pmid}`, i.pmcid && `pmcid:${i.pmcid}`, `${r.proveedor}:${r.id_externo}`].filter((k): k is string => Boolean(k));
 }

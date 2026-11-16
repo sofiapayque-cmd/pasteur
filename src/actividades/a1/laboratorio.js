@@ -18,8 +18,6 @@ export function azar(semilla) {
   };
 }
 
-export const nuevaSemilla = () => 1 + Math.floor(Math.random() * 9000);
-
 /* ---------- Incubadora ---------- */
 // VALIDAR: rangos aproximados de incubación (frío ≈ 4–10 °C, templado ≈ 20–25 °C, tibio ≈ 37 °C).
 export const TEMPERATURAS = [
@@ -41,9 +39,7 @@ const PREFERENCIA = {
   'campo-suelo': { frio: 0.18, templado: 1, tibio: 0.65 },
   'campo-vaca': { frio: 0.12, templado: 0.5, tibio: 1 },
 };
-export const preferencia = (ambiente, temp) => PREFERENCIA[ambiente]?.[temp] ?? 0.5;
-export const mejorTemperatura = (ambiente) =>
-  Object.entries(PREFERENCIA[ambiente] || { templado: 1 }).sort((a, b) => b[1] - a[1])[0][0];
+const preferencia = (ambiente, temp) => PREFERENCIA[ambiente]?.[temp] ?? 0.5;
 
 /* Cómo se ven las colonias de cada ambiente: ver colonias.js (la "firma", con sus fuentes). */
 export const coloresColonias = (ambiente) => firma(ambiente).map((m) => m.color);

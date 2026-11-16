@@ -2,7 +2,7 @@ import 'server-only';
 import { headers } from 'next/headers';
 
 /** La dirección de esta web (la del pedido: preview, producción o local). */
-export async function origenDelPedido() {
+async function origenDelPedido() {
   const h = await headers();
   return `${h.get('x-forwarded-proto') ?? 'https'}://${h.get('host')}`;
 }

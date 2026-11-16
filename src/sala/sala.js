@@ -42,7 +42,7 @@ const SALA_VACIA = {
 };
 
 // Id simple (crypto.randomUUID no existe en navegadores viejos ni sin https)
-export const nuevoId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const nuevoId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 
 let cache = null;
 let cacheTexto = null;

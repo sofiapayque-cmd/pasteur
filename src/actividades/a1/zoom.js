@@ -12,7 +12,7 @@ export const NIVELES = [
   { id: 'micro', nombre: 'Con microscopio', escala: '10 µm', icono: 'micro' },
 ];
 
-export const ZOOM = {
+const ZOOM = {
   'antartida-suelo': {
     ojo: {
       frase: 'Piedras, un poco de nieve y manchas de colores sobre las rocas.',

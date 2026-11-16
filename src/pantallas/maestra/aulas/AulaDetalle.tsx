@@ -107,6 +107,9 @@ export default function AulaDetalle({
                 <Link className="btn btn--secundario" href={`/maestra/aulas/${aula.id}/mandar`}>
                   Mandar como tarea
                 </Link>
+                <Link className="btn btn--claro" href={`/maestra/aulas/${aula.id}/cuaderno`}>
+                  Cuaderno de la clase
+                </Link>
               </div>
             )}
           </div>

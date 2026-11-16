@@ -100,7 +100,7 @@ export async function pedirJson<T>(p: Pedido): Promise<RespuestaIA<T>> {
 // ---------------------------------------------------------------------
 // Embeddings y moderación (asistente para la clase)
 // ---------------------------------------------------------------------
-export const MODELO_EMBEDDINGS = process.env.OPENAI_MODELO_EMBEDDINGS || 'text-embedding-3-small'; // 1536 números, como la columna
+const MODELO_EMBEDDINGS = process.env.OPENAI_MODELO_EMBEDDINGS || 'text-embedding-3-small'; // 1536 números, como la columna
 const MODELO_MODERACION = 'omni-moderation-latest'; // gratis
 
 async function postOpenAI(ruta: string, cuerpo: unknown, segundos = 20): Promise<unknown | null> {

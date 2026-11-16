@@ -47,7 +47,7 @@ export function aplanar(nodo, negrita = false, salida = { partes: [], complejo: 
 
 export const largo = (partes) => partes.reduce((n, p) => n + p.t.length, 0);
 
-export function movimientoReducido() {
+function movimientoReducido() {
   try {
     return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   } catch {

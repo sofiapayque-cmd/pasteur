@@ -150,15 +150,14 @@ En `public/illustrations/hero/`:
 | `magnifier/lupa-marco.webp` | La lupa de Sofia (aro, conector y mango, con el vidrio transparente). Se escala para que el aro mida lo mismo que en la referencia 1; el centro de su vidrio es el centro óptico, y la punta de su mango, el punto desde el que gira. |
 | `magnifier/lupa-reflejos.webp` | Los brillos del vidrio, de Sofia. Se agrandan hasta que el borde de su disco coincide con el del vidrio. |
 
-- Los PNG originales siguen en la carpeta, sin usar.
+- Los PNG originales (sin usar en la web) están en `docs/ilustraciones-originales/`, para que no se publiquen con el sitio (16/11).
 - Los recortes `*-mira.png` de Cursor cortaban codos y pelo en el borde: por eso se rehicieron.
-- `cells/Translucent Teal Cell with Pink Nucleus.png` es idéntico a `cells/cell.png`.
 - `lupa-marco` mide 628 × 723 px: en una pantalla común se ve nítida; en pantallas de alta densidad (Mac con Retina) se ve apenas suave. Una versión al doble de tamaño lo resolvería.
 
 ## La pelirroja que sostiene el mango (descartado)
 
 - `scientists/pelirroja-sostiene.png` (10/11) tenía la pose correcta, pero agarraba un mango unas cuatro veces más finito que el de la lupa gigante: puesta en la escena, se veía un mango chico adelante del grande.
-- Sofia decidió que nadie sostenga la lupa. El archivo queda guardado, sin usar.
+- Sofia decidió que nadie sostenga la lupa. El archivo queda guardado, sin usar, en `docs/ilustraciones-originales/scientists/`.
 - Para que igual se sienta que la levantan, la lupa gira desde la punta del mango (detrás del grupo) y los científicos se inclinan hacia ella.
 
 ## Ilustraciones opcionales

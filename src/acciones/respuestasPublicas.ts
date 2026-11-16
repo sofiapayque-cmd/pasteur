@@ -4,6 +4,7 @@ import { equipoReal } from '@/lib/supabase/config';
 import { crearClienteAdmin } from '@/lib/supabase/admin';
 import { puede } from '@/datos/acceso';
 import { contarRespuestaVista } from '@/datos/curiosidades';
+import { esUuid } from '@/lib/formularios';
 
 /*
   "PREGUNTAS DEL PASTEUR" DENTRO DE LAS ACTIVIDADES (bloque 4).
@@ -18,7 +19,6 @@ import { contarRespuestaVista } from '@/datos/curiosidades';
 */
 export type RespuestaPublica = { fichaId: string; pregunta: string; texto: string; fuentes: string[] };
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export async function respuestasDeActividad(actividad: string): Promise<RespuestaPublica[]> {
   if (!equipoReal || !/^a[1-4]$/.test(actividad)) return [];
@@ -52,7 +52,7 @@ export async function respuestasDeActividad(actividad: string): Promise<Respuest
 
 /** Suma una vista anónima (solo de respuestas publicadas: lo controla la base). */
 export async function contarVistaEnActividad(fichaId: string): Promise<void> {
-  if (!equipoReal || !UUID.test(fichaId)) return;
+  if (!equipoReal || !esUuid(fichaId)) return;
   if (!(await puede('actividad'))) return;
   const admin = crearClienteAdmin();
   if (!admin) return;

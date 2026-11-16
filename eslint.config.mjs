@@ -24,6 +24,10 @@ const eslintConfig = defineConfig([
       'react-hooks/purity': 'warn',
       'react-hooks/immutability': 'warn',
       'react-hooks/use-memo': 'warn',
+
+      // Un parámetro que empieza con _ está a propósito sin usar (por ejemplo, el estado previo
+      // que React les pasa a las acciones de los formularios).
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
     },
   },
   globalIgnores(['.next/**', 'out/**', 'build/**', 'dist/**', 'next-env.d.ts']),
