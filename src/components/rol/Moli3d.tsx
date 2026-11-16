@@ -1,7 +1,7 @@
 'use client';
 
 /*
-  MOLI 3D · todo Moli en un solo archivo (React Three Fiber + GSAP)
+  MOLI 3D · todo Moli en un solo archivo (three.js + GSAP)
 
   Un solo Moli, en un lienzo transparente encima de las placas. Se carga
   aparte, después de la página (EscenaRol lo pide con next/dynamic), así
@@ -21,30 +21,31 @@
   - Cámara ortográfica: 1 unidad del mundo = 1 píxel del lienzo. Así Moli se
     ubica midiendo las placas de verdad (getBoundingClientRect) y queda bien
     en compu, Ceibal y celular.
-  - En cada cuadro de GSAP el estado pasa al 3D y se pide un dibujo
-    (frameloop "demand"). En reposo, 30 cuadros por segundo.
+  - En cada cuadro de GSAP el estado pasa al 3D y se pide un dibujo (se
+    dibuja solo cuando algo cambió). En reposo, 30 cuadros por segundo.
+  - three.js directo, sin envoltorio de React (16/11): el componente crea el
+    lienzo, la cámara y la escena en un efecto, y los desarma al salir.
   - Con "reducir movimiento" queda quieta (la página navega sin esperar).
   - Si no hay WebGL o el modelo no carga, no pasa nada: queda la imagen de
     respaldo (EscenaRol).
 */
-import { Canvas, useLoader, useThree } from '@react-three/fiber';
 import gsap from 'gsap';
-import { Component, Suspense, useEffect, useLayoutEffect, useMemo, useRef, type ReactNode } from 'react';
+import { useEffect, useRef } from 'react';
 import {
   AgXToneMapping,
   CircleGeometry,
   Color,
   DoubleSide,
+  Group,
   MathUtils,
   Mesh,
   MeshBasicMaterial,
+  OrthographicCamera,
   PMREMGenerator,
   Scene,
   Vector3,
-  type Group,
+  WebGLRenderer,
   type Object3D,
-  type Scene as ThreeScene,
-  type WebGLRenderer,
 } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import type { Rol } from './EscenaRol';
@@ -461,7 +462,7 @@ function armarEntorno() {
 }
 
 /* Prepara la luz y el tono en el lienzo recién creado. Devuelve cómo desarmarla. */
-function prepararLuz(gl: WebGLRenderer, scene: ThreeScene, invalidate: () => void) {
+function prepararLuz(gl: WebGLRenderer, scene: Scene, invalidate: () => void) {
   gl.toneMapping = AgXToneMapping;
   gl.toneMappingExposure = LUZ.exposicion;
   const generador = new PMREMGenerator(gl);
@@ -531,201 +532,234 @@ const CUADRO_LENTO_MS = 40;
 /* El arco del salto sube como mucho esto (unidades de la escena): así no pasa por encima del título. */
 const ALTURA_SALTO = 130;
 
-function Moli({ escena, onListo, onControl, onLento }: Props) {
-  const gltf = useLoader(GLTFLoader, MOLI.modelo);
-  const partes = useMemo(() => buscarPartes(gltf.scene), [gltf]);
-  const lugar = useRef<Group>(null);
-  const movil = useRef<Group>(null);
-  const estado = useRef<EstadoMoli>(estadoSentada());
-  const medidas = useRef({ ancho: 0, alto: 0, escala: 1, u: 1 });
-  const { invalidate, size, gl } = useThree();
+/*
+  Moli en el lienzo: lo de cada cuadro (ubicarse, reposo, mirada, saludo y
+  salto). Recibe el modelo ya cargado y cómo pedir un dibujo. Devuelve cómo
+  desarmarse.
+*/
+function montarMoli(
+  lienzo: HTMLCanvasElement,
+  scene: Scene,
+  modelo: Object3D,
+  dibujar: () => void,
+  { escena, onListo, onControl, onLento }: Props,
+): () => void {
+  const partes = buscarPartes(modelo);
+  // lugar (dónde está, en píxeles) › inclinación hacia la pantalla › movil (sube, gira, se ladea y se estira desde los pies) › modelo
+  const lugar = new Group();
+  const inclinada = new Group();
+  inclinada.rotation.x = MathUtils.degToRad(MOLI.inclinacion);
+  const movil = new Group();
+  modelo.position.y = PIES; // los pies quedan en el punto de apoyo
+  movil.add(modelo);
+  inclinada.add(movil);
+  lugar.add(inclinada);
+  scene.add(lugar);
 
-  useLayoutEffect(() => {
-    const lienzo = gl.domElement;
-    const m = estado.current;
-    const reducido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    let placa: Rol = 'maestra'; // dónde está Moli
-    let accion = false; // saludando o saltando: se dibuja cada cuadro y no sigue al puntero
-    let cuadros = 0;
+  const m = estadoSentada();
+  let medidas = { ancho: 0, alto: 0, escala: 1, u: 1 };
+  const reducido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let placa: Rol = 'maestra'; // dónde está Moli
+  let accion = false; // saludando o saltando: se dibuja cada cuadro y no sigue al puntero
+  let cuadros = 0;
 
-    /* el borde de arriba de una placa, en píxeles del lienzo */
-    const apice = (rol: Rol) => {
-      const c = lienzo.getBoundingClientRect();
-      const p = escena.querySelector<HTMLElement>(`[data-placa="${rol}"]`)!.getBoundingClientRect();
-      return { x: p.left + p.width / 2 - c.left, y: p.top - c.top, u: p.width / PLACA_D };
+  /* el borde de arriba de una placa, en píxeles del lienzo */
+  const apice = (rol: Rol) => {
+    const c = lienzo.getBoundingClientRect();
+    const p = escena.querySelector<HTMLElement>(`[data-placa="${rol}"]`)!.getBoundingClientRect();
+    return { x: p.left + p.width / 2 - c.left, y: p.top - c.top, u: p.width / PLACA_D };
+  };
+
+  function pintar() {
+    const { ancho, alto, escala } = medidas;
+    lugar.position.set(m.x - ancho / 2, alto / 2 - m.y, 0);
+    lugar.scale.setScalar(escala);
+    aplicarEstado(movil, partes, m);
+    dibujar();
+  }
+
+  /* tamaños y lugar (si cambia la ventana) */
+  function ubicar() {
+    const c = lienzo.getBoundingClientRect();
+    const a = apice(placa);
+    medidas = { ancho: c.width, alto: c.height, escala: MOLI.escala * a.u, u: a.u };
+    if (!accion) {
+      m.x = a.x;
+      m.y = a.y;
+    }
+    pintar();
+  }
+  ubicar();
+  const observador = new ResizeObserver(ubicar);
+  observador.observe(escena);
+
+  /* en cada cuadro de GSAP; en reposo alcanza con 30 por segundo (la Ceibal lo agradece) */
+  /* ¿anda fluido? se mide en reposo, en 45 cuadros después de los primeros 20 (que compilan) */
+  const tiempos: number[] = [];
+  let anterior = 0;
+  function medirFluidez() {
+    const ahora = performance.now();
+    if (anterior && !accion && cuadros > 20 && tiempos.length < 45) {
+      tiempos.push(ahora - anterior);
+      if (tiempos.length === 45) {
+        const promedio = tiempos.reduce((suma, t) => suma + t, 0) / tiempos.length;
+        if (process.env.NODE_ENV === 'development') console.info('[moli] cuadro promedio', promedio.toFixed(1), 'ms');
+        // solo en desarrollo, para grabar videos con la calidad alta en una compu sin placa de video: localStorage.moliCalidad = 'alta'
+        const fija = process.env.NODE_ENV === 'development' && window.localStorage.getItem('moliCalidad') === 'alta';
+        if (promedio > CUADRO_LENTO_MS && !fija) onLento?.();
+      }
+    }
+    anterior = ahora;
+  }
+
+  function cuadro() {
+    cuadros++;
+    medirFluidez();
+    if (accion || cuadros % 2 === 0) pintar();
+  }
+
+  /* la mirada: el cuerpo gira apenas hacia el puntero */
+  const mirarX = gsap.quickTo(m, 'mirarX', { duration: 0.9, ease: 'power3.out' });
+  const mirarY = gsap.quickTo(m, 'mirarY', { duration: 0.9, ease: 'power3.out' });
+  function alMover(ev: PointerEvent) {
+    if (accion) return;
+    const c = lienzo.getBoundingClientRect();
+    const cabeza = c.top + m.y - 2.1 * medidas.escala;
+    const dx = (ev.clientX - (c.left + m.x)) / window.innerWidth;
+    const dy = (cabeza - ev.clientY) / window.innerHeight;
+    mirarX(Math.max(-12, Math.min(12, dx * 32)));
+    mirarY(Math.max(-5, Math.min(7, dy * 20)));
+  }
+
+  let detenerReposo = () => {};
+  if (!reducido) {
+    detenerReposo = reposo(m);
+    gsap.ticker.add(cuadro);
+    window.addEventListener('pointermove', alMover, { passive: true });
+  }
+
+  if (process.env.NODE_ENV === 'development') {
+    // solo en desarrollo: para revisar poses desde el navegador
+    (window as unknown as { __moli: unknown }).__moli = {
+      estado: m,
+      quieta() {
+        detenerReposo();
+        gsap.killTweensOf(m);
+        Object.assign(m, estadoSentada(m.x, m.y));
+        pintar();
+      },
     };
+  }
 
-    function pintar() {
-      const g = lugar.current;
-      const mv = movil.current;
-      if (!g || !mv) return;
-      const { ancho, alto, escala } = medidas.current;
-      g.position.set(m.x - ancho / 2, alto / 2 - m.y, 0);
-      g.scale.setScalar(escala);
-      aplicarEstado(mv, partes, m);
-      invalidate();
+  const terminar = (linea: gsap.core.Timeline) => new Promise<void>((listo) => linea.eventCallback('onComplete', () => listo()));
+
+  onControl({
+    saludar() {
+      accion = true;
+      detenerReposo();
+      return terminar(saludo(m));
+    },
+    saltar(hacia, alDespegar, alLlegar) {
+      accion = true;
+      detenerReposo();
+      const a = apice(hacia);
+      const distancia = Math.hypot(a.x - m.x, a.y - m.y);
+      const altura = Math.min(distancia * 0.25, ALTURA_SALTO * a.u);
+      placa = hacia;
+      return terminar(salto(m, { x: a.x, y: a.y, altura }, alDespegar, alLlegar));
+    },
+  });
+
+  // avisa cuando ya se dibujó
+  let aviso = requestAnimationFrame(() => {
+    aviso = requestAnimationFrame(onListo);
+  });
+
+  return () => {
+    cancelAnimationFrame(aviso);
+    onControl(null);
+    detenerReposo();
+    gsap.ticker.remove(cuadro);
+    gsap.killTweensOf(m);
+    window.removeEventListener('pointermove', alMover);
+    observador.disconnect();
+    lugar.removeFromParent();
+  };
+}
+
+/*
+  El lienzo: el dibujante de three.js, una cámara ortográfica de 1 unidad =
+  1 píxel (centrada, mirando de frente) y la escena con la luz. Dibuja solo
+  cuando se lo piden (una vez por cuadro como mucho). Si no hay WebGL o el
+  modelo no carga, no muestra nada: queda la imagen de respaldo (EscenaRol).
+*/
+export default function Moli3d({ calidad = 'alta', escena, onListo, onControl, onLento }: Props & { calidad?: Calidad }) {
+  const caja = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const div = caja.current;
+    if (!div) return;
+    let gl: WebGLRenderer;
+    try {
+      gl = new WebGLRenderer({ alpha: true, antialias: calidad === 'alta', powerPreference: 'default' });
+    } catch {
+      return; // sin WebGL
     }
+    gl.setPixelRatio(calidad === 'alta' ? Math.min(Math.max(window.devicePixelRatio, 1), 1.5) : 1);
+    const lienzo = gl.domElement;
+    Object.assign(lienzo.style, { display: 'block', width: '100%', height: '100%' });
+    div.appendChild(lienzo);
 
-    /* tamaños y lugar (si cambia la ventana) */
-    function ubicar() {
-      const c = lienzo.getBoundingClientRect();
-      const a = apice(placa);
-      medidas.current = { ancho: c.width, alto: c.height, escala: MOLI.escala * a.u, u: a.u };
-      if (!accion) {
-        m.x = a.x;
-        m.y = a.y;
+    const scene = new Scene();
+    const camara = new OrthographicCamera(-1, 1, 1, -1, 1, 4000);
+    camara.position.set(0, 0, 1000);
+
+    let pedido = 0;
+    const dibujar = () => {
+      if (!pedido) {
+        pedido = requestAnimationFrame(() => {
+          pedido = 0;
+          gl.render(scene, camara);
+        });
       }
-      pintar();
+    };
+    const desarmarLuz = prepararLuz(gl, scene, dibujar);
+
+    /* el tamaño del lienzo sigue al de su caja (rol.css) */
+    function medir() {
+      const { width, height } = div!.getBoundingClientRect();
+      if (!width || !height) return;
+      gl.setSize(width, height, false);
+      Object.assign(camara, { left: -width / 2, right: width / 2, top: height / 2, bottom: -height / 2 });
+      camara.updateProjectionMatrix();
+      dibujar();
     }
-    ubicar();
-    const observador = new ResizeObserver(ubicar);
-    observador.observe(escena);
+    medir();
+    const observador = new ResizeObserver(medir);
+    observador.observe(div);
 
-    /* en cada cuadro de GSAP; en reposo alcanza con 30 por segundo (la Ceibal lo agradece) */
-    /* ¿anda fluido? se mide en reposo, en 45 cuadros después de los primeros 20 (que compilan) */
-    const tiempos: number[] = [];
-    let anterior = 0;
-    function medirFluidez() {
-      const ahora = performance.now();
-      if (anterior && !accion && cuadros > 20 && tiempos.length < 45) {
-        tiempos.push(ahora - anterior);
-        if (tiempos.length === 45) {
-          const promedio = tiempos.reduce((suma, t) => suma + t, 0) / tiempos.length;
-          if (process.env.NODE_ENV === 'development') console.info('[moli] cuadro promedio', promedio.toFixed(1), 'ms');
-          // solo en desarrollo, para grabar videos con la calidad alta en una compu sin placa de video: localStorage.moliCalidad = 'alta'
-          const fija = process.env.NODE_ENV === 'development' && window.localStorage.getItem('moliCalidad') === 'alta';
-          if (promedio > CUADRO_LENTO_MS && !fija) onLento?.();
-        }
-      }
-      anterior = ahora;
-    }
-
-    function cuadro() {
-      cuadros++;
-      medirFluidez();
-      if (accion || cuadros % 2 === 0) pintar();
-    }
-
-    /* la mirada: el cuerpo gira apenas hacia el puntero */
-    const mirarX = gsap.quickTo(m, 'mirarX', { duration: 0.9, ease: 'power3.out' });
-    const mirarY = gsap.quickTo(m, 'mirarY', { duration: 0.9, ease: 'power3.out' });
-    function alMover(ev: PointerEvent) {
-      if (accion) return;
-      const c = lienzo.getBoundingClientRect();
-      const cabeza = c.top + m.y - 2.1 * medidas.current.escala;
-      const dx = (ev.clientX - (c.left + m.x)) / window.innerWidth;
-      const dy = (cabeza - ev.clientY) / window.innerHeight;
-      mirarX(Math.max(-12, Math.min(12, dx * 32)));
-      mirarY(Math.max(-5, Math.min(7, dy * 20)));
-    }
-
-    let detenerReposo = () => {};
-    if (!reducido) {
-      detenerReposo = reposo(m);
-      gsap.ticker.add(cuadro);
-      window.addEventListener('pointermove', alMover, { passive: true });
-    }
-
-    if (process.env.NODE_ENV === 'development') {
-      // solo en desarrollo: para revisar poses desde el navegador
-      (window as unknown as { __moli: unknown }).__moli = {
-        estado: m,
-        quieta() {
-          detenerReposo();
-          gsap.killTweensOf(m);
-          Object.assign(m, estadoSentada(m.x, m.y));
-          pintar();
-        },
-      };
-    }
-
-    const terminar = (linea: gsap.core.Timeline) => new Promise<void>((listo) => linea.eventCallback('onComplete', () => listo()));
-
-    onControl({
-      saludar() {
-        accion = true;
-        detenerReposo();
-        return terminar(saludo(m));
+    let vivo = true;
+    let desarmarMoli = () => {};
+    new GLTFLoader().load(
+      MOLI.modelo,
+      (gltf) => {
+        if (!vivo) return;
+        desarmarMoli = montarMoli(lienzo, scene, gltf.scene, dibujar, { escena, onListo, onControl, onLento });
       },
-      saltar(hacia, alDespegar, alLlegar) {
-        accion = true;
-        detenerReposo();
-        const a = apice(hacia);
-        const distancia = Math.hypot(a.x - m.x, a.y - m.y);
-        const altura = Math.min(distancia * 0.25, ALTURA_SALTO * a.u);
-        placa = hacia;
-        return terminar(salto(m, { x: a.x, y: a.y, altura }, alDespegar, alLlegar));
-      },
-    });
-
-    // avisa cuando ya se dibujó
-    let aviso = requestAnimationFrame(() => {
-      aviso = requestAnimationFrame(onListo);
-    });
+      undefined,
+      () => {}, // si el modelo no carga, queda la imagen de respaldo
+    );
 
     return () => {
-      cancelAnimationFrame(aviso);
-      onControl(null);
-      detenerReposo();
-      gsap.ticker.remove(cuadro);
-      gsap.killTweensOf(m);
-      window.removeEventListener('pointermove', alMover);
+      vivo = false;
+      desarmarMoli();
       observador.disconnect();
+      cancelAnimationFrame(pedido);
+      desarmarLuz();
+      gl.dispose();
+      lienzo.remove();
     };
-  }, [escena, gl, partes, invalidate, onListo, onControl, onLento]);
+  }, [calidad, escena, onListo, onControl, onLento]);
 
-  // si cambia el tamaño del lienzo, se vuelve a medir (lo hace el observador; esto solo redibuja)
-  useEffect(() => invalidate(), [size, invalidate]);
-
-  return (
-    <group ref={lugar}>
-      {/* se inclina hacia la pantalla, como la cámara del render de Blender */}
-      <group rotation-x={MathUtils.degToRad(MOLI.inclinacion)}>
-        {/* todo Moli: sube, gira, se ladea y se estira desde los pies */}
-        <group ref={movil}>
-          {/* los pies quedan en el punto de apoyo */}
-          <primitive object={gltf.scene} position-y={PIES} />
-        </group>
-      </group>
-    </group>
-  );
-}
-
-/* Si algo falla (WebGL, el modelo), no se muestra nada: queda la imagen de respaldo. */
-class SinMoli3d extends Component<{ children: ReactNode }, { error: boolean }> {
-  state = { error: false };
-  static getDerivedStateFromError() {
-    return { error: true };
-  }
-  render() {
-    return this.state.error ? null : this.props.children;
-  }
-}
-
-export default function Moli3d({ calidad = 'alta', ...props }: Props & { calidad?: Calidad }) {
-  const desarmarLuz = useRef<(() => void) | null>(null);
-  useEffect(() => () => desarmarLuz.current?.(), []);
-  return (
-    <SinMoli3d>
-      <Canvas
-        className="rol-moli__lienzo"
-        // R3F le pone estilos en línea al contenedor: el lugar y el tamaño los da rol.css, y los clics pasan a las placas de abajo
-        style={{ position: 'absolute', width: undefined, height: undefined, pointerEvents: 'none' }}
-        orthographic
-        frameloop="demand"
-        dpr={calidad === 'alta' ? [1, 1.5] : 1}
-        camera={{ position: [0, 0, 1000], near: 1, far: 4000, zoom: 1 }}
-        gl={{ alpha: true, antialias: calidad === 'alta', powerPreference: 'default' }}
-        onCreated={({ gl, scene, invalidate }) => {
-          desarmarLuz.current = prepararLuz(gl, scene, invalidate);
-        }}
-        fallback={null}
-        aria-hidden="true"
-      >
-        <Suspense fallback={null}>
-          <Moli {...props} />
-        </Suspense>
-      </Canvas>
-    </SinMoli3d>
-  );
+  // el lugar y el tamaño los da rol.css; los clics pasan a las placas de abajo
+  return <div ref={caja} className="rol-moli__lienzo" style={{ pointerEvents: 'none' }} aria-hidden="true" />;
 }
