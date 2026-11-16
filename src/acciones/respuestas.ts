@@ -4,7 +4,7 @@ import { refresh } from 'next/cache';
 import { crearClienteServidor } from '@/lib/supabase/servidor';
 import { crearClienteAdmin } from '@/lib/supabase/admin';
 import { miembroCon } from '@/datos/equipo';
-import { listarRespuestas, pedidasHoy, preguntasDeActividad } from '@/datos/respuestas';
+import { listarRespuestas, pedidasHoy, preguntasDeActividad, type Respuesta } from '@/datos/respuestas';
 import { iaConfigurada } from '@/lib/ia/openai';
 import { separarPreguntas } from '@/lib/ia/redaccion';
 import { corregirConComentario, proponer, responderPregunta, type Resultado } from '@/lib/ia/redactar';
@@ -16,8 +16,11 @@ import { corregirConComentario, proponer, responderPregunta, type Resultado } fr
     cada 24 horas, para cuidar el presupuesto.
   · Ideas de preguntas: la IA propone; no se guarda nada.
   · Corregir con la IA (15/11): las que tienen cambios pedidos, la IA las
-    reescribe siguiendo el comentario de la validadora, con los mismos
-    artículos, y vuelven a revisión (ver corregirConComentario).
+    reescribe siguiendo el comentario de la validadora, con sus artículos y
+    buscando otros nuevos para lo que pidió, y vuelven a revisión.
+  · Completar con la IA: las que esperan revisión pero quedaron incompletas
+    (no estaba en sus artículos), una vez, buscando artículos nuevos.
+    Las dos: ver corregirConComentario en src/lib/ia/redactar.ts.
 */
 export type EstadoPedido = { mensaje: string; ok?: boolean; resultados?: Resultado[] };
 export type EstadoIdeas = { mensaje: string; ok?: boolean; preguntas?: string[] };
@@ -151,38 +154,30 @@ export async function descartarPregunta(id: string): Promise<void> {
 // Corregir con la IA las que tienen cambios pedidos
 // ---------------------------------------------------------------------
 // De a 5 a la vez y hasta 15 por clic: entra en los 5 minutos que tiene la página
-const CORREGIR_POR_VEZ = 15;
-
-async function deACinco<T, R>(items: T[], fn: (t: T) => Promise<R>): Promise<R[]> {
-  const salida: R[] = new Array(items.length);
-  let siguiente = 0;
-  await Promise.all(
-    [0, 1, 2, 3, 4].map(async () => {
-      while (siguiente < items.length) {
-        const i = siguiente++;
-        salida[i] = await fn(items[i]);
-      }
-    }),
-  );
-  return salida;
-}
+// Cada una busca artículos y redacta (uno o dos minutos): de a dos a la vez,
+// como al pedir respuestas, y hasta 4 por vez para entrar en los 5 minutos.
+const CORREGIR_POR_VEZ = 4;
 
 async function corregirVarias(versiones: { id: string; pregunta?: string }[]): Promise<EstadoPedido> {
   const yo = await miembroCon();
   if (!yo) return SIN_PERMISO;
   if (!iaConfigurada()) return { mensaje: 'Falta la clave de OpenAI en el servidor (OPENAI_API_KEY).' };
+  const admin = crearClienteAdmin();
+  if (!admin) return { mensaje: 'Falta la clave secreta de Supabase en el servidor (SUPABASE_SECRET_KEY).' };
   const db = (await crearClienteServidor())!;
   console.info(`[ia] ${yo.id} pidió corregir ${versiones.length} respuesta(s)`);
-  const resultados = await deACinco(versiones, async ({ id, pregunta = '' }) => {
+  const resultados = await deADos(versiones, async ({ id, pregunta = '' }) => {
     try {
-      const r = await corregirConComentario({ db, actorId: yo.id }, id, pregunta);
-      if (!r.ok) console.warn(`[ia] no se corrigió ${id}: ${r.mensaje}`);
+      const r = await corregirConComentario({ db, admin, actorId: yo.id }, id, pregunta);
+      if (!r.enRevision) console.warn(`[ia] no se corrigió ${id}: ${r.mensaje}`);
       return r;
     } catch (e) {
       console.error('[ia] error inesperado al corregir:', e instanceof Error ? e.message : e);
       return { pregunta, ok: false, mensaje: 'Algo falló sin aviso. Probá de nuevo.' } satisfies Resultado;
     }
   });
+  const uso = resultados.reduce((t, r) => ({ entrada: t.entrada + (r.uso?.entrada ?? 0), salida: t.salida + (r.uso?.salida ?? 0) }), { entrada: 0, salida: 0 });
+  console.info(`[ia] tokens: ${uso.entrada} de entrada, ${uso.salida} de salida`);
   refresh();
   const listas = resultados.filter((r) => r.enRevision).length;
   if (versiones.length === 1) return { ok: listas === 1, resultados, mensaje: resultados[0].mensaje };
@@ -191,24 +186,34 @@ async function corregirVarias(versiones: { id: string; pregunta?: string }[]): P
     resultados,
     mensaje:
       listas === resultados.length
-        ? `Listo: las ${listas} quedaron corregidas y otra vez esperando revisión.`
-        : `${listas} de ${resultados.length} quedaron corregidas y esperando revisión. Abajo está qué pasó con cada una.`,
+        ? `Listo: las ${listas} están esperando revisión.`
+        : `${listas} de ${resultados.length} quedaron esperando revisión. Abajo está qué pasó con cada una.`,
   };
 }
 
-/** Una sola (botón de la tarjeta o de la ficha). */
+/** Una sola (botón de la tarjeta): corrige si tiene cambios pedidos, completa si quedó incompleta. */
 export async function corregirConIa(versionId: string): Promise<EstadoPedido> {
   if (!UUID.test(versionId)) return SIN_PERMISO;
   return corregirVarias([{ id: versionId }]);
 }
 
-/** Todas las que tienen cambios pedidos (hasta 15 por vez). */
-export async function corregirTodasConIa(): Promise<EstadoPedido> {
+async function variasDe(cuales: (r: Respuesta, yo: string) => boolean, ninguna: string): Promise<EstadoPedido> {
   const yo = await miembroCon();
   if (!yo) return SIN_PERMISO;
-  const todas = (await listarRespuestas()).filter((r) => r.grupo === 'cambios').map((r) => ({ id: r.versionId, pregunta: r.pregunta }));
-  if (!todas.length) return { mensaje: 'No hay respuestas con cambios pedidos.' };
+  // Solo las propias: la base deja cambiar una versión solo a quien la escribió
+  const todas = (await listarRespuestas()).filter((r) => cuales(r, yo.id)).map((r) => ({ id: r.versionId, pregunta: r.pregunta }));
+  if (!todas.length) return { mensaje: ninguna };
   const estado = await corregirVarias(todas.slice(0, CORREGIR_POR_VEZ));
   const sobran = todas.length - CORREGIR_POR_VEZ;
   return sobran > 0 ? { ...estado, mensaje: `${estado.mensaje} Quedan ${sobran}: tocá el botón otra vez.` } : estado;
+}
+
+/** Todas las que tienen cambios pedidos (hasta 4 por vez). */
+export async function corregirTodasConIa(): Promise<EstadoPedido> {
+  return variasDe((r, yo) => r.grupo === 'cambios' && r.autorId === yo, 'No hay respuestas tuyas con cambios pedidos.');
+}
+
+/** Todas las que esperan revisión pero quedaron incompletas (hasta 4 por vez). */
+export async function completarTodasConIa(): Promise<EstadoPedido> {
+  return variasDe((r, yo) => r.completable && r.autorId === yo, 'No hay respuestas tuyas incompletas para completar.');
 }

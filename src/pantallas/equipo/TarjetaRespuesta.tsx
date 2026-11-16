@@ -4,7 +4,7 @@ import { BotonCorregir } from './CorregirConIa';
 import { ACTIVIDADES, NOMBRE_ESTADO, haceCuanto, palabras } from '@/lib/equipo/comun';
 
 /* Una respuesta en el tablero: estado, pregunta, lo que leen los chicos, fuentes y qué hacer. */
-export default function Tarjeta({ r, nombres, validadora }: { r: Respuesta; nombres: Record<string, string>; validadora: boolean }) {
+export default function Tarjeta({ r, nombres, validadora, propia = false }: { r: Respuesta; nombres: Record<string, string>; validadora: boolean; propia?: boolean }) {
   const pendientes = r.fuentes.filter((f) => f.estado === 'en_revision').length;
   const estadoChip = { espera: 'en_revision', cambios: 'borrador', aprobada: 'publicada', rechazada: 'rechazada', borrador: 'borrador', retirada: 'retirada' }[r.grupo];
   return (
@@ -28,6 +28,11 @@ export default function Tarjeta({ r, nombres, validadora }: { r: Respuesta; nomb
           {r.fuentes.length > 3 && <li>y {r.fuentes.length - 3} más</li>}
         </ul>
       )}
+      {r.grupo === 'espera' && r.falta && (
+        <p className="eq-tarjeta__comentario">
+          <strong>Le faltó:</strong> {r.falta}
+        </p>
+      )}
       {r.grupo === 'cambios' && r.ultima?.comentario && (
         <p className="eq-tarjeta__comentario">
           <strong>{nombres[r.ultima.revisorId] ?? 'La validadora'}:</strong> {r.ultima.comentario}
@@ -49,7 +54,15 @@ export default function Tarjeta({ r, nombres, validadora }: { r: Respuesta; nomb
           <Link className="btn btn--primario btn--chico" href={`/equipo/revisar/${r.versionId}?desde=revisar`}>
             Revisar
           </Link>
-        ) : r.grupo === 'cambios' && !validadora ? (
+        ) : r.grupo === 'espera' && r.completable && propia && !validadora ? (
+          // Quedó incompleta: la IA busca artículos nuevos para lo que faltó (una vez)
+          <div className="eq-tarjeta__acciones">
+            <BotonCorregir versionId={r.versionId} completar />
+            <Link className="enlace" href={`/equipo/fichas/${r.fichaId}`}>
+              Ver
+            </Link>
+          </div>
+        ) : r.grupo === 'cambios' && propia && !validadora ? (
           // La IA la corrige siguiendo el comentario; "a mano" abre la ficha para editarla
           <div className="eq-tarjeta__acciones">
             <BotonCorregir versionId={r.versionId} />

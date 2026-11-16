@@ -1,6 +1,7 @@
 import 'server-only';
 import { crearClienteServidor } from '@/lib/supabase/servidor';
 import type { EstadoVersion } from './fichas';
+import { faltanteDe } from '@/lib/ia/redaccion';
 
 /*
   TABLERO DE RESPUESTAS (solo servidor, con la sesión del miembro: RLS).
@@ -32,6 +33,10 @@ export type Respuesta = {
   decididaEn: string | null;
   fuentes: { titulo: string; estado: string }[];
   ultima: { decision: string; comentario: string; revisorId: string; creadaEn: string } | null;
+  /** Lo que le faltó, si la IA anotó que quedó incompleta. */
+  falta: string | null;
+  /** Espera revisión, quedó incompleta y todavía no se buscaron artículos nuevos para completarla. */
+  completable: boolean;
 };
 
 type FilaFicha = {
@@ -50,6 +55,7 @@ type FilaFicha = {
     creada_en: string;
     enviada_en: string | null;
     decidida_en: string | null;
+    nota_interna: string | null;
   }[];
 };
 
@@ -60,7 +66,7 @@ export async function listarRespuestas(): Promise<Respuesta[]> {
   const { data: fichas } = await db
     .from('fichas')
     .select(
-      'id, estado, actividad, creada_en, ficha_versiones!ficha_versiones_ficha_id_fkey(id, numero, estado, pregunta, version_infantil, asistida_por_ia, autor_id, creada_en, enviada_en, decidida_en)',
+      'id, estado, actividad, creada_en, ficha_versiones!ficha_versiones_ficha_id_fkey(id, numero, estado, pregunta, version_infantil, asistida_por_ia, autor_id, creada_en, enviada_en, decidida_en, nota_interna)',
     )
     .eq('formato', 'pregunta')
     .order('creada_en', { ascending: false })
@@ -108,6 +114,7 @@ export async function listarRespuestas(): Promise<Respuesta[]> {
               : v.estado === 'borrador' && u?.decision === 'pedir_cambios'
                 ? 'cambios'
                 : 'borrador';
+    const { falta, yaBusco } = faltanteDe(v.nota_interna);
     return {
       fichaId: f.id,
       versionId: v.id,
@@ -122,6 +129,8 @@ export async function listarRespuestas(): Promise<Respuesta[]> {
       decididaEn: v.decidida_en,
       fuentes: fuentes[v.id] ?? [],
       ultima: u,
+      falta,
+      completable: grupo === 'espera' && Boolean(falta) && !yaBusco,
     };
   });
 }
