@@ -1,4 +1,5 @@
 import 'server-only';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { crearClienteServidor } from '@/lib/supabase/servidor';
 import { crearClienteAdmin } from '@/lib/supabase/admin';
 import { indexarTemas, limpiarCuriosidades } from '@/datos/curiosidades';
@@ -9,7 +10,10 @@ import { DIAS, VIDA_MEDIA } from '@/lib/curiosidades/elegir';
   reglas de la base deciden qué ve). De paso, con la clave secreta:
   embeddings de temas nuevos y limpieza de conteos viejos.
 */
-export type TemaPanel = { id: string; nombre: string; descripcion: string; actividad: string | null; activo: boolean; conIndice: boolean };
+export type TemaPanel = { id: string; nombre: string; descripcion: string; actividad: string | null; activo: boolean; conIndice: boolean; automatico: boolean; padreId: string | null };
+/** Una curiosidad automática: una oración tal cual de una respuesta aprobada (migración 23). */
+export type AutoPanel = { id: string; temaId: string | null; texto: string; pregunta: string; fichaId: string; oculta: boolean; vigente: boolean };
+export type EstadoAutomaticas = { total: number; respuestasMiradas: number; aprobadas: number; ultima: string | null; disponible: boolean };
 export type TendenciaPanel = { temaId: string; nombre: string; actividad: string | null; puntaje: number; consultas: number; curiosidades: number };
 export type CuriosidadPanel = { id: string; temaId: string | null; actividad: string | null; estado: 'publicada' | 'espera' | 'borrador' | 'rechazada' | 'retirada'; titulo: string; texto: string; ia: boolean };
 export type SinTema = { id: string; texto: string; actividad: string | null; veces: number; ultimaVez: string };
@@ -25,7 +29,8 @@ export async function panelCuriosidades() {
   }
   const db = (await crearClienteServidor())!;
   const [temasR, tendR, fichasR, sinTemaR] = await Promise.all([
-    db.from('temas').select('id, nombre, descripcion, actividad, activo, embedding').order('actividad').order('orden').order('nombre'),
+    // Con "*": anda con y sin la migración 23 (columna automatico)
+    db.from('temas').select('*').order('actividad').order('orden').order('nombre'),
     db.rpc('tendencia_temas', { p_dias: DIAS, p_vida_media: VIDA_MEDIA }),
     db
       .from('fichas')
@@ -36,13 +41,17 @@ export async function panelCuriosidades() {
     db.from('consultas_sin_tema').select('id, texto, actividad, veces, ultima_vez').order('ultima_vez', { ascending: false }).order('veces', { ascending: false }).limit(60),
   ]);
 
-  const temas: TemaPanel[] = ((temasR.data ?? []) as { id: string; nombre: string; descripcion: string; actividad: string | null; activo: boolean; embedding: unknown }[]).map((t) => ({
+  const temas: TemaPanel[] = (
+    (temasR.data ?? []) as { id: string; nombre: string; descripcion: string; actividad: string | null; activo: boolean; embedding: unknown; automatico?: boolean; padre_id: string | null }[]
+  ).map((t) => ({
     id: t.id,
     nombre: t.nombre,
     descripcion: t.descripcion,
     actividad: t.actividad,
     activo: t.activo,
     conIndice: t.embedding != null,
+    automatico: Boolean(t.automatico),
+    padreId: t.padre_id,
   }));
   const tendencia: TendenciaPanel[] = ((tendR.data ?? []) as { tema_id: string; nombre: string; actividad: string | null; puntaje: number; consultas: number; curiosidades: number }[]).map((t) => ({
     temaId: t.tema_id,
@@ -74,5 +83,42 @@ export async function panelCuriosidades() {
     veces: s.veces,
     ultimaVez: s.ultima_vez,
   }));
-  return { temas, tendencia, curiosidades, sinTema };
+  const { automaticas, estadoAutomaticas } = await panelAutomaticas(db);
+  return { temas, tendencia, curiosidades, sinTema, automaticas, estadoAutomaticas };
+}
+
+/** Las curiosidades automáticas, para el equipo (con su sesión). Sin la migración 23: vacío. */
+async function panelAutomaticas(db: SupabaseClient): Promise<{ automaticas: AutoPanel[]; estadoAutomaticas: EstadoAutomaticas }> {
+  const [autosR, origenR, aprobadasR] = await Promise.all([
+    db.from('curiosidades_auto').select('id, version_id, ficha_id, tema_id, texto, oculta').order('creada_en', { ascending: false }).limit(600),
+    db.from('curiosidades_origen').select('version_id, analizada_en').order('analizada_en', { ascending: false }).limit(1000),
+    db.from('fichas_validadas').select('version_id, pregunta').eq('formato', 'pregunta'),
+  ]);
+  const vacio = { automaticas: [], estadoAutomaticas: { total: 0, respuestasMiradas: 0, aprobadas: 0, ultima: null, disponible: false } };
+  if (autosR.error || origenR.error) return vacio;
+  const vigentes = new Map(((aprobadasR.data ?? []) as { version_id: string; pregunta: string }[]).map((v) => [v.version_id, v.pregunta]));
+  const filas = (autosR.data ?? []) as { id: string; version_id: string; ficha_id: string; tema_id: string | null; texto: string; oculta: boolean }[];
+  // La pregunta de las que ya no están vigentes (se retiró la respuesta o hay otra versión)
+  const faltan = [...new Set(filas.filter((f) => !vigentes.has(f.version_id)).map((f) => f.version_id))];
+  const { data: viejas } = faltan.length ? await db.from('ficha_versiones').select('id, pregunta').in('id', faltan) : { data: [] };
+  const preguntaDe = new Map([...vigentes, ...((viejas ?? []) as { id: string; pregunta: string }[]).map((v) => [v.id, v.pregunta] as const)]);
+  const origen = (origenR.data ?? []) as { version_id: string; analizada_en: string }[];
+  return {
+    automaticas: filas.map((f) => ({
+      id: f.id,
+      temaId: f.tema_id,
+      texto: f.texto,
+      pregunta: preguntaDe.get(f.version_id) ?? '',
+      fichaId: f.ficha_id,
+      oculta: f.oculta,
+      vigente: vigentes.has(f.version_id),
+    })),
+    estadoAutomaticas: {
+      total: filas.filter((f) => !f.oculta && vigentes.has(f.version_id)).length,
+      respuestasMiradas: origen.filter((o) => vigentes.has(o.version_id)).length,
+      aprobadas: vigentes.size,
+      ultima: origen[0]?.analizada_en ?? null,
+      disponible: true,
+    },
+  };
 }
