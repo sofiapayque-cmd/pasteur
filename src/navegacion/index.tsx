@@ -13,6 +13,7 @@
   - <Navigate to replace> → redirige apenas se muestra (igual que antes)
   - useDesde()            → de dónde vino la maestra (antes location.state.desde,
                             ahora ?desde=… en la dirección, así sobrevive a recargar)
+  - useVolver(porDefecto) → el botón "Volver": a la página anterior, o a porDefecto
 */
 import { useEffect } from 'react';
 import { useParams as useParamsNext, useRouter, useSearchParams } from 'next/navigation';
@@ -50,4 +51,29 @@ export function useDesde(): string | undefined {
 
 export function conDesde(ruta: string, desde: string): string {
   return `${ruta}?desde=${encodeURIComponent(desde)}`;
+}
+
+/*
+  "Volver" (pedido de Sofia, 16/11): vuelve a la página de la web de donde se
+  vino, como la flecha del navegador. Por ejemplo: inicio → Acceso
+  investigadores → Volver = el inicio.
+  Va a porDefecto (la página de arriba de esta) si:
+  · se entró de afuera (un link de un mail, la dirección escrita);
+  · la anterior es un ingreso: después de entrar, Volver no lleva de nuevo
+    a la pantalla de la contraseña;
+  · el navegador es viejo y no dice cuál fue la página anterior.
+*/
+const INGRESO = /^\/((maestra|equipo)\/(entrar|clave|recuperar)|auth\/)/;
+
+type Historial = { canGoBack?: boolean; currentEntry?: { index: number }; entries?: () => { url: string | null }[] };
+
+export function useVolver(porDefecto: string) {
+  const router = useRouter();
+  return () => {
+    // La lista del navegador solo tiene las páginas de esta web de esta pestaña
+    const h = (window as unknown as { navigation?: Historial }).navigation;
+    const anterior = h?.canGoBack && h.currentEntry ? h.entries?.()[h.currentEntry.index - 1]?.url : null;
+    if (anterior && !INGRESO.test(new URL(anterior).pathname)) router.back();
+    else router.push(porDefecto);
+  };
 }
