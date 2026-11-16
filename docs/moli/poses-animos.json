@@ -1,31 +1,27 @@
 {
-  "_como": "Poses de Moli 3D para las fotos de cada ánimo (public/illustrations/moli/moli-<ánimo>.webp). Se sacaron el 14/11 con three.js en Chrome, con el modelo public/models/moli.glb, la misma luz de Moli3d.tsx (sección 4) y los mismos nombres de EstadoMoli (sección 2). Todas con el mismo encuadre: 640×575, recortadas juntas.",
+  "_como": "Poses de Moli 3D para las fotos de cada ánimo (public/illustrations/moli/moli-<ánimo>.webp), con el modelo public/models/moli.glb, la misma luz de Moli3d.tsx (sección 4) y los mismos nombres de EstadoMoli (sección 2). Todas con el mismo encuadre: 640×575, Moli parada (alto 0, piernas derechas) con los pies en (−9,35; −256,65) desde el centro y escala 150,188. Desde el 16/11 (pedido de Sofia) los dos hidrógenos están a 104,5° y se mueven siempre juntos: 'manos' es cuánto giran juntos alrededor del oxígeno (positivo: sube el de la derecha y baja el de la izquierda); ya no hay una mano que suba sola.",
   "feliz": {
     "giro": 6,
     "inclina": -2,
-    "manoDer": 84,
-    "manoAdelante": 26,
-    "ola": 10
+    "manos": 16,
+    "mirarY": 2
   },
   "escucha": {
     "giro": -12,
     "inclina": 9,
-    "manoIzq": 22,
+    "manos": -10,
     "mirarY": 2
   },
   "piensa": {
     "giro": 12,
     "inclina": -6,
-    "manoDer": 62,
-    "manoAdelante": 55,
+    "manos": 12,
     "mirarY": 6,
     "parpado": 0.8
   },
   "eureka": {
     "giro": 0,
-    "manoIzq": 74,
-    "manoDer": 74,
-    "manoAdelante": 14,
+    "manos": 0,
     "estira": 1.03,
     "alto": 0.1,
     "mirarY": 4
@@ -33,14 +29,11 @@
   "duda": {
     "giro": -14,
     "inclina": -9,
-    "manoIzq": 58,
-    "manoAdelante": 30
+    "manos": -14
   },
   "alegria": {
     "giro": 0,
-    "manoIzq": 82,
-    "manoDer": 82,
-    "manoAdelante": 8,
+    "manos": 0,
     "estira": 1.04,
     "alto": 0.26,
     "piernas": 38,

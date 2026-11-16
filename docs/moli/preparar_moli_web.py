@@ -6,6 +6,13 @@ No cambia colores, materiales ni formas de lo que ya existe:
 - jerarquía: MOLI > Cuerpo (respira) > oxígeno, cara y hombros (de donde giran los hidrógenos);
   MOLI > Cadera > muslo y Rodilla > articulación y pantorrilla;
 - se borran los materiales que no usa nadie.
+
+16/11/2026 (pedido de Sofia): los hidrógenos tienen que estar a 104,5° entre sí, el ángulo real
+de la molécula de agua. En moli.blend y moli-web.blend estaban a 90,9°. Se corrigió directo en
+public/models/moli.glb, sin Blender: cada hidrógeno quedó a la misma distancia del centro del
+oxígeno (1,4037), en (±1,1099; −0,8535; 0,1) en coordenadas glTF, que en Blender es
+CENTRO + (±1,1099; −0,1; −0,8535). Si se vuelve a exportar desde Blender, hay que moverlos ahí
+antes (o repetir esa corrección en el .glb).
 """
 import bpy, bmesh, sys
 from mathutils import Vector

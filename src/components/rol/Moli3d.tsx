@@ -82,7 +82,9 @@ const PLACA_D = 453;
     ├─ Cuerpo (centro del oxígeno: respira y mira desde acá)
     │   ├─ oxígeno, ojos (parpadean), mejillas, sonrisa
     │   └─ Hombro izquierdo / derecho → hidrógeno (hacen de manos: giran
-    │      alrededor del centro del oxígeno)
+    │      alrededor del centro del oxígeno, siempre juntos: el ángulo
+    │      entre los dos es el de la molécula de agua, 104,5°, y no
+    │      cambia nunca; pedido de Sofia, 16/11)
     └─ Cadera izquierda / derecha → muslo
         └─ Rodilla → articulación y pantorrilla con el pie
 
@@ -188,11 +190,13 @@ type EstadoMoli = {
   rodillas: number;
   cierre: number;
   vaiven: number;
-  /** cuánto sube cada mano (hidrógeno) por el costado, y cuánto se adelanta la que sube */
-  manoIzq: number;
-  manoDer: number;
-  manoAdelante: number;
-  /** el ir y venir del saludo (se suma a la mano que saluda) */
+  /**
+    cuánto giran juntos los dos hidrógenos alrededor del oxígeno (positivo:
+    sube el de la derecha y baja el de la izquierda). Nunca se mueven por
+    separado: el ángulo entre los dos (104,5°) no cambia.
+  */
+  manos: number;
+  /** el ir y venir del saludo (se suma a manos) */
   ola: number;
   /** 1 = ojos abiertos; 0,1 = cerrados */
   parpado: number;
@@ -221,9 +225,7 @@ const estadoSentada = (x = 0, y = 0): EstadoMoli => ({
   respira: 1,
   ...PIERNAS_SENTADA,
   vaiven: 0,
-  manoIzq: 0,
-  manoDer: 0,
-  manoAdelante: 0,
+  manos: 0,
   ola: 0,
   parpado: 1,
   mirarX: 0,
@@ -261,12 +263,10 @@ function aplicarEstado(movil: Object3D, p: PartesMoli, m: EstadoMoli) {
     rodilla.rotation.set(rad(m.rodillas + lado * m.vaiven), 0, rad(-lado * m.cierre));
   }
 
-  // manos: suben por el costado (alrededor de Z) y se adelantan (alrededor de X); la que saluda suma la ola
-  const olaIzq = m.manoIzq > 40 ? m.ola : 0;
-  const olaDer = m.manoDer > 40 ? m.ola : 0;
-  const adelante = (mano: number) => rad((m.manoAdelante * Math.max(0, Math.min(mano, 60))) / 60);
-  p.hombroDer.rotation.set(adelante(m.manoDer), 0, rad(m.manoDer + olaDer));
-  p.hombroIzq.rotation.set(adelante(m.manoIzq), 0, rad(-(m.manoIzq + olaIzq)));
+  // manos: los dos hidrógenos giran juntos alrededor del oxígeno, como una sola pieza (el ángulo entre ellos no cambia)
+  const manos = rad(m.manos + m.ola);
+  p.hombroDer.rotation.set(0, 0, manos);
+  p.hombroIzq.rotation.set(0, 0, manos);
 
   p.ojoIzq.scale.y = m.parpado;
   p.ojoDer.scale.y = m.parpado;
@@ -278,8 +278,9 @@ function aplicarEstado(movil: Object3D, p: PartesMoli, m: EstadoMoli) {
   Tres momentos:
   - reposo: sentada en «Soy maestra» con las rodillas dobladas, respira,
     balancea las pantorrillas, parpadea y se ladea apenas;
-  - saludo («Soy maestra»): sigue sentada, mira, levanta un hidrógeno y
-    saluda;
+  - saludo («Soy maestra»): sigue sentada, mira y saluda meciendo los
+    dos hidrógenos juntos (nunca uno solo: el ángulo de la molécula no
+    cambia);
   - salto («Soy alumno»): se para estirando las piernas, toma envión
     doblando las rodillas, salta en arco con las piernas recogidas,
     aterriza amortiguando con las rodillas (y un rebote elástico) y saluda.
@@ -340,7 +341,7 @@ function saludo(m: EstadoMoli) {
   return gsap
     .timeline()
     .to(m, { giro: 0, mirarX: 0, mirarY: 2, inclina: 0, vaiven: 0, ...PIERNAS_SENTADA, duration: 0.35, ease: 'power2.out' })
-    .to(m, { manoDer: 84, manoAdelante: 26, duration: 0.42, ease: 'back.out(1.7)' }, 0.1)
+    .to(m, { manos: 12, duration: 0.42, ease: 'back.out(1.7)' }, 0.1)
     .to(m, { estira: 1.03, duration: 0.2, ease: 'sine.out', yoyo: true, repeat: 1 }, 0.12)
     .to(m, { ola: 14, duration: 0.16, ease: 'sine.out' }, 0.5)
     .to(m, { ola: -12, duration: 0.2, ease: 'sine.inOut', yoyo: true, repeat: 4 }, '>')
@@ -369,9 +370,9 @@ function salto(m: EstadoMoli, destino: Destino, alDespegar: () => void, alLlegar
     gsap
       .timeline()
       // 1 · se para: estira las piernas debajo del cuerpo y mira hacia donde va
-      .to(m, { alto: 0, ...PIERNAS_PARADA, vaiven: 0, giro: 18 * hacia, mirarX: 0, mirarY: 0, inclina: 0, manoIzq: 10, manoDer: 10, duration: 0.45, ease: 'power2.inOut' })
+      .to(m, { alto: 0, ...PIERNAS_PARADA, vaiven: 0, giro: 18 * hacia, mirarX: 0, mirarY: 0, inclina: 0, duration: 0.45, ease: 'power2.inOut' })
       // 2 · toma envión: dobla las rodillas (el cuerpo baja, los pies quedan) y se aplasta apenas
-      .to(m, { ...AGACHADA, alto: -bajaAlDoblar(AGACHADA.piernas, AGACHADA.rodillas), estira: ESTIRA.enviones, manoIzq: -6, manoDer: -6, duration: 0.22, ease: 'power2.out' })
+      .to(m, { ...AGACHADA, alto: -bajaAlDoblar(AGACHADA.piernas, AGACHADA.rodillas), estira: ESTIRA.enviones, duration: 0.22, ease: 'power2.out' })
       // 3 · despega y vuela en arco (el arco es un solo movimiento: x pareja, y en parábola)
       .addLabel('despegue')
       .call(alDespegar, [], 'despegue')
@@ -380,7 +381,6 @@ function salto(m: EstadoMoli, destino: Destino, alDespegar: () => void, alLlegar
       .to(m, { estira: 1, duration: 0.35, ease: 'sine.inOut' }, 'despegue+=0.12')
       // …y en el aire las recoge
       .to(m, { ...RECOGIDA, duration: 0.24, ease: 'power2.out' }, 'despegue+=0.1')
-      .to(m, { manoIzq: 48, manoDer: 48, duration: 0.25, ease: 'power2.out' }, 'despegue')
       .to(m, { inclina: -9 * hacia, duration: 0.25, ease: 'power2.out' }, 'despegue')
       .to(m, { inclina: 4 * hacia, duration: 0.35, ease: 'sine.inOut' }, 'despegue+=0.25')
       .to(
@@ -398,7 +398,7 @@ function salto(m: EstadoMoli, destino: Destino, alDespegar: () => void, alLlegar
         'despegue',
       )
       // antes de tocar, estira las piernas para recibir el piso
-      .to(m, { ...PIERNAS_PARADA, piernas: 8, rodillas: 14, manoIzq: 22, manoDer: 22, duration: 0.2, ease: 'power1.inOut' }, `despegue+=${vuelo - 0.2}`)
+      .to(m, { ...PIERNAS_PARADA, piernas: 8, rodillas: 14, duration: 0.2, ease: 'power1.inOut' }, `despegue+=${vuelo - 0.2}`)
       // 4 · aterriza: amortigua con las rodillas y vuelve con un rebote elástico
       .addLabel('aterrizaje', `despegue+=${vuelo}`)
       .call(alLlegar, [], 'aterrizaje')
@@ -408,9 +408,9 @@ function salto(m: EstadoMoli, destino: Destino, alDespegar: () => void, alLlegar
         'aterrizaje',
       )
       .to(m, { ...PIERNAS_PARADA, alto: 0, estira: 1, duration: 0.8, ease: 'elastic.out(1, 0.5)' }, 'aterrizaje+=0.1')
-      .to(m, { manoIzq: 0, manoDer: 0, giro: -6 * hacia, duration: 0.35, ease: 'power2.out' }, 'aterrizaje+=0.1')
-      // 5 · saluda (con la mano del lado de donde vino)
-      .to(m, { ...(hacia > 0 ? { manoIzq: 84 } : { manoDer: 84 }), manoAdelante: 26, duration: 0.4, ease: 'back.out(1.7)' }, 'aterrizaje+=0.35')
+      .to(m, { manos: 0, giro: -6 * hacia, duration: 0.35, ease: 'power2.out' }, 'aterrizaje+=0.1')
+      // 5 · saluda: los hidrógenos se mecen juntos, con el de adelante del lado de donde vino
+      .to(m, { manos: -12 * hacia, duration: 0.4, ease: 'back.out(1.7)' }, 'aterrizaje+=0.35')
       .to(m, { ola: 14, duration: 0.16, ease: 'sine.out' }, 'aterrizaje+=0.65')
       .to(m, { ola: -12, duration: 0.2, ease: 'sine.inOut', yoyo: true, repeat: 2 }, '>')
   );

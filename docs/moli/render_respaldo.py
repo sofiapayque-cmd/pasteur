@@ -1,4 +1,7 @@
-"""Render de respaldo de Moli sentada (para cuando no hay WebGL o mientras carga el 3D)."""
+"""Render de respaldo de Moli sentada (para cuando no hay WebGL o mientras carga el 3D).
+
+Ya no se usa: desde el 16/11 public/illustrations/rol/moli-sentada.webp es una foto del 3D de la
+web (three.js, misma luz que Moli3d.tsx), con los hidrógenos a 104,5°. Ver preparar_moli_web.py."""
 import bpy, sys, math
 from mathutils import Vector
 bpy.ops.wm.open_mainfile(filepath=sys.argv[-2])
