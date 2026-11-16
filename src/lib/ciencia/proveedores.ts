@@ -119,12 +119,12 @@ export async function buscarPubMed(c: Consulta): Promise<Respuesta> {
   return { ...base, registros, total, error };
 }
 
-export async function obtenerPubMed(pmid: string): Promise<Registro | null> {
+async function obtenerPubMed(pmid: string): Promise<Registro | null> {
   if (!/^[1-9]\d{0,9}$/.test(pmid)) return null;
   return (await traerPubMed([pmid])).registros[0] ?? null;
 }
 
-export async function pubMedPorDoi(doi: string): Promise<Registro | null> {
+async function pubMedPorDoi(doi: string): Promise<Registro | null> {
   const d = normalizarDoi(doi);
   if (!d) return null;
   const { real } = urlNcbi('esearch', { term: `"${d.replace(/"/g, '')}"[doi]`, retmax: '3', retmode: 'json' });
@@ -166,13 +166,13 @@ export async function buscarOpenAlex(c: Consulta): Promise<Respuesta> {
   };
 }
 
-export async function obtenerOpenAlex(idExterno: string): Promise<Registro | null> {
+async function obtenerOpenAlex(idExterno: string): Promise<Registro | null> {
   if (!/^W\d{1,12}$/.test(idExterno)) return null;
   const { json } = await pedirJson(conClave(`${OPENALEX}/works/${idExterno}?select=${CAMPOS_OPENALEX}`));
   return json ? deOpenAlex(json) : null;
 }
 
-export async function openAlexPorDoi(doi: string): Promise<Registro | null> {
+async function openAlexPorDoi(doi: string): Promise<Registro | null> {
   const d = normalizarDoi(doi);
   if (!d) return null;
   const { json } = await pedirJson(conClave(`${OPENALEX}/works/doi:${encodeURI(d).replace(/[?#]/g, encodeURIComponent)}?select=${CAMPOS_OPENALEX}`));
@@ -201,14 +201,14 @@ export async function buscarEuropePmc(c: Consulta): Promise<Respuesta> {
   return { proveedor: 'europepmc', costoUsd: null, ...r };
 }
 
-export async function obtenerEuropePmc(idExterno: string): Promise<Registro | null> {
+async function obtenerEuropePmc(idExterno: string): Promise<Registro | null> {
   const m = idExterno.match(/^([A-Z]{3}):([A-Za-z0-9._-]{1,40})$/);
   if (!m) return null;
   const { registros } = await consultarEuropePmc(`EXT_ID:"${m[2]}" AND SRC:${m[1]}`, 1);
   return registros.find((r) => r.id_externo === idExterno) ?? null;
 }
 
-export async function europePmcPorDoi(doi: string): Promise<Registro | null> {
+async function europePmcPorDoi(doi: string): Promise<Registro | null> {
   const d = normalizarDoi(doi);
   if (!d) return null;
   const { registros } = await consultarEuropePmc(`DOI:"${d.replace(/"/g, '')}"`, 3);

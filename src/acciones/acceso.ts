@@ -10,6 +10,7 @@ import { crearClienteAdmin } from '@/lib/supabase/admin';
 import { miembroCon } from '@/datos/equipo';
 import { ipDelPedido } from '@/datos/ip';
 import { leerSolicitud } from '@/lib/aulas/acceso';
+import { esUuid } from '@/lib/formularios';
 
 /*
   PEDIR ACCESO E INVITAR MAESTRAS (bloque 4 del plan de entrega).
@@ -25,7 +26,6 @@ import { leerSolicitud } from '@/lib/aulas/acceso';
 export type EstadoAcceso = { mensaje: string; ok?: boolean; campo?: string };
 export type EstadoInvitacion = { mensaje: string; ok?: boolean; link?: string; email?: string; nombre?: string };
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const MAIL = /^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,}$/;
 
 async function origen() {
@@ -106,7 +106,7 @@ const REEMPLAZO = 'Este mail ya tenía un link sin usar: ese dejó de servir. Ma
 
 export async function invitarDesdeSolicitud(solicitudId: string): Promise<EstadoInvitacion> {
   const yo = await miembroCon('admin');
-  if (!yo || !UUID.test(solicitudId)) return { mensaje: 'No tenés permiso para hacer eso.' };
+  if (!yo || !esUuid(solicitudId)) return { mensaje: 'No tenés permiso para hacer eso.' };
   const db = (await crearClienteServidor())!;
   const { data: s } = await db.from('solicitudes_acceso').select('id, nombre, email, estado').eq('id', solicitudId).maybeSingle();
   if (!s) return { mensaje: 'No encontramos ese pedido.' };
@@ -132,7 +132,7 @@ export async function invitarMaestra(_previo: EstadoInvitacion, datos: FormData)
 
 export async function descartarSolicitud(solicitudId: string): Promise<void> {
   const yo = await miembroCon('admin');
-  if (!yo || !UUID.test(solicitudId)) return;
+  if (!yo || !esUuid(solicitudId)) return;
   const db = (await crearClienteServidor())!;
   await db.from('solicitudes_acceso').update({ estado: 'descartada', resuelta_en: new Date().toISOString(), resuelta_por: yo.id }).eq('id', solicitudId).eq('estado', 'pendiente');
   refresh();

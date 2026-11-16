@@ -4,7 +4,7 @@
   (resaltado, con un "¿por qué?" corto) y qué viene después.
   Así el niño entiende el orden sin tener que adivinar.
 */
-export const PASOS_SIEMBRA = [
+const PASOS_SIEMBRA = [
   { id: 'llama', texto: 'Pasá el asa por la llama', porque: 'El fuego mata los microbios del aire que tiene el asa.', donde: 'mechero' },
   { id: 'enfriar', texto: 'Esperá que se enfríe', porque: 'Si el asa está caliente, mata a los microbios de tu muestra.', donde: 'asa' },
   { id: 'cargar', texto: 'Tocá tu muestra con el asa', porque: 'En la punta del asa quedan unos poquitos microbios.', donde: 'tubo' },

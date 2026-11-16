@@ -20,7 +20,7 @@
 
 export const DIAS = 30;
 export const VIDA_MEDIA = 7;
-export const EN_TENDENCIA = 5;
+const EN_TENDENCIA = 5;
 export const NO_REPETIR_DIAS = 14;
 
 export type Conteo = { temaId: string; dia: string; veces: number };

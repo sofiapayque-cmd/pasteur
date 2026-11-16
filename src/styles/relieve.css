@@ -98,21 +98,12 @@
   /* ---------- Superficies: tarjetas elevadas ---------- */
   .tarjeta,
   .acceso__tarjeta,
-  .clase-vivo__tarjeta,
-  .actividad__ambiente {
+  .clase-vivo__tarjeta {
     box-shadow: var(--relieve), var(--luz);
   }
   .tarjeta,
   .clase-vivo__tarjeta {
     border-radius: 28px;
-  }
-  .actividad__ambiente {
-    border-radius: 28px;
-    transition: transform 0.35s var(--ease-organico), box-shadow 0.3s;
-  }
-  .actividad__ambiente:hover {
-    transform: translateY(-3px);
-    box-shadow: var(--relieve-alto), var(--luz);
   }
   /* Guía docente y otras tarjetas color membrana */
   .preparar__guia-tarjeta {

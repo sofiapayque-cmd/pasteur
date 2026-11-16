@@ -35,7 +35,7 @@ const adentro = (x, y) => {
 };
 
 /* Placa sembrada "en césped" con discos de antibiótico. Donde el antibiótico frena, queda un halo. */
-export function PlacaCesped({ ambiente, discos, momento = 0, tamano = 360, onToque, destino, semilla = 5, etiqueta }) {
+function PlacaCesped({ ambiente, discos, momento = 0, tamano = 360, onToque, destino, semilla = 5, etiqueta }) {
   const uid = useId().replace(/:/g, '');
   const [c1] = coloresColonias(ambiente);
   const morfo = firma(ambiente)[0];

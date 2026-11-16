@@ -1,6 +1,10 @@
 import 'server-only';
 import { crearClienteServidor } from '@/lib/supabase/servidor';
 import { exigirDocenteActiva } from './docente';
+import { esUuid } from '@/lib/formularios';
+
+// Se sigue pudiendo importar desde acá (lo usan varias acciones)
+export { esUuid };
 
 /*
   CAPA DE ACCESO A DATOS · aulas y alumnos, vistos POR LA MAESTRA (solo servidor).
@@ -35,8 +39,6 @@ export type Alumno = {
   ultimo_ingreso: string | null;
 };
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-export const esUuid = (v: unknown): v is string => typeof v === 'string' && UUID.test(v);
 
 const COLUMNAS_AULA = 'id, nombre, grado, anio_lectivo, codigo, creada_en, archivada_en';
 const COLUMNAS_ALUMNO = 'id, aula_id, numero, usuario, apodo, color, activo, ultimo_ingreso';

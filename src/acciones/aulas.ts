@@ -8,6 +8,7 @@ import { listarAlumnos, obtenerAlumno, obtenerAula, type Aula } from '@/datos/au
 import { crearClienteAdmin } from '@/lib/supabase/admin';
 import { crearCuentas, regenerarClaves, type Tarjeta } from '@/datos/cuentas-alumnos';
 import { MAX_ALUMNOS_POR_AULA } from '@/datos/claves';
+import { leer } from '@/lib/formularios';
 
 /*
   ACCIONES DE AULAS (Server Actions de la maestra).
@@ -33,7 +34,6 @@ export type EstadoAula = {
 };
 
 const NUMERO_MAXIMO = 60; // límite de la base (alumnos.numero)
-const leer = (f: FormData, k: string) => String(f.get(k) ?? '').trim();
 const anioActual = () => Number(new Intl.DateTimeFormat('en', { year: 'numeric', timeZone: 'America/Montevideo' }).format(new Date()));
 const resumen = (a: Aula): AulaResumen => ({ id: a.id, nombre: a.nombre, codigo: a.codigo, grado: a.grado, anio_lectivo: a.anio_lectivo });
 

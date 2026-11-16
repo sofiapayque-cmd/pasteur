@@ -9,6 +9,7 @@ import { mensajeDeError } from '@/datos/errores';
 import { yaEnBiblioteca } from '@/datos/biblioteca';
 import { agrupar, claveDe, NOMBRE_PROVEEDOR, TIPO_ID, type Proveedor, type Registro } from '@/lib/ciencia/normalizar';
 import { buscarEuropePmc, buscarOpenAlex, buscarPubMed, enLasOtras, obtener, ORDEN_GUARDADO, type Consulta, type Respuesta } from '@/lib/ciencia/proveedores';
+import { esUuid, leer } from '@/lib/formularios';
 
 /*
   ACCIONES DE LA BIBLIOTECA CIENTÍFICA (Server Actions del equipo).
@@ -45,8 +46,6 @@ export type Resultado = {
 export type EstadoBusqueda = Estado & { resultados?: Resultado[]; totales?: Partial<Record<Proveedor, number>>; avisos?: string[]; consulta?: Record<string, string> };
 
 const SIN_PERMISO: Estado = { mensaje: 'No tenés permiso para hacer eso.' };
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const leer = (f: FormData, k: string) => String(f.get(k) ?? '').trim();
 const supabase = async () => (await crearClienteServidor())!;
 
 // ---------------------------------------------------------------------
@@ -168,7 +167,7 @@ export async function agregarPublicacion(proveedor: string, idExterno: string): 
 // ---------------------------------------------------------------------
 async function cambiarEstado(id: string, estado: 'en_revision' | 'candidata'): Promise<Estado> {
   const yo = await miembroCon();
-  if (!yo || !UUID.test(id)) return SIN_PERMISO;
+  if (!yo || !esUuid(id)) return SIN_PERMISO;
   const db = await supabase();
   const { data, error } = await db.from('publicaciones').update({ estado }).eq('id', id).select('id').maybeSingle();
   if (error) return { mensaje: mensajeDeError(error) };
@@ -185,7 +184,7 @@ export async function sacarDeRevision(id: string) {
 
 export async function revisarPublicacion(id: string, _p: Estado, datos: FormData): Promise<Estado> {
   const yo = await miembroCon('validador');
-  if (!yo || !UUID.test(id)) return { mensaje: 'Solo una validadora revisa.' };
+  if (!yo || !esUuid(id)) return { mensaje: 'Solo una validadora revisa.' };
   const decision = leer(datos, 'decision');
   const comentario = leer(datos, 'comentario').slice(0, 2000);
   const huella = leer(datos, 'huella');
@@ -201,7 +200,7 @@ export async function revisarPublicacion(id: string, _p: Estado, datos: FormData
 
 export async function retirarPublicacion(id: string, _p: Estado, datos: FormData): Promise<Estado> {
   const yo = await miembroCon('validador', 'admin');
-  if (!yo || !UUID.test(id)) return SIN_PERMISO;
+  if (!yo || !esUuid(id)) return SIN_PERMISO;
   const motivo = leer(datos, 'motivo').slice(0, 600);
   if (motivo.length < 5) return { mensaje: 'Escribí el motivo del retiro.' };
   const db = await supabase();
@@ -214,7 +213,7 @@ export async function retirarPublicacion(id: string, _p: Estado, datos: FormData
 /** Licencia fijada a mano (después de mirar la página de la revista). Solo validadora o admin. */
 export async function fijarLicencia(id: string, _p: Estado, datos: FormData): Promise<Estado> {
   const yo = await miembroCon('validador', 'admin');
-  if (!yo || !UUID.test(id)) return SIN_PERMISO;
+  if (!yo || !esUuid(id)) return SIN_PERMISO;
   const codigo = leer(datos, 'licencia');
   if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(codigo)) return { mensaje: 'Elegí una licencia.' };
   // Que la publicación exista y la vea este miembro (RLS) antes de usar la clave secreta
@@ -231,7 +230,7 @@ export async function fijarLicencia(id: string, _p: Estado, datos: FormData): Pr
 
 export async function resolverRelacion(relacionId: string, estado: 'confirmada' | 'descartada'): Promise<Estado> {
   const yo = await miembroCon();
-  if (!yo || !UUID.test(relacionId) || !['confirmada', 'descartada'].includes(estado)) return SIN_PERMISO;
+  if (!yo || !esUuid(relacionId) || !['confirmada', 'descartada'].includes(estado)) return SIN_PERMISO;
   const db = await supabase();
   const { data, error } = await db.from('publicacion_relaciones').update({ estado }).eq('id', relacionId).select('id').maybeSingle();
   if (error) return { mensaje: mensajeDeError(error) };

@@ -3,7 +3,7 @@
 import { useActionState, useState, useTransition } from 'react';
 import { anotarAlumno, borrarNotaAlumno, type EstadoNota } from '@/acciones/cuadernos';
 import type { CuadernoAlumno as Datos, NotaAlumno, RespuestaCorta } from '@/datos/cuadernos';
-import { actividad as datosActividad } from '@/lib/aulas/tareas';
+import { nombreActividad } from '@/lib/aulas/tareas';
 import { MAX_NOTA_ALUMNO } from '@/lib/cuadernos';
 import '../cuadernos.css';
 
@@ -15,10 +15,7 @@ import '../cuadernos.css';
   las preguntas de su clase que ya tienen respuesta.
 */
 const SELLO = 'Revisado por una investigadora del Institut Pasteur de Montevideo';
-const nombreAct = (a: string | null) => {
-  const d = a ? datosActividad(a) : null;
-  return d ? `${d.numero} · ${d.nombre}` : null;
-};
+const nombreAct = nombreActividad;
 const fecha = (iso: string) => new Date(iso).toLocaleDateString('es-UY', { timeZone: 'America/Montevideo', day: 'numeric', month: 'short' });
 
 const igual = (a: string, b: string) => a.toLowerCase().replace(/[^a-z0-9áéíóúñü]/g, '') === b.toLowerCase().replace(/[^a-z0-9áéíóúñü]/g, '');

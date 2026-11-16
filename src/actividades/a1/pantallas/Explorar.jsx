@@ -8,7 +8,7 @@ import { ESCENAS } from './Paisaje';
 import Descenso from '../piezas/Descenso';
 import { zoomDe } from '../zoom';
 
-export const semillaMuestra = (ambiente, n = 0) => {
+const semillaMuestra = (ambiente, n = 0) => {
   let h = 7;
   for (const ch of ambiente) h = (h * 31 + ch.charCodeAt(0)) % 9973;
   return (h + n * 37) % 9000 + 1;

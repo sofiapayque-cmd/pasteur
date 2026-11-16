@@ -10,9 +10,9 @@
     se ofrecen como parecidas y la maestra elige.
   Los umbrales se pueden ajustar en Vercel sin tocar el código.
 */
-export const PISO_CANDIDATA = Number(process.env.ASISTENTE_PISO ?? 0.5); // desde acá se la muestra al control
-export const UMBRAL_PARECIDA = Number(process.env.ASISTENTE_PARECIDA ?? 0.68); // vale la pena ofrecerla
-export const MAX_CANDIDATAS = 4;
+const PISO_CANDIDATA = Number(process.env.ASISTENTE_PISO ?? 0.5); // desde acá se la muestra al control
+const UMBRAL_PARECIDA = Number(process.env.ASISTENTE_PARECIDA ?? 0.68); // vale la pena ofrecerla
+const MAX_CANDIDATAS = 4;
 
 export function limpiarPregunta(texto: string): string {
   return texto

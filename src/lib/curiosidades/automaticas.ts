@@ -16,11 +16,11 @@
 */
 
 /** Hasta cuántas curiosidades se sacan de una respuesta. */
-export const MAX_POR_RESPUESTA = 2;
+const MAX_POR_RESPUESTA = 2;
 /** Parecido mínimo entre dos preguntas para ir al mismo tema nuevo. */
-export const UMBRAL_GRUPO = 0.6;
+const UMBRAL_GRUPO = 0.6;
 /** Un tema nuevo necesita al menos estas preguntas distintas… */
-export const MIN_PREGUNTAS_GRUPO = 2;
+const MIN_PREGUNTAS_GRUPO = 2;
 /** …y que entre todas se hayan hecho al menos estas veces. */
 export const MIN_VECES_GRUPO = 3;
 /** Parecido mínimo para que el tema nuevo quede como subtema del más cercano. */

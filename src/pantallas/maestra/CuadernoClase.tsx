@@ -6,7 +6,7 @@ import type { EstadoAsistente } from '@/acciones/asistente';
 import type { CuadernoClase as Datos, NotaDeChico, PreguntaMaestra, RespuestaCorta } from '@/datos/cuadernos';
 import type { EntradaDiario } from '@/lib/cuadernos';
 import { MAX_NOTA_MAESTRA, textoMinutos } from '@/lib/cuadernos';
-import { actividad as datosActividad } from '@/lib/aulas/tareas';
+import { nombreActividad } from '@/lib/aulas/tareas';
 import '../cuadernos.css';
 
 /*
@@ -19,10 +19,7 @@ import '../cuadernos.css';
   3. Preguntas al Pasteur de esta clase, con su respuesta o "esperando".
   4. Notas de los chicos.
 */
-const nombreAct = (a: string | null) => {
-  const d = a ? datosActividad(a) : null;
-  return d ? `${d.numero} · ${d.nombre}` : null;
-};
+const nombreAct = nombreActividad;
 const fechaCorta = (dia: string) => new Date(`${dia}T12:00:00Z`).toLocaleDateString('es-UY', { weekday: 'short', day: 'numeric', month: 'short' });
 const fechaDe = (iso: string) => new Date(iso).toLocaleDateString('es-UY', { timeZone: 'America/Montevideo', day: 'numeric', month: 'short' });
 

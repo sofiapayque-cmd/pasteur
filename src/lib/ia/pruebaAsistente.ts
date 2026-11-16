@@ -83,7 +83,7 @@ export const SET: { ancla: string; pedir: boolean; variantes: string[]; trampas:
   },
 ];
 
-export const OTROS_TEMAS = [
+const OTROS_TEMAS = [
   '¿Por qué el cielo es azul?',
   '¿Cuántos planetas hay?',
   '¿Qué comen los pingüinos?',

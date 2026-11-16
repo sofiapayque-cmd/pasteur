@@ -8,6 +8,7 @@ import { listarRespuestas, pedidasHoy, preguntasDeActividad, type Respuesta } fr
 import { iaConfigurada } from '@/lib/ia/openai';
 import { separarPreguntas } from '@/lib/ia/redaccion';
 import { corregirConComentario, proponer, responderPregunta, type Resultado } from '@/lib/ia/redactar';
+import { deA, esUuid, leer } from '@/lib/formularios';
 
 /*
   ACCIONES DEL TABLERO DE RESPUESTAS (Server Actions del equipo).
@@ -30,26 +31,13 @@ const POR_VEZ = 4;
 // el lote de 100 preguntas. El gasto lo sigue cuidando el límite mensual de OpenAI.
 const POR_DIA = 120;
 const SIN_PERMISO = { mensaje: 'No tenés permiso para hacer eso.' };
-const leer = (f: FormData, k: string) => String(f.get(k) ?? '').trim();
 const actividadDe = (f: FormData) => {
   const a = leer(f, 'actividad');
   return /^a[1-4]$/.test(a) ? a : null;
 };
 
 /** De a dos a la vez: no saturar OpenAlex ni Europe PMC. */
-async function deADos<T, R>(items: T[], fn: (t: T) => Promise<R>): Promise<R[]> {
-  const salida: R[] = new Array(items.length);
-  let siguiente = 0;
-  await Promise.all(
-    [0, 1].map(async () => {
-      while (siguiente < items.length) {
-        const i = siguiente++;
-        salida[i] = await fn(items[i]);
-      }
-    }),
-  );
-  return salida;
-}
+const deADos = <T, R>(items: T[], fn: (t: T) => Promise<R>) => deA(2, items, fn);
 
 export async function pedirRespuestas(_previo: EstadoPedido, datos: FormData): Promise<EstadoPedido> {
   const yo = await miembroCon();
@@ -104,7 +92,6 @@ export async function ideasDePreguntas(_previo: EstadoIdeas, datos: FormData): P
 // ---------------------------------------------------------------------
 // Preguntas de las clases sin respuesta (las anota el asistente)
 // ---------------------------------------------------------------------
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** La IA redacta las elegidas (hasta 4) y quedan "pedidas", unidas a su ficha. */
 export async function redactarPendientes(_previo: EstadoPedido, datos: FormData): Promise<EstadoPedido> {
@@ -113,7 +100,7 @@ export async function redactarPendientes(_previo: EstadoPedido, datos: FormData)
   if (!iaConfigurada()) return { mensaje: 'Falta la clave de OpenAI en el servidor (OPENAI_API_KEY).' };
   const admin = crearClienteAdmin();
   if (!admin) return { mensaje: 'Falta la clave secreta de Supabase en el servidor (SUPABASE_SECRET_KEY).' };
-  const ids = [...new Set(datos.getAll('id').map(String).filter((x) => UUID.test(x)))].slice(0, POR_VEZ);
+  const ids = [...new Set(datos.getAll('id').map(String).filter((x) => esUuid(x)))].slice(0, POR_VEZ);
   if (!ids.length) return { mensaje: 'Elegí al menos una pregunta.' };
   const hoy = await pedidasHoy(yo.id);
   if (hoy + ids.length > POR_DIA) return { mensaje: `Ya pediste ${hoy} respuestas en las últimas 24 horas (el máximo es ${POR_DIA}). Probá mañana.` };
@@ -144,7 +131,7 @@ export async function redactarPendientes(_previo: EstadoPedido, datos: FormData)
 
 export async function descartarPregunta(id: string): Promise<void> {
   const yo = await miembroCon();
-  if (!yo || !UUID.test(id)) return;
+  if (!yo || !esUuid(id)) return;
   const db = (await crearClienteServidor())!;
   await db.from('preguntas_sin_respuesta').update({ estado: 'descartada' }).eq('id', id);
   refresh();
@@ -193,7 +180,7 @@ async function corregirVarias(versiones: { id: string; pregunta?: string }[]): P
 
 /** Una sola (botón de la tarjeta): corrige si tiene cambios pedidos, completa si quedó incompleta. */
 export async function corregirConIa(versionId: string): Promise<EstadoPedido> {
-  if (!UUID.test(versionId)) return SIN_PERMISO;
+  if (!esUuid(versionId)) return SIN_PERMISO;
   return corregirVarias([{ id: versionId }]);
 }
 

@@ -10,6 +10,7 @@ import { crearClienteAdmin } from '@/lib/supabase/admin';
 import { iniciarSesion, cerrarSesion } from '@/datos/sesion';
 import { obtenerMiembro, miembroCon, type Rol } from '@/datos/equipo';
 import { mensajeDeError } from '@/datos/errores';
+import { leer } from '@/lib/formularios';
 
 /*
   ACCIONES DEL EQUIPO DEL PASTEUR (Server Actions).
@@ -25,7 +26,6 @@ const MAIL = /^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,}$/;
 const CLAVE_MIN = 10;
 const CLAVE_MAX = 72;
 const ROLES: Rol[] = ['redactor', 'validador', 'admin'];
-const leer = (f: FormData, k: string) => String(f.get(k) ?? '').trim();
 const SIN_PANEL = { mensaje: 'El panel del equipo todavía no está activado.' };
 const SIN_PERMISO = { mensaje: 'No tenés permiso para hacer eso.' };
 

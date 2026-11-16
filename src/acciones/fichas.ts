@@ -8,6 +8,7 @@ import { crearClienteServidor } from '@/lib/supabase/servidor';
 import { miembroCon } from '@/datos/equipo';
 import { mensajeDeError } from '@/datos/errores';
 import { slugDe } from '@/lib/equipo/comun';
+import { esUuid, leer } from '@/lib/formularios';
 
 /*
   ACCIONES DE FICHAS (Server Actions del equipo).
@@ -18,8 +19,6 @@ import { slugDe } from '@/lib/equipo/comun';
 export type Estado = { mensaje: string; ok?: boolean };
 
 const SIN_PERMISO: Estado = { mensaje: 'No tenés permiso para hacer eso.' };
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const leer = (f: FormData, k: string) => String(f.get(k) ?? '').trim();
 const texto = (f: FormData, k: string, max: number) => leer(f, k).replace(/\r\n/g, '\n').slice(0, max);
 const supabase = async () => (await crearClienteServidor())!;
 
@@ -36,7 +35,7 @@ export async function crearFicha(_previo: Estado, datos: FormData): Promise<Esta
   if (formato !== 'pregunta' && formato !== 'dato') return { mensaje: 'Elegí si es una pregunta o un dato.' };
   if (titulo.length < 3 || titulo.length > 300) return { mensaje: formato === 'pregunta' ? 'Escribí la pregunta (de 3 a 300 letras).' : 'Escribí de qué trata el dato (de 3 a 300 letras).' };
   if (actividad && !/^a[1-4]$/.test(actividad)) return { mensaje: 'Actividad desconocida.' };
-  if (tema && !UUID.test(tema)) return { mensaje: 'Tema desconocido.' };
+  if (tema && !esUuid(tema)) return { mensaje: 'Tema desconocido.' };
 
   const db = await supabase();
   const base = slugDe(titulo) || 'ficha';
@@ -61,7 +60,7 @@ export async function crearFicha(_previo: Estado, datos: FormData): Promise<Esta
 // ---------------------------------------------------------------------
 export async function guardarVersion(versionId: string, _previo: Estado, datos: FormData): Promise<Estado> {
   const yo = await miembroCon();
-  if (!yo || !UUID.test(versionId)) return SIN_PERMISO;
+  if (!yo || !esUuid(versionId)) return SIN_PERMISO;
   const variantes = texto(datos, 'variantes', 6000)
     .split('\n')
     .map((v) => v.trim())
@@ -96,7 +95,7 @@ export async function guardarVersion(versionId: string, _previo: Estado, datos: 
 
 async function cambiarEstadoVersion(versionId: string, estado: 'en_revision' | 'borrador'): Promise<Estado> {
   const yo = await miembroCon();
-  if (!yo || !UUID.test(versionId)) return SIN_PERMISO;
+  if (!yo || !esUuid(versionId)) return SIN_PERMISO;
   const db = await supabase();
   const { data, error } = await db.from('ficha_versiones').update({ estado }).eq('id', versionId).select('id').maybeSingle();
   if (error) return { mensaje: mensajeDeError(error) };
@@ -115,7 +114,7 @@ export async function retirarEnvio(versionId: string) {
 /** Para cambiar una ficha publicada: una versión nueva, copia de la publicada (los chicos siguen viendo la anterior). */
 export async function abrirVersionNueva(fichaId: string): Promise<Estado> {
   const yo = await miembroCon();
-  if (!yo || !UUID.test(fichaId)) return SIN_PERMISO;
+  if (!yo || !esUuid(fichaId)) return SIN_PERMISO;
   const db = await supabase();
   const { data: ficha } = await db.from('fichas').select('id, version_publicada_id').eq('id', fichaId).maybeSingle();
   if (!ficha?.version_publicada_id) return { mensaje: 'Esta ficha no tiene una versión publicada para copiar.' };
@@ -140,11 +139,11 @@ export async function abrirVersionNueva(fichaId: string): Promise<Estado> {
 
 export async function cambiarDatosFicha(fichaId: string, _p: Estado, datos: FormData): Promise<Estado> {
   const yo = await miembroCon();
-  if (!yo || !UUID.test(fichaId)) return SIN_PERMISO;
+  if (!yo || !esUuid(fichaId)) return SIN_PERMISO;
   const actividad = leer(datos, 'actividad') || null;
   const tema = leer(datos, 'tema') || null;
   if (actividad && !/^a[1-4]$/.test(actividad)) return { mensaje: 'Actividad desconocida.' };
-  if (tema && !UUID.test(tema)) return { mensaje: 'Tema desconocido.' };
+  if (tema && !esUuid(tema)) return { mensaje: 'Tema desconocido.' };
   const db = await supabase();
   const { data, error } = await db.from('fichas').update({ actividad, tema_id: tema }).eq('id', fichaId).select('id').maybeSingle();
   if (error) return { mensaje: mensajeDeError(error) };
@@ -155,7 +154,7 @@ export async function cambiarDatosFicha(fichaId: string, _p: Estado, datos: Form
 
 export async function retirarFicha(fichaId: string, _p: Estado, datos: FormData): Promise<Estado> {
   const yo = await miembroCon('validador', 'admin');
-  if (!yo || !UUID.test(fichaId)) return SIN_PERMISO;
+  if (!yo || !esUuid(fichaId)) return SIN_PERMISO;
   const motivo = leer(datos, 'motivo').slice(0, 600);
   if (motivo.length < 5) return { mensaje: 'Escribí el motivo del retiro.' };
   const db = await supabase();
@@ -179,7 +178,7 @@ function datosDeCita(datos: FormData) {
 
 export async function agregarCita(versionId: string, _p: Estado, datos: FormData): Promise<Estado> {
   const yo = await miembroCon();
-  if (!yo || !UUID.test(versionId)) return SIN_PERMISO;
+  if (!yo || !esUuid(versionId)) return SIN_PERMISO;
   const db = await supabase();
   const origen = leer(datos, 'origen');
   let publicacion_id: string | null = null;
@@ -187,10 +186,10 @@ export async function agregarCita(versionId: string, _p: Estado, datos: FormData
 
   if (origen === 'publicacion') {
     publicacion_id = leer(datos, 'publicacion');
-    if (!UUID.test(publicacion_id)) return { mensaje: 'Elegí la publicación.' };
+    if (!esUuid(publicacion_id)) return { mensaje: 'Elegí la publicación.' };
   } else if (origen === 'fuente') {
     fuente_id = leer(datos, 'fuente');
-    if (!UUID.test(fuente_id)) return { mensaje: 'Elegí la fuente.' };
+    if (!esUuid(fuente_id)) return { mensaje: 'Elegí la fuente.' };
   } else if (origen === 'nueva') {
     const tipo = leer(datos, 'tipo');
     const cita = texto(datos, 'cita', 600);
@@ -220,7 +219,7 @@ export async function agregarCita(versionId: string, _p: Estado, datos: FormData
 
 export async function actualizarCita(citaId: string, _p: Estado, datos: FormData): Promise<Estado> {
   const yo = await miembroCon();
-  if (!yo || !UUID.test(citaId)) return SIN_PERMISO;
+  if (!yo || !esUuid(citaId)) return SIN_PERMISO;
   const db = await supabase();
   const { data, error } = await db.from('version_fuentes').update(datosDeCita(datos)).eq('id', citaId).select('id').maybeSingle();
   if (error) return { mensaje: mensajeDeError(error) };
@@ -231,7 +230,7 @@ export async function actualizarCita(citaId: string, _p: Estado, datos: FormData
 
 export async function quitarCita(citaId: string): Promise<Estado> {
   const yo = await miembroCon();
-  if (!yo || !UUID.test(citaId)) return SIN_PERMISO;
+  if (!yo || !esUuid(citaId)) return SIN_PERMISO;
   const db = await supabase();
   const { data, error } = await db.from('version_fuentes').delete().eq('id', citaId).select('id');
   if (error) return { mensaje: mensajeDeError(error) };
@@ -245,7 +244,7 @@ export async function quitarCita(citaId: string): Promise<Estado> {
 // ---------------------------------------------------------------------
 export async function revisarVersion(versionId: string, _p: Estado, datos: FormData): Promise<Estado> {
   const yo = await miembroCon('validador');
-  if (!yo || !UUID.test(versionId)) return { mensaje: 'Solo una validadora revisa.' };
+  if (!yo || !esUuid(versionId)) return { mensaje: 'Solo una validadora revisa.' };
   const decision = leer(datos, 'decision');
   const comentario = texto(datos, 'comentario', 2000);
   const huella = leer(datos, 'huella');
@@ -259,7 +258,7 @@ export async function revisarVersion(versionId: string, _p: Estado, datos: FormD
     const crudo = JSON.parse(leer(datos, 'articulos') || '{}') as unknown;
     if (crudo && typeof crudo === 'object' && !Array.isArray(crudo)) {
       articulos = Object.fromEntries(
-        Object.entries(crudo as Record<string, unknown>).filter(([k, h]) => UUID.test(k) && typeof h === 'string' && /^[0-9a-f]{64}$/.test(h)),
+        Object.entries(crudo as Record<string, unknown>).filter(([k, h]) => esUuid(k) && typeof h === 'string' && /^[0-9a-f]{64}$/.test(h)),
       ) as Record<string, string>;
     }
   } catch {

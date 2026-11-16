@@ -81,7 +81,7 @@ export const estructura = (id) => ESTRUCTURAS.find((e) => e.id === id) || ESTRUC
 // Condiciones "como en el cuerpo": el punto de partida de toda simulación
 export const INICIAL = { t: 37, ph: 7.4 };
 
-export const ZONAS_T = [
+const ZONAS_T = [
   { hasta: 12, nombre: 'Heladera' },
   { hasta: 30, nombre: 'Ambiente' },
   { hasta: 39, nombre: 'Cuerpo' },

@@ -17,7 +17,7 @@ import { randomInt } from 'node:crypto';
     Supabase Auth: ninguna tabla nuestra la guarda.
 */
 
-export const DOMINIO_INTERNO = 'alumnos.invalid';
+const DOMINIO_INTERNO = 'alumnos.invalid';
 export const MAX_ALUMNOS_POR_AULA = 40;
 
 // Palabras cortas, sin tildes ni ñ (fáciles de escribir en cualquier teclado),
@@ -62,7 +62,7 @@ const PALABRAS = [
 ];
 
 // Sin repetidas, de 3 a 8 letras, solo a-z
-export const LISTA = Array.from(new Set(PALABRAS.filter((p) => /^[a-z]{3,8}$/.test(p)))).slice(0, 256);
+const LISTA = Array.from(new Set(PALABRAS.filter((p) => /^[a-z]{3,8}$/.test(p)))).slice(0, 256);
 
 export function generarClave(): string {
   const a = randomInt(LISTA.length);
@@ -71,8 +71,6 @@ export function generarClave(): string {
   const numero = randomInt(10, 100); // 10 a 99: sin ceros adelante que confundan
   return `${LISTA[a]}-${LISTA[b]}-${numero}`;
 }
-
-export const CODIGO_AULA = /^[A-HJ-NP-Z2-9]{4}$/;
 
 export function usuarioDe(codigo: string, numero: number): string {
   return `${codigo}-${String(numero).padStart(2, '0')}`;

@@ -78,7 +78,7 @@ export const DERIVA = {
 } as const;
 
 /* Profundidad: 0 = célula chica (lejos), 1 = grande (cerca). */
-export const profundidad = (d: number) => Math.min(1, Math.max(0, (d - 36) / (150 - 36)));
+const profundidad = (d: number) => Math.min(1, Math.max(0, (d - 36) / (150 - 36)));
 export const velocidadDe = (c: Pick<Celula, 'd'>) =>
   DERIVA.velocidadLejos + (DERIVA.velocidadCerca - DERIVA.velocidadLejos) * profundidad(c.d);
 export const radioDe = (c: Pick<Celula, 'd'>) => (c.d / 2) * ESCALA_CELULA_MAX;
@@ -147,11 +147,11 @@ function salida(x: number, y: number, z: Rect, r: number, min: number, maxX: num
 }
 
 /* ¿Una célula de radio r centrada en (x, y) queda lejos de todos los textos? */
-export function lejosDeTextos(x: number, y: number, r: number, zonas: Rect[], extra = 0) {
+function lejosDeTextos(x: number, y: number, r: number, zonas: Rect[], extra = 0) {
   return zonas.every((z) => cercano(x, y, z).d > r + MARGEN_TEXTOS + extra);
 }
 
-export function elegirDestino(c: Celula, rumbo: Rumbo, mundo: Mundo) {
+function elegirDestino(c: Celula, rumbo: Rumbo, mundo: Mundo) {
   const r = radioDe(c);
   const { azar } = mundo;
   rumbo.tramos++;

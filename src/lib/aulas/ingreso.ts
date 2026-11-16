@@ -4,9 +4,9 @@
   un teclado: minúsculas en el código, espacios en vez de guiones, tildes,
   mayúsculas en la clave, "7" en vez de "07".
 */
-export const CODIGO_AULA = /^[A-HJ-NP-Z2-9]{4}$/;
-export const CLAVE_ALUMNO = /^[a-z]{3,8}-[a-z]{3,8}-[1-9][0-9]$/;
-export const NUMERO_MAXIMO = 60;
+const CODIGO_AULA = /^[A-HJ-NP-Z2-9]{4}$/;
+const CLAVE_ALUMNO = /^[a-z]{3,8}-[a-z]{3,8}-[1-9][0-9]$/;
+const NUMERO_MAXIMO = 60;
 
 export const normalizarCodigo = (t: string) =>
   t

@@ -1,6 +1,7 @@
 import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { slugDe } from '@/lib/equipo/comun';
+import { deA } from '@/lib/formularios';
 import { embeber, MODELO_RAPIDO, pedirJson } from '@/lib/ia/openai';
 import { dividirOraciones } from '@/lib/ia/redaccion';
 import {
@@ -34,15 +35,6 @@ export type Informe = { temasNuevos: string[]; respuestasMiradas: number; curios
 
 const MAX_TEMAS_NUEVOS = 3;
 const MAX_RESPUESTAS_POR_VEZ = 80;
-
-async function deACinco<T>(items: T[], fn: (t: T) => Promise<void>): Promise<void> {
-  let siguiente = 0;
-  await Promise.all(
-    [0, 1, 2, 3, 4].map(async () => {
-      while (siguiente < items.length) await fn(items[siguiente++]);
-    }),
-  );
-}
 
 /** 1. Temas nuevos con las preguntas sin tema que se parecen entre sí. */
 async function temasNuevos(admin: SupabaseClient, informe: Informe): Promise<void> {
@@ -111,7 +103,7 @@ async function sacarCuriosidades(admin: SupabaseClient, informe: Informe): Promi
     .filter((a) => !vistas.has(a.version_id))
     .slice(0, MAX_RESPUESTAS_POR_VEZ);
 
-  await deACinco(pendientes, async (a) => {
+  await deA(5, pendientes, async (a) => {
     const oraciones = dividirOraciones(a.version_infantil);
     if (!oraciones.length) return;
     const r = await pedirJson<{ oraciones: number[] }>({

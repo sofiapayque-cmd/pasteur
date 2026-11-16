@@ -7,6 +7,7 @@ import { exigirDocenteActiva } from '@/datos/docente';
 import { esUuid, obtenerAula } from '@/datos/aulas';
 import { fechaEscrita, limpiarNota, MAX_NOTA_MAESTRA, minutosEscritos } from '@/lib/cuadernos';
 import { preguntarAlPasteur, type EstadoAsistente } from './asistente';
+import { leer } from '@/lib/formularios';
 
 /*
   ACCIONES DE LOS CUADERNOS (migración 25). Cada una comprueba quién la
@@ -20,7 +21,6 @@ import { preguntarAlPasteur, type EstadoAsistente } from './asistente';
 export type EstadoNota = { mensaje: string; ok?: boolean };
 
 const ACTIVIDAD = /^a[1-4]$/;
-const leer = (f: FormData, k: string) => String(f.get(k) ?? '').trim();
 
 // ---------------------------------------------------------------------
 // El chico

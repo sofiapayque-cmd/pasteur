@@ -190,7 +190,7 @@ const suave = (a, b, t) => {
 };
 
 // Amplitud de vibración según temperatura (más calor = más movimiento)
-export const amplitud = (temp) => 0.05 + 0.75 * Math.pow(Math.min(1, Math.max(0, temp / 100)), 1.6);
+const amplitud = (temp) => 0.05 + 0.75 * Math.pow(Math.min(1, Math.max(0, temp / 100)), 1.6);
 
 /*
   Posición de cada esfera en la simulación.

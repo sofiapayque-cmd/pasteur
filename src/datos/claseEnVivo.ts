@@ -11,7 +11,7 @@ import type { AlumnoClase, AsignacionClase, Instantanea, ProgresoClase, SesionFi
 */
 export const COLUMNAS_SESION = 'id, asignacion_id, aula_id, estado, pausada, desbloqueos, iniciada_en, cerrada_en';
 // El timer (migración 21, 8/11)
-export const COLUMNAS_TIEMPO = 'tiempo_estado, tiempo_duracion, tiempo_fin, tiempo_restante, tiempo_terminado_en, cierre';
+const COLUMNAS_TIEMPO = 'tiempo_estado, tiempo_duracion, tiempo_fin, tiempo_restante, tiempo_terminado_en, cierre';
 
 /**
  * Lee la sesión con su timer. Si la base todavía no tiene la migración 21

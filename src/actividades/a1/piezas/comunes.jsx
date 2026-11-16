@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import Aviso from '../../../components/Aviso';
 
 /* Cabeza de pantalla: etiqueta de laboratorio, titular y UNA instrucción. */
@@ -16,7 +16,7 @@ export function Cabeza({ etiqueta, titulo, children, extra }) {
 }
 
 /* Aviso de Moli encima de todo (el resto queda atenuado). */
-export function Capa({ children, onCerrar }) {
+function Capa({ children, onCerrar }) {
   const ref = useRef(null);
   useEffect(() => {
     const boton = ref.current?.querySelector('button');
@@ -79,12 +79,6 @@ export function ChipAmbiente({ ambiente, extra }) {
       {extra && <b>{extra}</b>}
     </span>
   );
-}
-
-export function useRecordar(valor) {
-  const [v, setV] = useState(valor);
-  useEffect(() => setV(valor), [valor]);
-  return [v, setV];
 }
 
 /* Fecha de hoy, en castellano */
