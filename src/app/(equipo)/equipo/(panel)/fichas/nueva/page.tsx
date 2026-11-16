@@ -1,7 +1,7 @@
 import { exigirMiembro } from '@/datos/equipo';
 import { listarTemas } from '@/datos/fichas';
 import { crearFicha } from '@/acciones/fichas';
-import { ACTIVIDADES, ACTIVIDADES_A_ELEGIR } from '@/lib/equipo/comun';
+import { ACTIVIDADES_A_ELEGIR } from '@/lib/equipo/comun';
 import Forma from '@/pantallas/equipo/Forma';
 
 /* /equipo/fichas/nueva · Empezar una ficha (después se completa en su página) */

@@ -810,7 +810,6 @@
 }
 .a2-veredicto__fila {
   display: grid;
-  grid-template-columns: 1fr 1fr auto;
   gap: 18px;
   align-items: center;
 }

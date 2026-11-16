@@ -840,14 +840,7 @@
 .a1-banco {
   display: grid;
   grid-template-columns: repeat(4, auto);
-  justify-content: start;
   align-items: end;
-  gap: 24px;
-  padding: 24px 26px 20px;
-  border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.75);
-  box-shadow: var(--halo);
-  max-width: 940px;
 }
 .a1-banco > * {
   display: flex;
@@ -860,9 +853,7 @@
   padding: 8px 14px;
   border: 0;
   border-radius: var(--radius-md);
-  background: transparent;
   cursor: pointer;
-  transition: transform 0.4s var(--ease-organico), background 0.2s;
 }
 .a1-banco__mechero:hover,
 .a1-banco__tubo:hover {
@@ -913,7 +904,6 @@
   overflow: visible;
 }
 .a1-placa--dibujo {
-  cursor: crosshair;
   touch-action: none;
 }
 .a1-placa__tapa {
@@ -2185,9 +2175,6 @@
    CULTIVO: protocolo paso a paso al lado de la mesa
    ========================================================= */
 .a1-cultivo__fila {
-  display: flex;
-  align-items: flex-start;
-  gap: 28px;
   flex-wrap: wrap;
 }
 .a1-banco > * {
@@ -2215,10 +2202,6 @@
   color: var(--sobre-nucleo);
   box-shadow: 0 0 0 5px rgba(227, 238, 160, 0.9);
   animation: a1-latido 1.6s ease-in-out infinite;
-}
-.a1-banco__mechero.a1-banco__siguiente,
-.a1-banco__tubo.a1-banco__siguiente {
-  background: rgba(227, 238, 160, 0.45);
 }
 
 .a1-protocolo {

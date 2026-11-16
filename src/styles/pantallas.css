@@ -474,9 +474,6 @@
   gap: 12px;
   font-size: 15px;
 }
-.barra__nombre {
-  width: 80px;
-}
 .barra__linea {
   height: 14px;
   min-width: 4px;
@@ -866,13 +863,6 @@
   .globo-moli,
   .puesta__lado button {
     display: none;
-  }
-}
-
-/* Ajustes: Moli no tapa las actividades del panel; la cabecera de Rol ocupa todo el ancho */
-@media (min-width: 901px) {
-  .panel__actividades {
-    padding-right: 220px;
   }
 }
 
@@ -1482,7 +1472,6 @@
 @media (max-width: 640px) {
   .pie-inst__nav {
     border-radius: var(--radius-sm);
-    padding: 8px 16px;
   }
 }
 
