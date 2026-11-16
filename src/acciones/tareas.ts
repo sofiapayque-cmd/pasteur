@@ -6,12 +6,11 @@ import { crearClienteServidor } from '@/lib/supabase/servidor';
 import { exigirDocenteActiva } from '@/datos/docente';
 import { esUuid, obtenerAula } from '@/datos/aulas';
 import { obtenerAlumno } from '@/datos/alumno';
-import { desbloqueosDe, esEtapa, esUltimaEtapa, leerFormularioActividad, limpiarDesbloqueos } from '@/lib/aulas/tareas';
+import { esEtapa, esUltimaEtapa, leerFormularioActividad } from '@/lib/aulas/tareas';
 
 /*
   ACCIONES DE TAREAS (etapa 5, parte 1).
-  · La maestra manda una actividad a su aula, la cierra o la reabre, y
-    habilita lo que la actividad deja para después (por ejemplo, antibióticos).
+  · La maestra manda una actividad a su aula, la cierra o la reabre.
   · El alumno guarda su avance mientras trabaja.
   Todo con la sesión de quien llama: las reglas RLS de la base deciden
   (la maestra solo toca SUS aulas; el alumno solo SU avance, y solo en
@@ -36,11 +35,11 @@ export async function mandarActividad(aulaId: string, _previo: EstadoTareaForm, 
   if (aula.archivada_en) return { mensaje: 'El aula está archivada.' };
   const form = leerFormularioActividad(datos);
   if (!form.ok) return { mensaje: form.mensaje };
-  const { actividad: act, opciones, desbloqueos } = form;
+  const { actividad: act, opciones } = form;
 
   const { data, error } = await (await db())
     .from('asignaciones')
-    .insert({ aula_id: aula.id, actividad: act, opciones, desbloqueos, estado: 'activa' })
+    .insert({ aula_id: aula.id, actividad: act, opciones, estado: 'activa' })
     .select('id')
     .single();
   if (error || !data) {
@@ -61,20 +60,6 @@ export async function cambiarEstadoTarea(tareaId: string, estado: 'activa' | 'ce
   if (error || !data?.length) return { mensaje: 'No se pudo cambiar.' };
   refresh();
   return { ok: true, mensaje: estado === 'cerrada' ? 'Cerrada: los chicos la ven, pero ya no pueden seguir.' : 'Abierta otra vez.' };
-}
-
-export async function cambiarDesbloqueo(tareaId: string, clave: string, habilitado: boolean): Promise<EstadoTareaForm> {
-  await exigirDocenteActiva();
-  if (!esUuid(tareaId)) return { mensaje: 'Pedido raro.' };
-  const supabase = await db();
-  const { data: tarea } = await supabase.from('asignaciones').select('actividad, desbloqueos').eq('id', tareaId).maybeSingle();
-  if (!tarea) return { mensaje: 'No encontramos esa tarea.' };
-  if (!desbloqueosDe(tarea.actividad).some((d) => d.clave === clave)) return { mensaje: 'Esa actividad no tiene eso.' };
-  const desbloqueos = limpiarDesbloqueos(tarea.actividad, { ...(tarea.desbloqueos ?? {}), [clave]: habilitado });
-  const { error } = await supabase.from('asignaciones').update({ desbloqueos }).eq('id', tareaId);
-  if (error) return { mensaje: 'No se pudo cambiar.' };
-  refresh();
-  return { ok: true, mensaje: habilitado ? 'Habilitado.' : 'Vuelve a estar cerrado.' };
 }
 
 // ---------------------------------------------------------------------

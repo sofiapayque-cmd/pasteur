@@ -13,8 +13,8 @@ import './aulas.css';
 
 /*
   /maestra/aulas/[id]/tareas/[tarea] · Cómo va una tarea: en qué parte está
-  cada chico, quién terminó, y los botones para habilitar lo que quedó para
-  después o cerrar la tarea. Se actualiza sola cada 20 segundos.
+  cada chico, quién terminó, y el botón para cerrar la tarea. Se actualiza
+  sola cada 20 segundos.
 */
 type Fila = { id: string; numero: number; apodo: string | null; activo: boolean; etapa: string | null; actualizado: string | null; terminada: boolean; cuaderno?: Record<string, string[]> | null };
 type Accion = (previo: EstadoTareaForm, datos: FormData) => Promise<EstadoTareaForm>;
@@ -40,7 +40,6 @@ export default function ComoVaTarea({
   cuenta,
   cerrar,
   reabrir,
-  desbloqueos,
 }: {
   aula: { id: string; nombre: string };
   tarea: { id: string; actividad: string; estado: string; creada_en: string };
@@ -48,7 +47,6 @@ export default function ComoVaTarea({
   cuenta: string;
   cerrar: Accion;
   reabrir: Accion;
-  desbloqueos: { clave: string; etiqueta: string; habilitado: boolean; habilitar: Accion; cerrar: Accion }[];
 }) {
   const router = useRouter();
   useEffect(() => {
@@ -83,19 +81,6 @@ export default function ComoVaTarea({
             {abierta ? <Boton accion={cerrar} texto="Cerrar la actividad" variante="claro" /> : <Boton accion={reabrir} texto="Abrirla otra vez" />}
           </div>
         </div>
-
-        {abierta && desbloqueos.length > 0 && (
-          <section className="aulas__bloque" aria-labelledby="titulo-habilitar">
-            <h2 id="titulo-habilitar">Para habilitar</h2>
-            {desbloqueos.map((d) => (
-              <div key={d.clave} className="tarea__estado">
-                <strong>{d.etiqueta}:</strong>
-                <span>{d.habilitado ? 'habilitado' : 'todavía cerrado'}</span>
-                {d.habilitado ? <Boton accion={d.cerrar} texto="Cerrar" variante="claro" /> : <Boton accion={d.habilitar} texto={`Habilitar ${d.etiqueta.toLowerCase()}`} />}
-              </div>
-            ))}
-          </section>
-        )}
 
         <section className="aulas__bloque" aria-labelledby="titulo-avance">
           <h2 id="titulo-avance">Cómo va cada uno</h2>

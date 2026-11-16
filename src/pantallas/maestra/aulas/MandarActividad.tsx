@@ -5,7 +5,7 @@ import Cabecera from '@/components/Cabecera';
 import FondoVivo from '@/components/FondoVivo';
 import CuentaDocente from '@/components/CuentaDocente';
 import type { EstadoTareaForm } from '@/acciones/tareas';
-import { ACTIVIDADES_DISPONIBLES, desbloqueosDe, opcionesDe } from '@/lib/aulas/tareas';
+import { ACTIVIDADES_DISPONIBLES, opcionesDe } from '@/lib/aulas/tareas';
 import './aulas.css';
 
 /*
@@ -19,15 +19,13 @@ const TEXTOS = {
   tarea: {
     titulo: 'Mandar una actividad',
     bajada: (aula: string) => `Aparece en el laboratorio de cada chico de ${aula}. Su avance se guarda solo, y vos ves cómo va cada uno.`,
-    despues: 'Lo habilito yo después (desde la tarea)',
     boton: 'Mandar al aula',
     enviando: 'Mandando…',
   },
   clase: {
     titulo: 'Empezar una clase en vivo',
     bajada: (aula: string) =>
-      `Los chicos de ${aula} entran con su tarjeta, cada uno desde su Ceibal, y la hacen juntos. Vos la guiás desde esta compu: los ves en el tablero, pausás para mirar el pizarrón, habilitás lo que sigue y hacen la puesta en común. Lo de cada uno queda guardado.`,
-    despues: 'Lo habilito yo durante la clase',
+      `Los chicos de ${aula} entran con su tarjeta, cada uno desde su Ceibal, y la hacen juntos. Vos la guiás desde esta compu: los ves en el tablero, pausás para mirar el pizarrón y hacen la puesta en común. Lo de cada uno queda guardado.`,
     boton: 'Abrir la clase',
     enviando: 'Abriendo…',
   },
@@ -97,22 +95,7 @@ export default function MandarActividad({
               </div>
             </fieldset>
           ))}
-          {desbloqueosDe(act).map((d) => (
-            <fieldset key={d.clave} className="mandar__grupo">
-              <legend>{d.etiqueta}</legend>
-              <div className="mandar__items">
-                <label className="mandar__item">
-                  <input type="radio" name={`des:${d.clave}`} value="inicio" defaultChecked />
-                  Disponible desde el principio
-                </label>
-                <label className="mandar__item">
-                  <input type="radio" name={`des:${d.clave}`} value="despues" />
-                  {t.despues}
-                </label>
-              </div>
-            </fieldset>
-          ))}
-          {opcionesDe(act).length === 0 && desbloqueosDe(act).length === 0 && <p className="aulas__bajada">Esta actividad no tiene opciones para elegir.</p>}
+          {opcionesDe(act).length === 0 && <p className="aulas__bajada">Esta actividad no tiene opciones para elegir.</p>}
         </div>
 
         <p className={`aulas__mensaje ${estado.ok ? 'aulas__mensaje--ok' : ''}`} role="status" aria-live="polite">

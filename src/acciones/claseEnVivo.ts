@@ -8,15 +8,14 @@ import { obtenerAlumno } from '@/datos/alumno';
 import { claseAbiertaDeAula, COLUMNAS_SESION, instantaneaMaestra, leerSesion } from '@/datos/claseEnVivo';
 import { crearClienteAdmin } from '@/lib/supabase/admin';
 import { esAccionTiempo, tiempoDeFila, type AccionTiempo, type FilaTiempo, type Tiempo } from '@/lib/aulas/tiempo';
-import { desbloqueosDe, leerFormularioActividad } from '@/lib/aulas/tareas';
+import { leerFormularioActividad } from '@/lib/aulas/tareas';
 import { esPaso, PASOS, type Instantanea, type Paso, type SesionFila } from '@/lib/aulas/clase';
 import type { EstadoTareaForm } from './tareas';
 
 /*
   ACCIONES DE LA CLASE EN VIVO (etapa 5, parte 2).
   · La maestra abre una clase (con una actividad nueva o una tarea que ya
-    mandó), la empieza, la pausa, habilita lo que la actividad deja para
-    después, va a la puesta en común y la cierra.
+    mandó), la empieza, la pausa, va a la puesta en común y la cierra.
   · Las pantallas se actualizan en tiempo real (Supabase Realtime); estas
     consultas son el respaldo si el tiempo real no anda en la red de la escuela.
   Todo con la sesión de quien llama: las reglas RLS deciden (la maestra solo
@@ -29,7 +28,7 @@ async function db() {
 const enVivo = (aulaId: string) => `/maestra/aulas/${aulaId}/en-vivo`;
 
 async function crearSesion(aulaId: string, asignacionId: string): Promise<{ ok: true } | { ok: false; mensaje: string }> {
-  const { error } = await (await db()).from('sesiones').insert({ asignacion_id: asignacionId, aula_id: aulaId, estado: 'esperando', desbloqueos: {} });
+  const { error } = await (await db()).from('sesiones').insert({ asignacion_id: asignacionId, aula_id: aulaId, estado: 'esperando' });
   if (!error) return { ok: true };
   if (error.code === '23505') return { ok: true }; // ya había una abierta: se va a esa
   console.error('[clase] no se pudo abrir:', error.code);
@@ -48,7 +47,7 @@ export async function abrirClase(aulaId: string, _previo: EstadoTareaForm, datos
 
   const { data, error } = await (await db())
     .from('asignaciones')
-    .insert({ aula_id: aula.id, actividad: form.actividad, opciones: form.opciones, desbloqueos: form.desbloqueos, estado: 'activa' })
+    .insert({ aula_id: aula.id, actividad: form.actividad, opciones: form.opciones, estado: 'activa' })
     .select('id')
     .single();
   if (error || !data) {
@@ -109,28 +108,6 @@ export async function pausarClase(sesionId: string, pausada: boolean): Promise<R
     .select(COLUMNAS_SESION)
     .maybeSingle();
   if (error || !data) return { ok: false, mensaje: 'No se pudo pausar. Probá de nuevo.' };
-  return { ok: true, sesion: data as SesionFila };
-}
-
-/** Habilita en vivo algo que la actividad deja para después (y queda habilitado también en la tarea). */
-export async function habilitarEnClase(sesionId: string, clave: string): Promise<ResultadoClase> {
-  await exigirDocenteActiva();
-  if (!esUuid(sesionId)) return { ok: false, mensaje: 'Pedido raro.' };
-  const supabase = await db();
-  const { data: s } = await supabase.from('sesiones').select('id, asignacion_id, desbloqueos, estado').eq('id', sesionId).maybeSingle();
-  if (!s || s.estado === 'cerrada') return { ok: false, mensaje: 'La clase ya está cerrada.' };
-  const { data: tarea } = await supabase.from('asignaciones').select('id, actividad, desbloqueos').eq('id', s.asignacion_id).maybeSingle();
-  if (!tarea || !desbloqueosDe(tarea.actividad).some((d) => d.clave === clave)) return { ok: false, mensaje: 'Esa actividad no tiene eso.' };
-  const { data, error } = await supabase
-    .from('sesiones')
-    .update({ desbloqueos: { ...(s.desbloqueos ?? {}), [clave]: true } })
-    .eq('id', sesionId)
-    .select(COLUMNAS_SESION)
-    .maybeSingle();
-  if (error || !data) return { ok: false, mensaje: 'No se pudo habilitar. Probá de nuevo.' };
-  // También en la tarea: si después siguen en casa, ya está habilitado
-  const { error: errorTarea } = await supabase.from('asignaciones').update({ desbloqueos: { ...(tarea.desbloqueos ?? {}), [clave]: true } }).eq('id', tarea.id);
-  if (errorTarea) console.error('[clase] habilitar en la tarea:', errorTarea.code);
   return { ok: true, sesion: data as SesionFila };
 }
 

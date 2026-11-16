@@ -29,7 +29,7 @@ export default async function Page({ params }: { params: Promise<{ id: string; t
   const { tarea, avances } = datos;
   const sala = salaDeTarea(
     { id: aula.id, nombre: aula.nombre, codigo: aula.codigo },
-    { id: tarea.id, actividad: tarea.actividad, opciones: tarea.opciones, desbloqueos: tarea.desbloqueos, estado: tarea.estado },
+    { id: tarea.id, actividad: tarea.actividad, opciones: tarea.opciones, estado: tarea.estado },
     alumnos.map((a) => ({ id: a.id, numero: a.numero, apodo: a.apodo, color: a.color ?? null, activo: a.activo })),
     avances.map((a) => ({ alumno_id: a.alumno_id, etapa: a.etapa, datos: a.datos, actualizado_en: a.actualizado_en, completada_en: a.completada_en })),
   );

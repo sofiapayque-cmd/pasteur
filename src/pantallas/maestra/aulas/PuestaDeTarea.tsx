@@ -24,7 +24,6 @@ export default function PuestaDeTarea({
     sala: sala as unknown as Clase['sala'],
     empezar: nada,
     alternarPausa: nada,
-    desbloquear: nada,
     irAPuesta: nada,
     cerrar: nada,
     aula,

@@ -6,7 +6,7 @@
 */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { aplicarProgreso, aplicarSesion, desbloqueosDeClase, esPaso, esReciente, fusionar, PASOS, salaDeTarea, salaDesde, ultimoCambio } from '../src/lib/aulas/clase.ts';
+import { aplicarProgreso, aplicarSesion, esPaso, esReciente, fusionar, PASOS, salaDeTarea, salaDesde, ultimoCambio } from '../src/lib/aulas/clase.ts';
 import { cuadernoDe, cuadernoVacio, SECCIONES } from '../src/actividades/cuaderno.js';
 import { leerFormularioActividad } from '../src/lib/aulas/tareas.ts';
 
@@ -15,8 +15,8 @@ const T1 = '2026-11-07T13:01:00.000Z';
 const T2 = '2026-11-07T13:02:00.000Z';
 
 const base = () => ({
-  sesion: { id: 'S', asignacion_id: 'A', aula_id: 'U', estado: 'esperando', pausada: false, desbloqueos: {}, iniciada_en: T0, cerrada_en: null },
-  asignacion: { id: 'A', actividad: 'a1', opciones: { ambientes: ['antartida'] }, desbloqueos: { antibioticos: false }, estado: 'activa' },
+  sesion: { id: 'S', asignacion_id: 'A', aula_id: 'U', estado: 'esperando', pausada: false, iniciada_en: T0, cerrada_en: null },
+  asignacion: { id: 'A', actividad: 'a1', opciones: { ambientes: ['antartida'] }, estado: 'activa' },
   aula: { id: 'U', nombre: '5.º B', codigo: 'Q3V5' },
   alumnos: [
     { id: 'n3', numero: 3, apodo: null, color: null, activo: true },
@@ -31,18 +31,11 @@ const base = () => ({
   ],
 });
 
-test('habilitado: lo de la actividad más lo que la maestra habilitó en vivo', () => {
-  assert.deepEqual(desbloqueosDeClase({ antibioticos: false, otro: true }, { antibioticos: true }), { antibioticos: true, otro: true });
-  assert.deepEqual(desbloqueosDeClase({ antibioticos: false }, { antibioticos: false }), { antibioticos: false });
-  assert.deepEqual(desbloqueosDeClase(null, null), {});
-});
-
 test('la sala de las pantallas: solo los que entraron y están activos, por número, con apodo y color', () => {
   const sala = salaDesde(base());
   assert.equal(sala.codigo, 'Q3V5');
   assert.equal(sala.actividad, 'a1');
   assert.deepEqual(sala.opciones, { ambientes: ['antartida'] });
-  assert.deepEqual(sala.desbloqueos, { antibioticos: false });
   assert.deepEqual(sala.alumnos.map((a) => [a.id, a.apodo, a.etapa]), [
     ['n1', 'Pulpo Sabio', 'paisaje'],
     ['n3', 'N.º 3', 'explorar'],
@@ -58,11 +51,9 @@ test('cambios de la sesión: solo los de esta clase', () => {
   const r = aplicarSesion(i, { id: 'S', estado: 'en-curso', pausada: true });
   assert.equal(r.sesion.estado, 'en-curso');
   assert.equal(r.sesion.pausada, true);
-  assert.deepEqual(r.sesion.desbloqueos, {}, 'si no viene, se queda lo que había');
+  assert.equal(r.sesion.aula_id, 'U', 'lo que no viene se queda como estaba');
   assert.equal(aplicarSesion(i, { id: 'OTRA', estado: 'cerrada' }), i);
   assert.equal(aplicarSesion(i, null), i);
-  const habilitado = aplicarSesion(r, { id: 'S', desbloqueos: { antibioticos: true } });
-  assert.equal(salaDesde(habilitado).desbloqueos.antibioticos, true);
 });
 
 test('avances: uno nuevo se suma, uno viejo no pisa al nuevo, otra actividad no entra', () => {
@@ -110,8 +101,8 @@ test('formulario de actividad: se limpia contra lo que existe', () => {
   const r = leerFormularioActividad(f);
   assert.equal(r.ok, true);
   assert.deepEqual(r.opciones.ambientes, ['antartida-suelo']);
-  // A1 ya no tiene partes para habilitar (16/11: los antibióticos están siempre): lo que llegue de más se ignora
-  assert.deepEqual(r.desbloqueos, {});
+  // Ya no hay partes para habilitar después (16/11): lo que llegue de más se ignora
+  assert.deepEqual(Object.keys(r).sort(), ['actividad', 'ok', 'opciones']);
   const sinNada = new FormData();
   sinNada.set('actividad', 'a1');
   assert.equal(leerFormularioActividad(sinNada).ok, false);
@@ -170,7 +161,7 @@ test('cuaderno: sin datos, datos raros o actividad desconocida → vacío, nunca
 test('la sala de una tarea: puesta en común para mirar, con los que hicieron algo', () => {
   const sala = salaDeTarea(
     { id: 'U', nombre: '5.º B', codigo: 'Q3V5' },
-    { id: 'A', actividad: 'a2', opciones: {}, desbloqueos: {}, estado: 'activa' },
+    { id: 'A', actividad: 'a2', opciones: {}, estado: 'activa' },
     [{ id: 'n1', numero: 1, apodo: 'Pulpo', color: null, activo: true }, { id: 'n2', numero: 2, apodo: null, color: null, activo: true }],
     [{ alumno_id: 'n1', etapa: 'conclusion', datos: { estructura: 'dengue' }, actualizado_en: T1, completada_en: T1 }],
   );

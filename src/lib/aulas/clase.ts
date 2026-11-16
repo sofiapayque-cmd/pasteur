@@ -23,11 +23,10 @@ export type SesionFila = {
   aula_id: string;
   estado: EstadoClase;
   pausada: boolean;
-  desbloqueos: Record<string, boolean> | null;
   iniciada_en: string;
   cerrada_en: string | null;
 } & FilaTiempo; // + el timer (migración 21; puede faltar si la base todavía no la tiene)
-export type AsignacionClase = { id: string; actividad: string; opciones: Record<string, string[]> | null; desbloqueos: Record<string, boolean> | null; estado: string };
+export type AsignacionClase = { id: string; actividad: string; opciones: Record<string, string[]> | null; estado: string };
 export type AlumnoClase = { id: string; numero: number; apodo: string | null; color: string | null; activo: boolean };
 export type ProgresoClase = {
   alumno_id: string;
@@ -52,23 +51,12 @@ export type SalaReal = {
   estado: EstadoClase;
   pausada: boolean;
   opciones: Record<string, string[]>;
-  desbloqueos: Record<string, boolean>;
   alumnos: { id: string; apodo: string; color: string; etapa: string; datos: Record<string, unknown>; desde: number; numero: number; terminada: boolean }[];
 };
 
 const COLORES = ['#EF6F5E', '#F4A6BD', '#F2B13B', '#8ED5C3', '#93AEEB', '#A9A9F4'];
 const nombreDeAlumno = (a: Pick<AlumnoClase, 'apodo' | 'numero'>) => a.apodo || `N.º ${a.numero}`;
 const colorDeAlumno = (a: Pick<AlumnoClase, 'color' | 'numero'>) => a.color || COLORES[(a.numero - 1) % COLORES.length];
-
-/**
- * Lo habilitado en la clase: lo de la actividad (true = desde el principio,
- * false = lo habilita la maestra) más lo que la maestra habilitó en vivo.
- */
-export function desbloqueosDeClase(deActividad: Record<string, boolean> | null, enVivo: Record<string, boolean> | null): Record<string, boolean> {
-  const salida: Record<string, boolean> = { ...(deActividad ?? {}) };
-  for (const [k, v] of Object.entries(enVivo ?? {})) if (v === true) salida[k] = true;
-  return salida;
-}
 
 export function salaDesde(i: Instantanea): SalaReal {
   const porAlumno = new Map(i.progresos.map((p) => [p.alumno_id, p]));
@@ -94,7 +82,6 @@ export function salaDesde(i: Instantanea): SalaReal {
     estado: i.sesion.estado,
     pausada: i.sesion.pausada,
     opciones: i.asignacion.opciones ?? {},
-    desbloqueos: desbloqueosDeClase(i.asignacion.desbloqueos, i.sesion.desbloqueos),
     alumnos,
   };
 }
@@ -102,7 +89,7 @@ export function salaDesde(i: Instantanea): SalaReal {
 /** Cambio de la sesión (tiempo real o consulta). Solo la de esta clase. */
 export function aplicarSesion(i: Instantanea, fila: Partial<SesionFila> | null | undefined): Instantanea {
   if (!fila || fila.id !== i.sesion.id) return i;
-  return { ...i, sesion: { ...i.sesion, ...fila, desbloqueos: fila.desbloqueos ?? i.sesion.desbloqueos } };
+  return { ...i, sesion: { ...i.sesion, ...fila } };
 }
 
 /**
@@ -160,6 +147,6 @@ export function salaDeTarea(
   alumnos: AlumnoClase[],
   progresos: (Omit<ProgresoClase, 'etapa_desde'> & { etapa_desde?: string })[],
 ): SalaReal {
-  const sesion: SesionFila = { id: 'tarea', asignacion_id: asignacion.id, aula_id: aula.id, estado: 'puesta', pausada: false, desbloqueos: {}, iniciada_en: '', cerrada_en: null };
+  const sesion: SesionFila = { id: 'tarea', asignacion_id: asignacion.id, aula_id: aula.id, estado: 'puesta', pausada: false, iniciada_en: '', cerrada_en: null };
   return salaDesde({ sesion, asignacion, aula, alumnos, progresos: progresos.map((p) => ({ ...p, etapa_desde: p.etapa_desde ?? p.actualizado_en })) });
 }

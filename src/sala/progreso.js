@@ -11,7 +11,6 @@ import { INFO_ACTIVIDADES } from '../actividades/info';
   p.ir('etapa', {…}) → cambia de etapa y (opcional) guarda datos
   p.guardar({…})     → guarda datos sin cambiar de etapa
   p.enClase          → true si el niño está en una sala con su maestra
-  p.desbloqueado(k)  → si la maestra habilitó algo (en modo individual, siempre true)
   p.opciones         → lo que eligió la maestra al preparar la clase ({} en modo individual)
 
   En clase, todo se guarda en la sala (la maestra lo ve en el tablero).
@@ -77,7 +76,6 @@ export function useProgreso(actividadId) {
     enClase,
     alumno: mio,
     opciones: enClase ? sala.opciones || {} : {},
-    desbloqueado: (clave) => (enClase ? Boolean(sala.desbloqueos?.[clave]) : true),
     pausada: enClase && (sala.pausada || sala.estado === 'puesta'),
     sala,
   };

@@ -435,14 +435,6 @@
   font-size: 11px;
   letter-spacing: 0.03em;
 }
-.tablero__columna--bloqueada {
-  border-radius: 16px;
-  background: repeating-linear-gradient(135deg, rgba(34, 35, 42, 0.05) 0 8px, transparent 8px 16px);
-}
-.tablero__candado {
-  font-size: 13px;
-  line-height: 1.35;
-}
 .tablero__cuenta {
   font-family: var(--font-display);
   font-weight: 700;
@@ -537,10 +529,6 @@
 }
 .accion--pausa[aria-pressed='true'] {
   background: var(--clorofila);
-}
-.accion--habilitar {
-  background: var(--clorofila);
-  color: var(--tinta);
 }
 .accion--puesta {
   background: var(--nucleo);

@@ -33,7 +33,6 @@ export default async function Page() {
           id: tarea.id,
           actividad: tarea.actividad as 'a1' | 'a2' | 'a3',
           opciones: tarea.opciones ?? {},
-          desbloqueos: tarea.desbloqueos ?? {},
           abierta: tarea.estado === 'activa',
         }}
         inicial={{ etapa: avance.etapa, datos: avance.datos ?? {} }}

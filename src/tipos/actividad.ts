@@ -21,16 +21,6 @@ export interface OpcionDef {
   items: Array<{ id: string; nombre: string; detalle?: string; color?: string }>;
 }
 
-/** Una etapa que la maestra puede habilitar en vivo (ej. antibióticos en A1). */
-export interface DesbloqueoDef {
-  clave: string;
-  etiqueta: string;
-  etapa: string;
-  accion: string;
-  recomendado: string;
-  explicacion: string;
-}
-
 export interface GuiaDocente {
   titulo: string;
   objetivos: string[];
@@ -41,7 +31,6 @@ export interface InfoActividad {
   ETAPAS: Etapa[];
   PREGUNTAS?: unknown[];
   OPCIONES?: OpcionDef[];
-  DESBLOQUEOS?: DesbloqueoDef[];
   GUIA?: GuiaDocente;
   simularDatos?: (indiceEtapa: number, sala: import('./sala').Sala) => DatosActividad;
   resumen?: (datos: DatosActividad) => string;

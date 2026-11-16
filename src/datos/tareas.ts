@@ -17,7 +17,6 @@ export type Tarea = {
   aula_id: string;
   actividad: string;
   opciones: Record<string, string[]>;
-  desbloqueos: Record<string, boolean>;
   estado: EstadoTarea;
   creada_en: string;
   cerrada_en: string | null;
@@ -31,7 +30,7 @@ export type Avance = {
 };
 export type TareaConCuentas = Tarea & { empezaron: number; terminaron: number };
 
-const COLUMNAS = 'id, aula_id, actividad, opciones, desbloqueos, estado, creada_en, cerrada_en';
+const COLUMNAS = 'id, aula_id, actividad, opciones, estado, creada_en, cerrada_en';
 
 async function db() {
   const supabase = await crearClienteServidor();

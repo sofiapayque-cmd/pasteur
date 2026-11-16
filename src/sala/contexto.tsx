@@ -2,7 +2,7 @@
 
 import { createContext, useContext, type ReactNode } from 'react';
 import type { AccionTiempo, FilaTiempo } from '@/lib/aulas/tiempo';
-import { alternarPausa, cerrarSala, desbloquear, empezar, irAPuesta, simularAlumno, useSala } from './sala';
+import { alternarPausa, cerrarSala, empezar, irAPuesta, simularAlumno, useSala } from './sala';
 import type { Conexion } from './claseEnVivo';
 
 /*
@@ -18,7 +18,6 @@ export type Clase = {
   sala: SalaComun;
   empezar: () => void;
   alternarPausa: () => void;
-  desbloquear: (clave: string) => void;
   irAPuesta: () => void;
   volverAlTablero?: () => void;
   cerrar: () => void;
@@ -52,5 +51,5 @@ export function useClase(): Clase {
   const real = useContext(Contexto);
   const sala = useSala();
   if (real) return real;
-  return { real: false, sala, empezar, alternarPausa, desbloquear, irAPuesta, cerrar: cerrarSala, simularAlumno };
+  return { real: false, sala, empezar, alternarPausa, irAPuesta, cerrar: cerrarSala, simularAlumno };
 }

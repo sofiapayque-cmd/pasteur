@@ -4,7 +4,6 @@
   - ETAPAS:      [{ id, nombre }] en orden (las ve la maestra en el tablero)
   - PREGUNTAS:   preguntas para la puesta en común
   - OPCIONES:    (opcional) lo que la maestra elige al preparar la clase
-  - DESBLOQUEOS: (opcional) etapas que la maestra habilita en vivo
   - GUIA:        (opcional) resumen de la guía docente
   - simularDatos(indiceEtapa, sala): (opcional) datos de alumnos de prueba
   - resumen(datos): (opcional) una línea con lo que hizo cada niño, para la puesta en común

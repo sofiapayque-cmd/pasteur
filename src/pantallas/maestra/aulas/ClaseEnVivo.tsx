@@ -32,7 +32,6 @@ export default function ClaseEnVivo({ inicial, asistente = false }: { inicial: I
       if (inst.sesion.tiempo_estado === 'listo') tiempo('iniciar');
     },
     alternarPausa: acciones.alternarPausa,
-    desbloquear: acciones.desbloquear,
     irAPuesta: () => acciones.mover('puesta'),
     volverAlTablero: () => acciones.mover('volver'),
     cerrar: () => acciones.mover('cerrar'),

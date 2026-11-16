@@ -33,7 +33,6 @@ export default function Tablero() {
   const etapas = info.ETAPAS || [];
   const ultima = etapas[etapas.length - 1]?.id;
   const nombreEtapa = (id) => etapas.find((e) => e.id === id)?.nombre || id;
-  const bloqueadas = new Set((info.DESBLOQUEOS || []).filter((d) => !sala.desbloqueos?.[d.clave]).map((d) => d.etapa));
   const trabados = sala.alumnos.filter((a) => a.etapa !== ultima && ahora - a.desde > CINCO_MINUTOS);
 
   function puesta() {
@@ -70,24 +69,17 @@ export default function Tablero() {
       <section className="tablero__etapas" aria-label="Etapa de cada niño" style={{ gridTemplateColumns: `repeat(${Math.max(etapas.length, 1)}, minmax(0, 1fr))` }}>
         {etapas.map((e) => {
           const aca = sala.alumnos.filter((a) => a.etapa === e.id);
-          const bloqueada = bloqueadas.has(e.id);
           return (
-            <div key={e.id} className={`tablero__columna ${bloqueada ? 'tablero__columna--bloqueada' : ''}`}>
+            <div key={e.id} className="tablero__columna">
               <span className="etiqueta etiqueta--oscura">{e.nombre}</span>
-              {bloqueada ? (
-                <span className="tablero__candado">Bloqueado hasta que lo habilites</span>
-              ) : (
-                <>
-                  <span className="tablero__cuenta">{aca.length}</span>
-                  <ul className="tablero__puntos">
-                    {aca.map((a) => (
-                      <li key={a.id} title={a.apodo} style={{ background: a.color }}>
-                        <span className="solo-lector">{a.apodo}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </>
-              )}
+              <span className="tablero__cuenta">{aca.length}</span>
+              <ul className="tablero__puntos">
+                {aca.map((a) => (
+                  <li key={a.id} title={a.apodo} style={{ background: a.color }}>
+                    <span className="solo-lector">{a.apodo}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
           );
         })}
@@ -118,11 +110,6 @@ export default function Tablero() {
         <button className="accion accion--pausa" onClick={clase.alternarPausa} aria-pressed={sala.pausada}>
           {sala.pausada ? 'Reanudar las Ceibal' : 'Pausar y mirar el pizarrón'}
         </button>
-        {(info.DESBLOQUEOS || []).map((d) => (
-          <button key={d.clave} className="accion accion--habilitar" onClick={() => clase.desbloquear(d.clave)} disabled={sala.desbloqueos?.[d.clave]}>
-            {sala.desbloqueos?.[d.clave] ? `${d.etiqueta}: habilitado` : d.accion}
-          </button>
-        ))}
         <button className="accion accion--puesta" onClick={puesta}>
           Ir a la puesta en común
         </button>
