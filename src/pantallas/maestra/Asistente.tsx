@@ -181,7 +181,7 @@ export function ConsultaAsistente({
           <h2>Todavía no tenemos esa respuesta</h2>
           <p>
             Ya se la pasamos al equipo del Pasteur. Cuando una investigadora la apruebe,{' '}
-            {mostrado.guardada ? 'te avisamos en tu panel y queda en tu cuaderno' : 'va a aparecer acá'}. Mientras tanto, es una linda pregunta para investigar en clase.
+            {mostrado.guardada ? 'te avisamos en tu panel y queda en tu cuaderno' : 'va a aparecer acá'}. Mientras tanto, es una linda pregunta para hipotetizar en clase.
           </p>
         </section>
       )}
