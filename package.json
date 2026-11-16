@@ -23,7 +23,8 @@
     "test:portada": "node --import ./pruebas/registrar.mjs --test --experimental-strip-types pruebas/portada.test.mjs",
     "test:portada-navegador": "node --import ./pruebas/registrar.mjs pruebas/portada.e2e.mjs",
     "test:rol-navegador": "node --import ./pruebas/registrar.mjs pruebas/rol.e2e.mjs",
-    "test:curiosidades": "node --import ./pruebas/registrar.mjs --test --experimental-strip-types pruebas/curiosidades.test.mjs"
+    "test:curiosidades": "node --import ./pruebas/registrar.mjs --test --experimental-strip-types pruebas/curiosidades.test.mjs",
+    "test:cuadernos": "node --import ./pruebas/registrar.mjs --test --experimental-strip-types pruebas/cuadernos.test.mjs"
   },
   "dependencies": {
     "@fontsource-variable/bricolage-grotesque": "^5.3.0",

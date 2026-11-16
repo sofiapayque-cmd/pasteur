@@ -58,11 +58,17 @@ export function ConsultaAsistente({
   lista,
   inicial = {},
   actividadInicial = '',
+  aulas = [],
+  aulaFija,
   onBuscando,
 }: {
   lista: boolean;
   inicial?: EstadoAsistente;
   actividadInicial?: string;
+  /** Sus clases, para elegir de cuál es la pregunta (queda en el cuaderno de esa clase). */
+  aulas?: { id: string; nombre: string }[];
+  /** La clase de la puesta en común (sin elegir). */
+  aulaFija?: string;
   onBuscando?: (buscando: boolean) => void;
 }) {
   const [estado, preguntar, buscando] = useActionState<EstadoAsistente, FormData>(preguntarAlPasteur, inicial);
@@ -126,6 +132,23 @@ export function ConsultaAsistente({
                 ))}
               </select>
             </label>
+            {aulaFija ? (
+              <input type="hidden" name="aula" value={aulaFija} />
+            ) : (
+              aulas.length > 0 && (
+                <label className="campo">
+                  <span className="campo__nombre">Clase (opcional)</span>
+                  <select className="campo__entrada" name="aula" defaultValue={aulas.length === 1 ? aulas[0].id : ''}>
+                    <option value="">Ninguna</option>
+                    {aulas.map((a) => (
+                      <option key={a.id} value={a.id}>
+                        {a.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )
+            )}
             <button className="btn btn--primario btn--grande" type="submit" disabled={buscando || texto.trim().length < 5}>
               {buscando ? 'Buscando…' : 'Preguntar'}
             </button>
@@ -152,14 +175,20 @@ export function ConsultaAsistente({
               </button>
             ))}
           </div>
-          <p className="asis__nota">La tuya se la pasamos al equipo del Pasteur, por si hace falta una respuesta nueva.</p>
+          <p className="asis__nota">
+            La tuya se la pasamos al equipo del Pasteur, por si hace falta una respuesta nueva.
+            {mostrado.guardada ? ' Si la responden, te avisamos en tu panel.' : ''}
+          </p>
         </section>
       )}
 
       {!buscando && mostrado.resultado?.tipo === 'nada' && (
         <section className="asis__caja" role="status">
           <h2>Todavía no tenemos esa respuesta</h2>
-          <p>Ya se la pasamos al equipo del Pasteur. Cuando una investigadora la apruebe, va a aparecer acá. Mientras tanto, es una linda pregunta para investigar en clase.</p>
+          <p>
+            Ya se la pasamos al equipo del Pasteur. Cuando una investigadora la apruebe,{' '}
+            {mostrado.guardada ? 'te avisamos en tu panel y queda en tu cuaderno' : 'va a aparecer acá'}. Mientras tanto, es una linda pregunta para investigar en clase.
+          </p>
         </section>
       )}
 
@@ -189,7 +218,17 @@ export function ConsultaAsistente({
   );
 }
 
-export default function Asistente({ cuenta, lista, inicial = {} }: { cuenta: string; lista: boolean; inicial?: EstadoAsistente }) {
+export default function Asistente({
+  cuenta,
+  lista,
+  inicial = {},
+  aulas = [],
+}: {
+  cuenta: string;
+  lista: boolean;
+  inicial?: EstadoAsistente;
+  aulas?: { id: string; nombre: string }[];
+}) {
   const [buscando, setBuscando] = useState(false);
   return (
     <main className="pantalla asis">
@@ -208,7 +247,7 @@ export default function Asistente({ cuenta, lista, inicial = {} }: { cuenta: str
             <Moli animo={buscando ? 'duda' : 'feliz'} estilo="plano" patas tamano={110} />
           </div>
         </div>
-        <ConsultaAsistente lista={lista} inicial={inicial} onBuscando={setBuscando} />
+        <ConsultaAsistente lista={lista} inicial={inicial} aulas={aulas} onBuscando={setBuscando} />
       </div>
     </main>
   );

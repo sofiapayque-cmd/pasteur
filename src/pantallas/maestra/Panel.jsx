@@ -11,8 +11,8 @@ import Curiosidades from '../../components/Curiosidades';
 
 /* 03 · PANEL DE LA MAESTRA — las actividades aparecen como colonias que crecen.
    cuenta: nombre de la maestra con sesión (sistema de aulas), o null en el prototipo. */
-/** @param {{ cuenta?: string | null, curiosidades?: import('@/datos/curiosidades').CuriosidadVisible[] }} props */
-export default function Panel({ cuenta = null, curiosidades = [] }) {
+/** @param {{ cuenta?: string | null, curiosidades?: import('@/datos/curiosidades').CuriosidadVisible[], avisos?: { respuestasNuevas: number, preguntasDeChicos: number } | null }} props */
+export default function Panel({ cuenta = null, curiosidades = [], avisos = null }) {
   const navegar = useNavigate();
   return (
     <main className="pantalla panel">
@@ -39,6 +39,31 @@ export default function Panel({ cuenta = null, curiosidades = [] }) {
           </div>
           <a className="btn btn--primario" href="/maestra/preguntar">
             Hacer una pregunta
+          </a>
+        </section>
+      )}
+      {/* Mi cuaderno (16/11): avisa cuando llega la respuesta a una pregunta suya y cuando los chicos escriben preguntas */}
+      {cuenta && avisos && (
+        <section className={`tarjeta panel__asistente ${avisos.respuestasNuevas ? 'panel__aviso' : ''}`} aria-labelledby="panel-cuaderno">
+          <div>
+            <span className="etiqueta">Mi cuaderno</span>
+            <h2 id="panel-cuaderno">
+              {avisos.respuestasNuevas
+                ? avisos.respuestasNuevas === 1
+                  ? '¡Respondimos una pregunta tuya!'
+                  : `¡Respondimos ${avisos.respuestasNuevas} preguntas tuyas!`
+                : 'Tus preguntas y tus clases'}
+            </h2>
+            <p>
+              {avisos.preguntasDeChicos
+                ? avisos.preguntasDeChicos === 1
+                  ? 'Un chico escribió una pregunta en su cuaderno.'
+                  : `Tus chicos escribieron ${avisos.preguntasDeChicos} preguntas en sus cuadernos.`
+                : 'Lo que hicieron en cada clase, cuánto duró y lo que preguntaron.'}
+            </p>
+          </div>
+          <a className="btn btn--secundario" href="/maestra/cuaderno">
+            Abrir mi cuaderno
           </a>
         </section>
       )}

@@ -8,10 +8,10 @@ import './asistente.css';
   "Preguntale al Pasteur" al costado de la puesta en común (pedido de Sofia, 8/11).
   La maestra pregunta sin salir de la pantalla que está proyectando; "Mostrar en
   grande" pone la respuesta aprobada a pantalla completa. Es la misma consulta
-  que /maestra/preguntar: solo respuestas aprobadas, y la pregunta sin respuesta
-  se anota sin maestra, aula ni hora. Los chicos no la usan.
+  que /maestra/preguntar: solo respuestas aprobadas. Con una clase real, la
+  pregunta queda en el cuaderno de esa clase (16/11). Los chicos no la usan.
 */
-export default function PanelAsistente({ actividad, onCerrar }: { actividad?: string; onCerrar: () => void }) {
+export default function PanelAsistente({ actividad, aulaId, onCerrar }: { actividad?: string; aulaId?: string; onCerrar: () => void }) {
   const panel = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -34,7 +34,7 @@ export default function PanelAsistente({ actividad, onCerrar }: { actividad?: st
           </button>
         </div>
         <p className="asis__nota">Escribí la pregunta de la clase. Solo aparecen respuestas que revisó una investigadora del Instituto.</p>
-        <ConsultaAsistente lista actividadInicial={actividad} />
+        <ConsultaAsistente lista actividadInicial={actividad} aulaFija={aulaId} />
       </div>
     </div>
   );

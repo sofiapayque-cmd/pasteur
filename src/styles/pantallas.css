@@ -1599,6 +1599,10 @@
   max-width: 60ch;
   line-height: 1.45;
 }
+/* Mi cuaderno: con una respuesta nueva, el borde se marca */
+.panel__aviso {
+  box-shadow: inset 0 0 0 3px var(--plasma), var(--halo);
+}
 @media (max-width: 900px) {
   .panel__asistente {
     margin: var(--space-3) var(--space-3) 0;
