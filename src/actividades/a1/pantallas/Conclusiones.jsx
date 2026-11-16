@@ -142,7 +142,7 @@ export default function Conclusiones({ progreso }) {
               <p>Con el {ANTIBIOTICOS.find((x) => x.id === ab.masResistido)?.nombre} resistieron más bacterias.</p>
             </div>
           ) : (
-            <p className="a1-cuaderno__nota">{progreso.desbloqueado('antibioticos') ? 'Puedo volver a la mesa y probar antibióticos.' : 'Mi maestra lo va a habilitar.'}</p>
+            <p className="a1-cuaderno__nota">Puedo volver a la mesa y probar antibióticos.</p>
           )}
 
           <h2 className="a1-cuaderno__titulo">Lo que aprendí</h2>
