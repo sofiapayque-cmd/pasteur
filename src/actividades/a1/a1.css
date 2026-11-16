@@ -827,13 +827,6 @@
 .a1-accion--experimentar .a1-accion__icono {
   background: #fff;
 }
-.a1-accion--candado {
-  background: transparent;
-  border: 2px dashed rgba(47, 74, 133, 0.3);
-  box-shadow: none;
-  cursor: default;
-}
-
 /* =========================================================
    5 · CULTIVO
    ========================================================= */

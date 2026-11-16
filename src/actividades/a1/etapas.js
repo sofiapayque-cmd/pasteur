@@ -29,16 +29,7 @@ export const OPCIONES = [
   },
 ];
 
-export const DESBLOQUEOS = [
-  {
-    clave: 'antibioticos',
-    etiqueta: 'Antibióticos',
-    etapa: 'antibioticos',
-    accion: 'Habilitar antibióticos',
-    recomendado: 'Los habilito yo durante la clase',
-    explicacion: 'Recomendado: primero exploran, después experimentan',
-  },
-];
+/* Los antibióticos están disponibles siempre (pedido de Sofia, 16/11): la maestra ya no los habilita durante la clase. */
 
 export const PREGUNTAS = [
   '¿Por qué no crecieron las mismas colonias en todos los ambientes?',

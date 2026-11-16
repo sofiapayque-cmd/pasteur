@@ -42,14 +42,6 @@ function Icono({ tipo }) {
         <circle cx="24" cy="24" r="4.5" fill="#fff" stroke="#7272EE" strokeWidth="2" />
       </svg>
     );
-  if (tipo === 'candado')
-    return (
-      <svg {...comun}>
-        <path d="M16 22v-6a8 8 0 0 1 16 0v6" fill="none" stroke="#5E6070" strokeWidth="3" />
-        <rect x="11" y="22" width="26" height="20" rx="5" fill="#D4DCF7" stroke="#5E6070" strokeWidth="2.5" />
-        <circle cx="24" cy="31" r="2.6" fill="#5E6070" />
-      </svg>
-    );
   return (
     <svg {...comun}>
       <path d="M10 8h22l6 6v26H10z" fill="#FBF9F1" stroke="#2F4A85" strokeWidth="2.5" strokeLinejoin="round" />
@@ -80,7 +72,6 @@ export default function Mesa({ progreso }) {
   const primeraSin = muestras.find((m) => !cultivada(m));
   const [sel, setSel] = useState(primeraSin?.id || muestras[muestras.length - 1]?.id);
   const seleccionada = muestras.find((m) => m.id === sel);
-  const habilitado = progreso.desbloqueado('antibioticos');
   const limpias = cultivos.filter((c) => !c.contaminada);
   const yaAntibioticos = (progreso.datos.antibioticos || []).length > 0;
 
@@ -94,11 +85,8 @@ export default function Mesa({ progreso }) {
     animo = 'piensa';
   } else if (cultivos.length === 1) {
     moli = 'Con dos placas vas a poder comparar. ¿Otra muestra, u otra temperatura?';
-  } else if (habilitado && !yaAntibioticos) {
+  } else if (!yaAntibioticos) {
     moli = '¡Ya podés comparar placas y probar antibióticos!';
-    animo = 'eureka';
-  } else if (!habilitado) {
-    moli = '¡Ya podés comparar tus placas!';
     animo = 'eureka';
   }
 
@@ -193,25 +181,13 @@ export default function Mesa({ progreso }) {
             onClick={() => progreso.ir('cultivo', { cultivando: seleccionada.id })}
           />
           <Accion icono="comparar" titulo="Comparar placas" detalle={cultivos.length < 2 ? 'Necesitás 2 placas' : `${cultivos.length} placas para elegir`} disabled={cultivos.length < 2} onClick={() => progreso.ir('comparar')} />
-          {habilitado ? (
-            <Accion
-              icono="antibioticos"
-              titulo="Probar antibióticos"
-              detalle={limpias.length ? '¿Qué bacterias resisten?' : 'Necesitás una placa sin contaminar'}
-              disabled={!limpias.length}
-              onClick={() => progreso.ir('antibioticos')}
-            />
-          ) : (
-            <div className="a1-accion a1-accion--candado" role="note">
-              <span className="a1-accion__icono">
-                <Icono tipo="candado" />
-              </span>
-              <span className="a1-accion__textos">
-                <b>Probar antibióticos</b>
-                <small>Tu maestra lo va a habilitar</small>
-              </span>
-            </div>
-          )}
+          <Accion
+            icono="antibioticos"
+            titulo="Probar antibióticos"
+            detalle={limpias.length ? '¿Qué bacterias resisten?' : 'Necesitás una placa sin contaminar'}
+            disabled={!limpias.length}
+            onClick={() => progreso.ir('antibioticos')}
+          />
         </nav>
       </div>
 

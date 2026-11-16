@@ -126,7 +126,7 @@ export default function PuestaA1({ sala }) {
             ))}
           </ul>
         ) : (
-          <p className="texto-suave a1-puesta__vacio">Todavía nadie probó antibióticos. Cuando los habilites, acá aparece qué antibiótico tuvo más bacterias resistentes.</p>
+          <p className="texto-suave a1-puesta__vacio">Todavía nadie probó antibióticos. Cuando los prueben, acá aparece qué antibiótico tuvo más bacterias resistentes.</p>
         )}
       </section>
     </div>

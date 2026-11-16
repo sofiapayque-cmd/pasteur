@@ -110,7 +110,8 @@ test('formulario de actividad: se limpia contra lo que existe', () => {
   const r = leerFormularioActividad(f);
   assert.equal(r.ok, true);
   assert.deepEqual(r.opciones.ambientes, ['antartida-suelo']);
-  assert.equal(r.desbloqueos.antibioticos, false);
+  // A1 ya no tiene partes para habilitar (16/11: los antibióticos están siempre): lo que llegue de más se ignora
+  assert.deepEqual(r.desbloqueos, {});
   const sinNada = new FormData();
   sinNada.set('actividad', 'a1');
   assert.equal(leerFormularioActividad(sinNada).ok, false);

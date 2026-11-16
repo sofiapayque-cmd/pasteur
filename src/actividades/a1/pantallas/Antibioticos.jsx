@@ -125,7 +125,6 @@ function PlacaCesped({ ambiente, discos, momento = 0, tamano = 360, onToque, des
 export default function Antibioticos({ progreso }) {
   const cultivos = progreso.datos.cultivos || [];
   const limpias = cultivos.filter((c) => !c.contaminada);
-  const habilitado = progreso.desbloqueado('antibioticos');
   const tiempo = useTiempos();
 
   const [baseId, setBaseId] = useState(limpias.length === 1 ? limpias[0].id : null);
@@ -137,20 +136,6 @@ export default function Antibioticos({ progreso }) {
   const [error, setError] = useState(null);
   const [respuesta, setRespuesta] = useState(null);
   const [fin, setFin] = useState(false);
-
-  if (!habilitado) {
-    return (
-      <section className="a1-antibioticos">
-        <Cabeza etiqueta="Antibióticos" titulo="Todavía no está habilitado">
-          Tu maestra lo va a habilitar cuando sea el momento.
-        </Cabeza>
-        <button className="btn btn--primario" onClick={() => progreso.ir('mesa')}>
-          Volver a la mesa
-        </button>
-        <GloboMoli texto="¡Paciencia! Mientras tanto podés comparar tus placas." animo="escucha" />
-      </section>
-    );
-  }
 
   if (!limpias.length) {
     return (
