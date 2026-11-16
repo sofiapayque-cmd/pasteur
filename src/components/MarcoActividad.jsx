@@ -7,6 +7,7 @@ import FondoVivo from './FondoVivo';
 import { ACTIVIDADES } from '../data/contenido';
 import { INFO_ACTIVIDADES } from '../actividades/info';
 import PreguntasDelPasteur from './PreguntasDelPasteur';
+import Ventana from './Ventana';
 import { equipoReal } from '@/lib/supabase/config';
 
 /*
@@ -75,7 +76,7 @@ export default function MarcoActividad({ actividadId, progreso, children }) {
       <div className="actividad__contenido">{children}</div>
 
       {progreso.pausada && (
-        <div className="pausa" role="dialog" aria-modal="true" aria-labelledby="pausa-titulo">
+        <Ventana className="pausa" aria-labelledby="pausa-titulo">
           <div className="pausa__tarjeta">
             <Moli animo="escucha" tamano={260} />
             <div>
@@ -83,7 +84,7 @@ export default function MarcoActividad({ actividadId, progreso, children }) {
               <h2 id="pausa-titulo">Mirá el pizarrón</h2>
             </div>
           </div>
-        </div>
+        </Ventana>
       )}
     </main>
   );

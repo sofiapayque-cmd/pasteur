@@ -180,3 +180,22 @@ input {
   clip: rect(0 0 0 0);
   white-space: nowrap;
 }
+
+/* Ventanas (src/components/Ventana.tsx): el <dialog> del navegador sin sus
+   estilos de fábrica. Cada ventana pone su fondo, su lugar y su tamaño. */
+:where(.ventana) {
+  width: auto;
+  height: auto;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  color: inherit;
+}
+.ventana::backdrop {
+  background: transparent;
+}
+.ventana:not([open]) {
+  display: none;
+}

@@ -5,6 +5,7 @@ import Cabecera from '@/components/Cabecera';
 import FondoVivo from '@/components/FondoVivo';
 import CuentaDocente from '@/components/CuentaDocente';
 import Moli from '@/components/Moli';
+import Ventana from '@/components/Ventana';
 import { preguntarAlPasteur, verRespuesta, type EstadoAsistente, type Respuesta } from '@/acciones/asistente';
 import { ACTIVIDADES_DISPONIBLES } from '@/lib/aulas/tareas';
 import './asistente.css';
@@ -82,13 +83,6 @@ export function ConsultaAsistente({
   useEffect(() => {
     onBuscando?.(buscando);
   }, [buscando, onBuscando]);
-
-  useEffect(() => {
-    if (!grande) return;
-    const cerrar = (e: KeyboardEvent) => e.key === 'Escape' && setGrande(false);
-    window.addEventListener('keydown', cerrar);
-    return () => window.removeEventListener('keydown', cerrar);
-  }, [grande]);
 
   function enviar(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -203,7 +197,7 @@ export function ConsultaAsistente({
       )}
 
       {grande && respuesta && (
-        <div className="asis__grande" role="dialog" aria-modal="true" aria-label="Respuesta en grande">
+        <Ventana className="asis__grande" aria-label="Respuesta en grande" onCerrar={() => setGrande(false)}>
           <button className="btn btn--claro asis__cerrar" type="button" onClick={() => setGrande(false)}>
             Cerrar
           </button>
@@ -212,7 +206,7 @@ export function ConsultaAsistente({
           <p className="asis__sello asis__sello--grande">
             <span aria-hidden="true">✓</span> {SELLO}
           </p>
-        </div>
+        </Ventana>
       )}
     </>
   );

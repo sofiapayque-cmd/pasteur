@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import Ventana from '@/components/Ventana';
 import { ConsultaAsistente } from './Asistente';
 import './asistente.css';
 
@@ -16,16 +17,11 @@ export default function PanelAsistente({ actividad, aulaId, onCerrar }: { activi
 
   useEffect(() => {
     panel.current?.focus();
-    // Esc cierra el panel, salvo que esté abierta la respuesta en grande (Esc cierra esa primero)
-    const tecla = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && !document.querySelector('.asis__grande')) onCerrar();
-    };
-    window.addEventListener('keydown', tecla);
-    return () => window.removeEventListener('keydown', tecla);
-  }, [onCerrar]);
+  }, []);
 
+  // Si está abierta la respuesta en grande, Esc cierra esa primero (lo hace el navegador)
   return (
-    <div className="puesta-asis" role="dialog" aria-modal="true" aria-labelledby="puesta-asis-titulo" onClick={(e) => e.target === e.currentTarget && onCerrar()}>
+    <Ventana className="puesta-asis" aria-labelledby="puesta-asis-titulo" onCerrar={onCerrar} cerrarAfuera>
       <div className="puesta-asis__panel" ref={panel} tabIndex={-1}>
         <div className="puesta-asis__cabeza">
           <h2 id="puesta-asis-titulo">Preguntale al Pasteur</h2>
@@ -36,6 +32,6 @@ export default function PanelAsistente({ actividad, aulaId, onCerrar }: { activi
         <p className="asis__nota">Escribí la pregunta de la clase. Solo aparecen respuestas que revisó una investigadora del Instituto.</p>
         <ConsultaAsistente lista actividadInicial={actividad} aulaFija={aulaId} />
       </div>
-    </div>
+    </Ventana>
   );
 }

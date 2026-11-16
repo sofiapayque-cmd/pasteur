@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import Ventana from '@/components/Ventana';
 import { ordenParaProyectar, resumenPuesta, type AlumnoPuesta, type Conclusion } from '@/lib/aulas/puesta';
 import './puesta.css';
 
@@ -17,11 +18,15 @@ export default function ResumenClase({ actividad, alumnos, grafico }: { activida
   const r = useMemo(() => resumenPuesta(actividad, alumnos), [actividad, alumnos]);
   const [elegidas, setElegidas] = useState<Set<string>>(() => new Set());
   const [proyectando, setProyectando] = useState(false);
-  const cerrar = useCallback(() => setProyectando(false), []);
-  // La pantalla completa se pide en el mismo toque (el navegador no la deja pedir después)
+  const cerrar = useCallback(() => {
+    setProyectando(false);
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  }, []);
+  // La pantalla completa se pide en el mismo toque (el navegador no la deja pedir después).
+  // La proyección se abre recién cuando ya está, así queda arriba de la pantalla completa.
   const proyectar = () => {
-    setProyectando(true);
-    document.documentElement.requestFullscreen?.().catch(() => {});
+    const pantallaCompleta = document.documentElement.requestFullscreen?.().catch(() => {});
+    Promise.resolve(pantallaCompleta).then(() => setProyectando(true));
   };
   const vigentes = r.conclusiones.filter((c) => elegidas.has(c.id));
 
@@ -162,31 +167,20 @@ export default function ResumenClase({ actividad, alumnos, grafico }: { activida
 
 /* Pantalla completa para el proyector: solo las frases, letra grande, sin nombres. */
 function Proyeccion({ conclusiones, onCerrar }: { conclusiones: Conclusion[]; onCerrar: () => void }) {
-  const boton = useRef<HTMLButtonElement>(null);
-
+  // Si la maestra sale de pantalla completa (Esc o F11), también se cierra la proyección
   useEffect(() => {
-    boton.current?.focus();
-    const tecla = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onCerrar();
-    };
-    // Si la maestra sale de pantalla completa (Esc o F11), también se cierra la proyección
     const cambio = () => {
       if (!document.fullscreenElement) onCerrar();
     };
-    document.addEventListener('keydown', tecla);
     document.addEventListener('fullscreenchange', cambio);
-    return () => {
-      document.removeEventListener('keydown', tecla);
-      document.removeEventListener('fullscreenchange', cambio);
-      if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
-    };
+    return () => document.removeEventListener('fullscreenchange', cambio);
   }, [onCerrar]);
 
   return (
-    <div className={`proyeccion ${conclusiones.length > 4 ? 'proyeccion--muchas' : ''}`} role="dialog" aria-modal="true" aria-labelledby="proyeccion-titulo">
+    <Ventana className={`proyeccion ${conclusiones.length > 4 ? 'proyeccion--muchas' : ''}`} aria-labelledby="proyeccion-titulo" onCerrar={onCerrar}>
       <header className="proyeccion__cabeza">
         <h2 id="proyeccion-titulo">Lo que concluyó la clase</h2>
-        <button ref={boton} className="btn btn--claro" type="button" onClick={onCerrar}>
+        <button className="btn btn--claro" type="button" onClick={onCerrar}>
           Cerrar
         </button>
       </header>
@@ -195,6 +189,6 @@ function Proyeccion({ conclusiones, onCerrar }: { conclusiones: Conclusion[]; on
           <li key={c.id}>{c.texto}</li>
         ))}
       </ul>
-    </div>
+    </Ventana>
   );
 }

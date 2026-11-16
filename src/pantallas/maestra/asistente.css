@@ -153,7 +153,6 @@
 .asis__grande {
   position: fixed;
   inset: 0;
-  z-index: 50;
   background: var(--agar);
   display: grid;
   align-content: center;
@@ -196,7 +195,6 @@
 .puesta-asis {
   position: fixed;
   inset: 0;
-  z-index: 40;
   display: flex;
   justify-content: flex-end;
   background: rgba(34, 35, 42, 0.35);

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import Ventana from './Ventana';
 import { contarVistaEnActividad, respuestasDeActividad, type RespuestaPublica } from '@/acciones/respuestasPublicas';
 
 /*
@@ -21,9 +22,6 @@ export default function PreguntasDelPasteur({ actividadId }: { actividadId: stri
     if (!abierto) return;
     if (lista === null) respuestasDeActividad(actividadId).then(setLista, () => setLista([]));
     panel.current?.focus();
-    const tecla = (e: KeyboardEvent) => e.key === 'Escape' && setAbierto(false);
-    window.addEventListener('keydown', tecla);
-    return () => window.removeEventListener('keydown', tecla);
   }, [abierto, lista, actividadId]);
 
   function abrirRespuesta(id: string) {
@@ -40,7 +38,7 @@ export default function PreguntasDelPasteur({ actividadId }: { actividadId: stri
         Preguntas del Pasteur
       </button>
       {abierto && (
-        <div className="preguntas-pasteur" role="dialog" aria-modal="true" aria-labelledby="pp-titulo" onClick={(e) => e.target === e.currentTarget && setAbierto(false)}>
+        <Ventana className="preguntas-pasteur" aria-labelledby="pp-titulo" onCerrar={() => setAbierto(false)} cerrarAfuera>
           <div className="preguntas-pasteur__panel" ref={panel} tabIndex={-1}>
             <div className="preguntas-pasteur__cabeza">
               <h2 id="pp-titulo">Preguntas del Pasteur</h2>
@@ -83,7 +81,7 @@ export default function PreguntasDelPasteur({ actividadId }: { actividadId: stri
               </ul>
             )}
           </div>
-        </div>
+        </Ventana>
       )}
     </>
   );
