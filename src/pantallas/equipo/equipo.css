@@ -83,29 +83,13 @@
   /* Relieve de la gota */
   filter: drop-shadow(0 6px 9px rgba(47, 74, 133, 0.32)) drop-shadow(0 1px 1px rgba(47, 74, 133, 0.28));
 }
-/* La gota está hecha de tres piezas (dos puntas redondas y el medio) que se
-   mueven solo con transform: así la animación la hace la placa de video y
-   sigue suave aunque la página esté ocupada cargando la sección nueva. */
+/* La gota es una sola pastilla: ConGota.tsx le pone dónde va y cómo moverse */
 .gota {
   position: absolute;
-  top: 0;
-  left: 0;
   opacity: 0;
-}
-.gota > span {
-  position: absolute;
-  top: 0;
-  left: 0;
+  border-radius: 999px;
   background: var(--eq-azul);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
-  will-change: transform;
-}
-.gota__punta {
-  border-radius: 50%;
-}
-.gota__medio {
-  width: 100px;
-  transform-origin: 0 50%;
 }
 .con-gota > a,
 .con-gota > button {
