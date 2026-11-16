@@ -10,6 +10,9 @@ import {
   candidatosDeGuardados,
   citaContraResumen,
   pedidoDeCorreccion,
+  faltanteDe,
+  notaSinFaltante,
+  MARCA_BUSCO,
   dividirOraciones,
   elegirArticulos,
   oracionesDeUbicacion,
@@ -231,6 +234,34 @@ test('corregir: el pedido lleva el comentario de la validadora, lo anterior y qu
   assert.match(pedidoDeCorreccion({ formato: 'dato', comentario: 'x', infantil: '', explicacion: '' }), /esta curiosidad/);
   // El comentario se recorta: no se le pasa al modelo un texto sin fin
   assert.ok(pedidoDeCorreccion({ formato: 'pregunta', comentario: 'a'.repeat(5000), infantil: '', explicacion: '' }).length < 3000);
+  // Con artículos nuevos: los usa para lo pedido, y lo que no está en ningún resumen no se inventa
+  assert.match(p, /otros nuevos, buscados para lo que pidió/);
+  assert.match(p, /no la inventes/);
+  assert.doesNotMatch(p, /igual incluila/);
+});
+
+test('completar: el pedido sin comentario dice qué faltó', () => {
+  const p = pedidoDeCorreccion({ formato: 'pregunta', comentario: '', faltaba: 'no dicen que la penicilina sale de un hongo', infantil: 'Viejo.', explicacion: 'Vieja.' });
+  assert.match(p, /quedó incompleta/);
+  assert.match(p, /"""no dicen que la penicilina sale de un hongo"""/);
+  assert.match(p, /buscados para lo que faltó/);
+  assert.doesNotMatch(p, /pidió cambios/);
+});
+
+test('faltante: se lee de la nota de la IA, se saca al corregir y marca si ya se buscó', () => {
+  const corregida =
+    'Corregida con IA (m) el 15/11/2026, siguiendo el pedido de cambios de la validadora, con los mismos artículos.\nLo que pidió y no está en los resúmenes: no mencionan los hongos.\nRedactada con IA (m) el 14/11/2026.';
+  assert.deepEqual(faltanteDe(corregida), { falta: 'no mencionan los hongos.', yaBusco: false });
+  assert.deepEqual(faltanteDe('Redactada con IA.\nRespuesta parcial. Quedó afuera: cómo apareció el núcleo'), { falta: 'cómo apareció el núcleo', yaBusco: false });
+  assert.deepEqual(faltanteDe('Redactada con IA el 14/11.'), { falta: null, yaBusco: false });
+  assert.deepEqual(faltanteDe(null), { falta: null, yaBusco: false });
+  assert.equal(faltanteDe(`Completada con IA (m) el 15/11, ${MARCA_BUSCO} para lo que le faltaba.\nRespuesta parcial. Quedó afuera: x`).yaBusco, true);
+  // Al corregir se borra lo que faltaba antes (si sigue faltando algo, la IA lo anota de nuevo)
+  assert.equal(
+    notaSinFaltante(corregida),
+    'Corregida con IA (m) el 15/11/2026, siguiendo el pedido de cambios de la validadora, con los mismos artículos.\nRedactada con IA (m) el 14/11/2026.',
+  );
+  assert.equal(faltanteDe(notaSinFaltante(corregida)).falta, null);
 });
 
 test('ninguna consulta une versiones y fichas sin decir por cuál relación', async () => {

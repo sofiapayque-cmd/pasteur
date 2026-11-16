@@ -171,6 +171,7 @@ Las preguntas de chicos suelen ser sobre conceptos básicos, que los artículos 
 - La segunda: la pregunta concreta con términos técnicos.
 - La tercera: un sinónimo o un enfoque más amplio (por ejemplo, el origen o la evolución del concepto).
 Siempre en biología, salud o ciencias de la vida: si un término también se usa en otros campos (materiales, ingeniería, física), agregá una palabra que lo deje en biología (por ejemplo "cell", "biology", "tissue").
+Si además viene lo que hay que agregar o corregir (lo pidió una investigadora o le faltó a la respuesta), las 3 consultas buscan ESO: sobre todo el concepto básico que falta, como lo nombraría una revisión (por ejemplo "penicillin discovery Penicillium fungus", "plant cell wall composition").
 Si la pregunta no es de ciencia, devolvé una lista vacía.`;
 
 export const INSTRUCCIONES_PREGUNTAS = `Proponés preguntas que harían chicos de 10 a 12 años de escuelas de Uruguay durante una actividad de ciencia del Institut Pasteur de Montevideo.
@@ -366,14 +367,43 @@ export function candidatosDeGuardados(pubs: PublicacionGuardada[]): { candidatos
 }
 
 /** El pedido de corrección que se le suma a la redactora: el comentario de la validadora manda. */
-export function pedidoDeCorreccion(o: { formato: 'pregunta' | 'dato'; comentario: string; infantil: string; explicacion: string }): string {
+export function pedidoDeCorreccion(o: { formato: 'pregunta' | 'dato'; comentario: string; infantil: string; explicacion: string; faltaba?: string }): string {
   const que = o.formato === 'dato' ? 'curiosidad' : 'respuesta';
-  return `CORRECCIÓN. Una investigadora del Instituto revisó esta ${que} y pidió cambios.
+  const comentario = o.comentario.trim();
+  const faltaba = (o.faltaba ?? '').trim();
+  const pedido = comentario
+    ? `Una investigadora del Instituto revisó esta ${que} y pidió cambios.
 Lo que pidió la investigadora (es la experta; su pedido manda sobre lo anterior):
-"""${o.comentario.trim().slice(0, 2000)}"""
+"""${comentario.slice(0, 1800)}"""`
+    : `Esta ${que} quedó incompleta.`;
+  return `CORRECCIÓN. ${pedido}${faltaba ? `\nLo que le faltó a la versión anterior, porque no estaba en sus artículos:\n"""${faltaba.slice(0, 600)}"""` : ''}
 Versión para chicos anterior:
 """${o.infantil.trim().slice(0, 1200)}"""
 Explicación científica anterior:
 """${o.explicacion.trim().slice(0, 2000)}"""
-Reescribí siguiendo su pedido. Si ella escribió un texto, usalo como base: mantené lo que dice y adaptalo a chicos de 10 a 12 años (voseo, palabras de todos los días, explicando cualquier palabra científica), dentro del límite de palabras. Mantené la misma pregunta. Citá las oraciones de los resúmenes que respalden cada parte; si alguna parte de lo que ella pide no está en los resúmenes, igual incluila y contalo en "motivo".`;
+Reescribí siguiendo ${comentario ? 'su pedido' : 'lo que faltó'}. ${comentario ? 'Si ella escribió un texto, usalo como base: mantené lo que dice y adaptalo' : 'Adaptalo'} a chicos de 10 a 12 años (voseo, palabras de todos los días, explicando cualquier palabra científica), dentro del límite de palabras. Mantené la misma pregunta.
+Además de los artículos que ya citaba, tenés otros nuevos, buscados para ${comentario ? 'lo que pidió' : 'lo que faltó'}: usalos para cubrirlo. Si lo pedido es solo de forma (más simple, más corto), quedate con los que ya citaba. Citá las oraciones de los resúmenes que respalden cada parte. Si una parte no está en ningún resumen, no la inventes: dejala afuera y contá en "motivo" qué quedó afuera.`;
+}
+
+/*
+  Lo que le faltó a una respuesta, tal como lo anota la IA en la nota interna
+  al redactarla ("Respuesta parcial. Quedó afuera: …") o al corregirla ("Lo
+  que pidió y no está en los resúmenes: …"). yaBusco: ya se buscaron
+  artículos nuevos para completarla (no se ofrece de nuevo; decide la validadora).
+*/
+const LINEA_FALTANTE = /^(?:Lo que pidió y no está en los resúmenes|Respuesta parcial\. Quedó afuera): (.+)$/m;
+export const MARCA_BUSCO = 'buscando artículos nuevos';
+
+export function faltanteDe(nota: string | null | undefined): { falta: string | null; yaBusco: boolean } {
+  const texto = nota ?? '';
+  return { falta: LINEA_FALTANTE.exec(texto)?.[1]?.trim() || null, yaBusco: texto.includes(MARCA_BUSCO) };
+}
+
+/** La nota sin las líneas de lo que faltaba (la corrección anota lo que sigue faltando, si algo). */
+export function notaSinFaltante(nota: string | null | undefined): string {
+  return (nota ?? '')
+    .split('\n')
+    .filter((l) => !LINEA_FALTANTE.test(l))
+    .join('\n')
+    .trim();
 }

@@ -7,7 +7,7 @@ import { ACTIVIDADES, ACTIVIDADES_A_ELEGIR } from '@/lib/equipo/comun';
 import PedirRespuestas from '@/pantallas/equipo/PedirRespuestas';
 import PreguntasDeClases from '@/pantallas/equipo/PreguntasDeClases';
 import Tarjeta from '@/pantallas/equipo/TarjetaRespuesta';
-import { CorregirTodas } from '@/pantallas/equipo/CorregirConIa';
+import { CompletarTodas, CorregirTodas } from '@/pantallas/equipo/CorregirConIa';
 import ConGota from '@/components/ConGota';
 import CambioSuave from '@/components/CambioSuave';
 
@@ -34,6 +34,10 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ v
   const validadora = yo.rol === 'validador';
 
   const cuenta = (g: Grupo) => todas.filter((r) => r.grupo === g).length;
+  // Las que puede corregir o completar quien entra: solo las propias (lo decide la base)
+  const mias = todas.filter((r) => r.autorId === yo.id);
+  const conCambios = mias.filter((r) => r.grupo === 'cambios').length;
+  const incompletas = mias.filter((r) => r.completable).length;
   const ver = (PESTANAS as string[]).includes(sp.ver ?? '') ? (sp.ver as Grupo | 'todas') : cuenta('espera') ? 'espera' : 'todas';
   const actividad = sp.actividad && ACTIVIDADES[sp.actividad] ? sp.actividad : '';
   const soloIa = sp.origen === 'ia';
@@ -102,7 +106,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ v
       )}
 
       {/* Las que tienen cambios pedidos: la IA las corrige siguiendo a la validadora (15/11) */}
-      {!validadora && cuenta('cambios') > 0 && iaConfigurada() && <CorregirTodas cantidad={cuenta('cambios')} />}
+      {!validadora && conCambios > 0 && iaConfigurada() && <CorregirTodas cantidad={conCambios} />}
+      {/* Las que esperan revisión pero quedaron incompletas: la IA busca artículos nuevos para lo que faltó */}
+      {!validadora && incompletas > 0 && iaConfigurada() && <CompletarTodas cantidad={incompletas} />}
 
       {!validadora && pedir}
 
@@ -142,7 +148,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ v
           ) : (
             <ul className="eq-tarjetas">
               {visibles.map((r) => (
-                <Tarjeta key={r.versionId} r={r} nombres={nombres} validadora={validadora} />
+                <Tarjeta key={r.versionId} r={r} nombres={nombres} validadora={validadora} propia={r.autorId === yo.id} />
               ))}
             </ul>
           )}

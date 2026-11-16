@@ -8,6 +8,9 @@ import { MODELO_RAPIDO, MODELO_REDACCION, pedirJson, type Uso } from './openai';
 import {
   DESCRIPCION_ACTIVIDAD,
   candidatosDeGuardados,
+  faltanteDe,
+  MARCA_BUSCO,
+  notaSinFaltante,
   pedidoDeCorreccion,
   type PublicacionGuardada,
   ESQUEMA_CONSULTAS,
@@ -57,11 +60,11 @@ type Modo = { formato: 'pregunta' } | { formato: 'dato'; temaId: string; tema: s
 const RESPUESTA: Modo = { formato: 'pregunta' };
 const sumar = (a: Uso, b?: Uso): Uso => ({ entrada: a.entrada + (b?.entrada ?? 0), salida: a.salida + (b?.salida ?? 0) });
 
-async function consultasPara(pregunta: string, actividad: string | null) {
+async function consultasPara(pregunta: string, actividad: string | null, falta = '') {
   const r = await pedirJson<{ consultas: string[] }>({
     modelo: MODELO_RAPIDO,
     instrucciones: INSTRUCCIONES_CONSULTAS,
-    entrada: `Pregunta: ${pregunta}${actividad ? `\nTema de la actividad: ${DESCRIPCION_ACTIVIDAD[actividad] ?? ''}` : ''}`,
+    entrada: `Pregunta: ${pregunta}${falta ? `\nLo que hay que agregar o corregir (las búsquedas tienen que encontrar esto): ${falta.slice(0, 800)}` : ''}${actividad ? `\nTema de la actividad: ${DESCRIPCION_ACTIVIDAD[actividad] ?? ''}` : ''}`,
     nombre: 'consultas',
     esquema: ESQUEMA_CONSULTAS,
     maxTokens: 1500,
@@ -283,15 +286,20 @@ export async function proponerCuriosidad(
 // Corregir con la IA (15/11, pedido de Sofia)
 // ---------------------------------------------------------------------
 /*
-  Una respuesta (o curiosidad) a la que la validadora le pidió cambios: la IA
-  la reescribe siguiendo el comentario, con los MISMOS artículos que ya cita
-  (sus resúmenes guardados, divididos en oraciones numeradas), y cada cita se
-  vuelve a comprobar contra el resumen guardado, igual que al redactarla.
-  La versión es la misma (volvió a borrador con el pedido de cambios): se
-  cambian sus textos y sus citas, y vuelve a revisión. Decide la validadora,
-  como siempre. Todo con la sesión del miembro que lo pide.
+  Dos casos, el mismo camino:
+  · Cambios pedidos: la validadora pidió cambios (la versión volvió a
+    borrador). La IA la reescribe siguiendo su comentario.
+  · Completar: está esperando revisión pero quedó incompleta (la nota dice
+    qué le faltó porque no estaba en sus artículos). Se ofrece una sola vez.
+  En los dos usa los artículos que ya cita (sus resúmenes guardados) y,
+  además, busca artículos nuevos para lo que pidió o lo que faltó (las
+  revisiones primero: son las que explican lo básico). Cada cita se vuelve a
+  comprobar contra el resumen guardado, como al redactarla; los artículos
+  nuevos se guardan en la biblioteca y se aprueban con la respuesta. Se
+  cambian textos y citas de la misma versión y queda esperando revisión.
+  Decide la validadora, como siempre. Todo con la sesión del miembro.
 */
-type ContextoCorreccion = { db: SupabaseClient; actorId: string };
+type ContextoCorreccion = { db: SupabaseClient; admin: SupabaseClient; actorId: string };
 type FilaVersion = {
   id: string;
   estado: string;
@@ -302,6 +310,9 @@ type FilaVersion = {
   ficha_id: string;
 };
 type FilaPub = PublicacionGuardada & { licencia_codigo: string | null };
+/** Cuántos artículos nuevos se le suman como mucho a los que ya tenía. */
+const MAX_NUEVOS = 6;
+const claveTitulo = (t: string) => t.toLowerCase().normalize('NFD').replace(/[^a-z0-9]/g, '');
 
 export async function corregirConComentario(c: ContextoCorreccion, versionId: string, preguntaConocida = ''): Promise<Resultado> {
   /*
@@ -323,7 +334,6 @@ export async function corregirConComentario(c: ContextoCorreccion, versionId: st
     .eq('id', v.ficha_id)
     .maybeSingle<{ formato: 'pregunta' | 'dato'; actividad: string | null }>();
   if (errorFicha || !ficha) return { pregunta, ok: false, mensaje: `No pude leer su ficha: ${mensajeDeError(errorFicha, 'no aparece')}.` };
-  if (v.estado !== 'borrador') return { pregunta, ok: false, mensaje: 'Esta respuesta ya no está esperando cambios.' };
 
   const { data: rev } = await c.db
     .from('revisiones')
@@ -333,42 +343,89 @@ export async function corregirConComentario(c: ContextoCorreccion, versionId: st
     .order('creada_en', { ascending: false })
     .limit(1)
     .maybeSingle<{ decision: string; comentario: string | null }>();
-  const comentario = (rev?.comentario ?? '').trim();
-  if (rev?.decision !== 'pedir_cambios' || !comentario) return { pregunta, ok: false, mensaje: 'No hay un pedido de cambios con comentario para seguir.' };
+  const comentario = rev?.decision === 'pedir_cambios' ? (rev.comentario ?? '').trim() : '';
+  const { falta, yaBusco } = faltanteDe(v.nota_interna);
+  const completar = v.estado === 'en_revision';
+  if (v.estado === 'borrador') {
+    if (!comentario) return { pregunta, ok: false, mensaje: 'No hay un pedido de cambios con comentario para seguir.' };
+  } else if (completar) {
+    if (!falta) return { pregunta, ok: false, mensaje: 'No le falta nada: ya está esperando revisión.' };
+    if (yaBusco) return { pregunta, ok: false, mensaje: 'Ya se buscaron artículos nuevos para esta: ahora decide la validadora.' };
+  } else return { pregunta, ok: false, mensaje: 'Esta respuesta ya no está esperando cambios.' };
 
   // Los artículos que ya cita, con su resumen guardado
   const { data: viejas } = await c.db.from('version_fuentes').select('*').eq('version_id', versionId).order('orden');
   const ids = [...new Set((viejas ?? []).map((x: { publicacion_id: string | null }) => x.publicacion_id).filter((x): x is string => Boolean(x)))];
-  if (!ids.length) return { pregunta, ok: false, mensaje: 'No tiene artículos para corregirla con la IA.' };
-  const { data: pubs } = await c.db.from('publicaciones').select('id, titulo, anio, revista, tipo, resumen_interno, licencia_codigo, estado, retractada').in('id', ids);
+  const { data: pubs } = ids.length
+    ? await c.db.from('publicaciones').select('id, titulo, anio, revista, tipo, resumen_interno, licencia_codigo, estado, retractada').in('id', ids)
+    : { data: [] };
   const { candidatos, usadas } = candidatosDeGuardados((pubs ?? []) as FilaPub[]);
   const usables = usadas as FilaPub[];
-  if (!usables.length) return { pregunta, ok: false, mensaje: 'Sus artículos ya no se pueden usar (retirados o sin resumen).' };
+
+  // Artículos nuevos, buscados para lo que pidió o lo que faltó
+  const loQueFalta = [comentario, completar ? falta : ''].filter(Boolean).join('\n');
+  const q = await consultasPara(pregunta, ficha.actividad, loQueFalta);
+  if (q.error) console.warn(`[ia] corrección ${versionId}: no se pudo preparar la búsqueda (${q.error}); sigue con sus artículos`);
+  const vistas = new Set(usables.map((p) => claveTitulo(p.titulo)));
+  const nuevos = q.consultas.length ? (await buscar(q.consultas)).filter((x) => !vistas.has(claveTitulo(x.principal.titulo))).slice(0, MAX_NUEVOS) : [];
+  const todos = [...candidatos, ...nuevos];
+  if (!todos.length) return { pregunta, ok: false, mensaje: 'No encontré artículos para corregirla: ni los que tenía ni nuevos.', uso: q.uso };
 
   const formato = ficha.formato;
   const modo: Modo = formato === 'dato' ? { formato: 'dato', temaId: '', tema: pregunta, existentes: [] } : RESPUESTA;
-  const pedido = pedidoDeCorreccion({ formato, comentario, infantil: v.version_infantil, explicacion: v.explicacion_cientifica });
-  const red = await redactar(pregunta, ficha.actividad, candidatos, modo, pedido);
-  if (!red.ok) return { pregunta, ok: false, mensaje: `No la pude corregir: ${red.motivo.replace(/\.+$/, '')}.`, uso: red.uso };
+  const pedido = pedidoDeCorreccion({ formato, comentario, faltaba: completar ? (falta ?? '') : '', infantil: v.version_infantil, explicacion: v.explicacion_cientifica });
+  const red = await redactar(pregunta, ficha.actividad, todos, modo, pedido);
+  const uso = sumar(q.uso ?? { entrada: 0, salida: 0 }, red.uso);
+  if (!red.ok) return { pregunta, ok: false, mensaje: `No la pude corregir: ${red.motivo.replace(/\.+$/, '')}.`, uso };
 
-  // Cada cita, comprobada contra el resumen guardado
+  // Cada cita, comprobada contra el resumen guardado (los artículos nuevos se guardan antes)
   const { data: politicas } = await c.db.from('licencias').select('codigo, pasaje');
   const politicaDe = (codigo: string | null): Politica =>
     ((politicas ?? []).find((l: { codigo: string; pasaje: Politica }) => l.codigo === codigo)?.pasaje ?? 'solo_ubicacion') as Politica;
+  const contexto: Contexto = { db: c.db, admin: c.admin, actorId: c.actorId, actividad: ficha.actividad };
   const citas: { publicacion_id: string; pasaje: string; pasaje_textual: boolean; ubicacion: string; parafrasis: string; orden: number }[] = [];
+  const descartes: string[] = [...red.avisos];
+  let sumadas = 0;
   for (const cita of red.borrador.citas) {
-    const pub = usables[cita.articulo];
-    const lista = pub && citaContraResumen(cita.frases, pub.resumen_interno, politicaDe(pub.licencia_codigo), cita.parafrasis);
-    if (!pub || !lista || citas.some((x) => x.publicacion_id === pub.id)) continue;
+    const art = todos[cita.articulo];
+    if (!art) continue;
+    let pub: { id: string; resumen_interno: string | null; licencia_codigo: string | null } | undefined = usables[cita.articulo];
+    const nueva = cita.articulo >= usables.length;
+    if (nueva) {
+      const g = await guardarArticulo(contexto, art.registros);
+      if (!g.pub) {
+        descartes.push(`"${art.principal.titulo.slice(0, 60)}…": ${g.error}`);
+        continue;
+      }
+      if (g.pub.estado !== 'en_revision' && g.pub.estado !== 'aprobada') {
+        descartes.push(`"${art.principal.titulo.slice(0, 60)}…" está ${g.pub.estado} en la biblioteca`);
+        continue;
+      }
+      pub = g.pub;
+    }
+    if (!pub) continue;
+    const lista = citaContraResumen(cita.frases, pub.resumen_interno, politicaDe(pub.licencia_codigo), cita.parafrasis);
+    if (!lista) {
+      descartes.push(`"${art.principal.titulo.slice(0, 60)}…": la oración citada no está tal cual en el resumen guardado`);
+      continue;
+    }
+    if (citas.some((x) => x.publicacion_id === pub.id)) continue;
+    if (nueva && !ids.includes(pub.id)) sumadas++;
     citas.push({ publicacion_id: pub.id, ...lista, orden: citas.length + 1 });
   }
-  if (!citas.length) return { pregunta, ok: false, mensaje: 'No la guardé: ninguna cita de la corrección pasó el control.', uso: red.uso };
+  if (!citas.length) return { pregunta, ok: false, mensaje: 'No la guardé: ninguna cita de la corrección pasó el control.', uso };
 
   const fecha = new Date().toLocaleDateString('es-UY', { timeZone: 'America/Montevideo' });
+  const sigueFaltando = red.borrador.faltante;
   const nota = [
-    `Corregida con IA (${red.modelo}) el ${fecha}, siguiendo el pedido de cambios de la validadora, con los mismos artículos.`,
-    red.borrador.faltante ? `Lo que pidió y no está en los resúmenes: ${red.borrador.faltante}` : '',
-    v.nota_interna ?? '',
+    completar
+      ? `Completada con IA (${red.modelo}) el ${fecha}, ${MARCA_BUSCO} para lo que le faltaba.`
+      : `Corregida con IA (${red.modelo}) el ${fecha}, siguiendo el pedido de cambios de la validadora, con sus artículos y ${MARCA_BUSCO}.`,
+    sumadas ? `Suma ${sumadas} ${sumadas === 1 ? 'artículo nuevo' : 'artículos nuevos'} (se aprueban con la respuesta).` : 'No sumó artículos nuevos.',
+    q.consultas.length ? `Búsquedas: ${q.consultas.join(' · ')}` : '',
+    sigueFaltando ? (completar ? `Respuesta parcial. Quedó afuera: ${sigueFaltando}` : `Lo que pidió y no está en los resúmenes: ${sigueFaltando}`) : '',
+    descartes.length ? `Descartado por el control: ${descartes.join('; ')}` : '',
+    notaSinFaltante(v.nota_interna),
   ]
     .filter(Boolean)
     .join('\n')
@@ -377,23 +434,26 @@ export async function corregirConComentario(c: ContextoCorreccion, versionId: st
     .from('ficha_versiones')
     .update({ explicacion_cientifica: red.borrador.explicacion_cientifica, version_infantil: red.borrador.version_infantil, asistida_por_ia: true, nota_interna: nota })
     .eq('id', versionId)
-    .eq('estado', 'borrador')
+    .eq('estado', v.estado)
     .select('id')
     .maybeSingle();
-  if (error || !cambiada) return { pregunta, ok: false, mensaje: `No se pudo guardar la corrección: ${mensajeDeError(error, 'no tenés permiso para cambiarla')}.`, uso: red.uso };
+  if (error || !cambiada) return { pregunta, ok: false, mensaje: `No se pudo guardar la corrección: ${mensajeDeError(error, 'no tenés permiso para cambiarla')}.`, uso };
 
   // Las citas nuevas reemplazan a las viejas (si algo falla, vuelven las viejas)
   const { error: errorBorrar } = await c.db.from('version_fuentes').delete().eq('version_id', versionId);
-  if (errorBorrar) return { pregunta, ok: true, uso: red.uso, enRevision: false, mensaje: `El texto quedó corregido pero no pude cambiar sus fuentes: ${mensajeDeError(errorBorrar)}.` };
+  if (errorBorrar) return { pregunta, ok: true, uso, enRevision: completar, mensaje: `El texto quedó corregido pero no pude cambiar sus fuentes: ${mensajeDeError(errorBorrar)}.` };
   const { error: errorCitas } = await c.db.from('version_fuentes').insert(citas.map((x) => ({ version_id: versionId, ...x })));
   if (errorCitas) {
     const CAMPOS = ['version_id', 'publicacion_id', 'fuente_id', 'pasaje', 'pasaje_textual', 'ubicacion', 'parafrasis', 'orden'];
     const restaurar = (viejas ?? []).map((fila: Record<string, unknown>) => Object.fromEntries(CAMPOS.filter((k) => k in fila).map((k) => [k, fila[k]])));
     if (restaurar.length) await c.db.from('version_fuentes').insert(restaurar);
-    return { pregunta, ok: true, uso: red.uso, enRevision: false, mensaje: `El texto quedó corregido con sus fuentes de antes: ${mensajeDeError(errorCitas)}.` };
+    return { pregunta, ok: true, uso, enRevision: completar, mensaje: `El texto quedó corregido con sus fuentes de antes: ${mensajeDeError(errorCitas)}.` };
   }
 
-  const { error: errorEnvio } = await c.db.from('ficha_versiones').update({ estado: 'en_revision' }).eq('id', versionId);
-  if (errorEnvio) return { pregunta, ok: true, uso: red.uso, enRevision: false, mensaje: `Quedó corregida en borrador: ${mensajeDeError(errorEnvio)}.` };
-  return { pregunta, ok: true, enRevision: true, uso: red.uso, mensaje: 'Corregida y otra vez esperando revisión.' };
+  const resumen = `${sumadas ? ` Sumó ${sumadas} ${sumadas === 1 ? 'artículo nuevo' : 'artículos nuevos'}.` : ''}${sigueFaltando ? ' Todavía le falta algo (está anotado para la validadora).' : ''}`;
+  if (!completar) {
+    const { error: errorEnvio } = await c.db.from('ficha_versiones').update({ estado: 'en_revision' }).eq('id', versionId);
+    if (errorEnvio) return { pregunta, ok: true, uso, enRevision: false, mensaje: `Quedó corregida en borrador: ${mensajeDeError(errorEnvio)}.` };
+  }
+  return { pregunta, ok: true, enRevision: true, uso, mensaje: `${completar ? 'Completada' : 'Corregida'} y esperando revisión.${resumen}` };
 }
