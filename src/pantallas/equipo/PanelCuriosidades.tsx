@@ -172,13 +172,13 @@ export default function PanelCuriosidades({ rol, temas, tendencia, curiosidades,
       <section className="eq-caja eq-caja--aviso eq-form">
         <h2>Todavía no hay temas</h2>
         <p>
-          Los temas agrupan las preguntas parecidas y las curiosidades. Hay una propuesta de 40 temas (14 de A1, 12 de A2 y 14 de A3), armada con las 100 preguntas
-          del 14/11. Después se pueden cambiar, apagar o agregar.
+          Los temas agrupan las preguntas parecidas y las curiosidades. Hay una propuesta de 6 temas grandes, dos por actividad (por ejemplo, Bacterias y
+          Antibióticos en A1). Después se pueden cambiar, apagar o agregar.
         </p>
         {rol === 'admin' ? (
           <div className="eq-fila" style={{ alignItems: 'center' }}>
             <button className="btn btn--primario" disabled={cargando} onClick={() => empezarCarga(async () => setMensajeCarga((await cargarTemasIniciales()).mensaje))}>
-              {cargando ? 'Cargando…' : 'Cargar los 40 temas propuestos'}
+              {cargando ? 'Cargando…' : 'Cargar los 6 temas propuestos'}
             </button>
             {mensajeCarga && <span role="status">{mensajeCarga}</span>}
           </div>
