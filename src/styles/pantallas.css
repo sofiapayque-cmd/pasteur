@@ -1484,35 +1484,142 @@
   bottom: 0;
 }
 
-/* Panel de la maestra: "Preguntale al Pasteur" a la vista (8/11) */
-.panel__asistente {
+/* Panel de la maestra: "Preguntale al Pasteur" y "Mi cuaderno" (16/11): dos
+   tarjetas en relieve, una al lado de la otra, con una placa chica como las de
+   las actividades. Toda la tarjeta es el link: se levanta al pasar. */
+.panel__accesos {
   position: relative;
   z-index: 1;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3) var(--space-4);
-  margin: var(--space-4) var(--space-6) 0;
-  max-width: 960px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
+  gap: var(--space-4);
+  margin: var(--space-5) var(--space-6) 0;
 }
-.panel__asistente h2 {
-  margin: 4px 0;
-  font-size: 26px;
+.panel__acceso {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 18px 20px 18px 18px;
+  border-radius: 28px;
+  background: linear-gradient(180deg, #fff 0%, #fafbff 100%);
+  box-shadow: var(--luz), var(--relieve);
+  color: var(--tinta);
+  text-decoration: none;
+  transition: transform 0.35s var(--ease-organico), box-shadow 0.35s ease;
+}
+.panel__acceso:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--luz), var(--relieve-alto);
+}
+.panel__acceso:active {
+  transform: translateY(0);
+  box-shadow: var(--luz), var(--relieve);
+}
+.panel__acceso:focus-visible {
+  outline: none;
+  box-shadow: var(--luz), var(--relieve), var(--anillo-foco);
+}
+/* Con una respuesta nueva, el borde se marca */
+.panel__acceso--nuevo {
+  box-shadow: inset 0 0 0 3px var(--plasma), var(--luz), var(--relieve);
+}
+.panel__mini {
+  position: relative;
+  flex: none;
+  width: 78px;
+  height: 78px;
+  border-radius: 50%;
+  border: 5px solid #fff;
+  box-shadow: 0 10px 24px rgba(47, 74, 133, 0.18);
+  display: grid;
+  place-items: center;
+  transition: transform 0.4s var(--ease-organico);
+}
+.panel__acceso:hover .panel__mini {
+  transform: scale(1.06) rotate(-4deg);
+}
+.panel__mini--pregunta {
+  background: radial-gradient(circle at 50% 50%, var(--nucleo) 0 31%, var(--plasma) 32% 60%, var(--membrana) 61% 100%);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 24px;
+  color: #fff;
+}
+.panel__mini--cuaderno {
+  background: radial-gradient(circle at 42% 42%, var(--coral) 0 11%, var(--clorofila) 12% 46%, #f6f8e3 47% 100%);
+}
+.panel__mini-numero {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  min-width: 30px;
+  height: 30px;
+  padding: 0 8px;
+  border-radius: 999px;
+  border: 3px solid #fff;
+  background: var(--coral);
+  color: var(--tinta);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+}
+.panel__acceso-texto {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.panel__acceso-titulo {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 23px;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
   color: var(--nucleo);
 }
-.panel__asistente p {
-  margin: 0;
-  max-width: 60ch;
-  line-height: 1.45;
+.panel__acceso-bajada {
+  font-size: 15px;
+  line-height: 1.4;
+  color: var(--tinta-suave);
 }
-/* Mi cuaderno: con una respuesta nueva, el borde se marca */
-.panel__aviso {
-  box-shadow: inset 0 0 0 3px var(--plasma), var(--halo);
+.panel__acceso-flecha {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--azul);
+  color: #fff;
+  box-shadow: var(--pastilla);
+  transition: transform 0.35s var(--ease-organico);
+}
+.panel__acceso:hover .panel__acceso-flecha {
+  transform: translateX(4px);
 }
 @media (max-width: 900px) {
-  .panel__asistente {
-    margin: var(--space-3) var(--space-3) 0;
+  .panel__accesos {
+    margin: var(--space-4) var(--space-3) 0;
+  }
+}
+@media (max-width: 480px) {
+  .panel__acceso {
+    gap: 14px;
+    padding: 14px;
+  }
+  .panel__mini {
+    width: 60px;
+    height: 60px;
+    border-width: 4px;
+  }
+  .panel__acceso-titulo {
+    font-size: 20px;
+  }
+  .panel__acceso-flecha {
+    display: none;
   }
 }
 /* Celular: el pie va en dos renglones y el aviso de "Pedí acceso" del inicio se sube para no encimarse */

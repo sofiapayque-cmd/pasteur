@@ -29,43 +29,48 @@ export default function Panel({ cuenta = null, curiosidades = [], avisos = null 
           <Moli estilo="plano" patas tamano={110} />
         </div>
       </div>
-      {/* "Preguntale al Pasteur" a la vista (8/11): antes era solo un botón chico arriba a la derecha */}
+      {/* "Preguntale al Pasteur" y "Mi cuaderno" (16/11, pedido de Sofia): dos tarjetas en relieve, una al lado de la otra,
+          cada una con su placa chica como las de las actividades. Toda la tarjeta es el link.
+          Mi cuaderno avisa cuando llega la respuesta a una pregunta suya y cuando los chicos escriben preguntas. */}
       {cuenta && (
-        <section className="tarjeta panel__asistente" aria-labelledby="panel-asistente">
-          <div>
-            <span className="etiqueta">Para la clase</span>
-            <h2 id="panel-asistente">Preguntale al Pasteur</h2>
-            <p>Escribí una pregunta que haya hecho la clase y mostrales la respuesta que aprobó una investigadora del Instituto.</p>
-          </div>
-          <a className="btn btn--primario" href="/maestra/preguntar">
-            Hacer una pregunta
+        <div className="panel__accesos">
+          <a className="panel__acceso" href="/maestra/preguntar">
+            <span className="panel__mini panel__mini--pregunta" aria-hidden="true">
+              ?
+            </span>
+            <span className="panel__acceso-texto">
+              <span className="etiqueta">Para la clase</span>
+              <strong className="panel__acceso-titulo">Preguntale al Pasteur</strong>
+              <span className="panel__acceso-bajada">Escribí una pregunta de la clase y mostrales la respuesta que aprobó una investigadora.</span>
+            </span>
+            <Flecha />
           </a>
-        </section>
-      )}
-      {/* Mi cuaderno (16/11): avisa cuando llega la respuesta a una pregunta suya y cuando los chicos escriben preguntas */}
-      {cuenta && avisos && (
-        <section className={`tarjeta panel__asistente ${avisos.respuestasNuevas ? 'panel__aviso' : ''}`} aria-labelledby="panel-cuaderno">
-          <div>
-            <span className="etiqueta">Mi cuaderno</span>
-            <h2 id="panel-cuaderno">
-              {avisos.respuestasNuevas
-                ? avisos.respuestasNuevas === 1
-                  ? '¡Respondimos una pregunta tuya!'
-                  : `¡Respondimos ${avisos.respuestasNuevas} preguntas tuyas!`
-                : 'Tus preguntas y tus clases'}
-            </h2>
-            <p>
-              {avisos.preguntasDeChicos
-                ? avisos.preguntasDeChicos === 1
-                  ? 'Un chico escribió una pregunta en su cuaderno.'
-                  : `Tus chicos escribieron ${avisos.preguntasDeChicos} preguntas en sus cuadernos.`
-                : 'Lo que hicieron en cada clase, cuánto duró y lo que preguntaron.'}
-            </p>
-          </div>
-          <a className="btn btn--secundario" href="/maestra/cuaderno">
-            Abrir mi cuaderno
-          </a>
-        </section>
+          {avisos && (
+            <a className={`panel__acceso ${avisos.respuestasNuevas ? 'panel__acceso--nuevo' : ''}`} href="/maestra/cuaderno">
+              <span className="panel__mini panel__mini--cuaderno" aria-hidden="true">
+                {avisos.respuestasNuevas > 0 && <b className="panel__mini-numero">{avisos.respuestasNuevas}</b>}
+              </span>
+              <span className="panel__acceso-texto">
+                <span className="etiqueta">Mi cuaderno</span>
+                <strong className="panel__acceso-titulo">
+                  {avisos.respuestasNuevas
+                    ? avisos.respuestasNuevas === 1
+                      ? '¡Respondimos una pregunta tuya!'
+                      : `¡Respondimos ${avisos.respuestasNuevas} preguntas tuyas!`
+                    : 'Tus preguntas y tus clases'}
+                </strong>
+                <span className="panel__acceso-bajada">
+                  {avisos.preguntasDeChicos
+                    ? avisos.preguntasDeChicos === 1
+                      ? 'Un chico escribió una pregunta en su cuaderno.'
+                      : `Tus chicos escribieron ${avisos.preguntasDeChicos} preguntas en sus cuadernos.`
+                    : 'Lo que hicieron en cada clase, cuánto duró y lo que preguntaron.'}
+                </span>
+              </span>
+              <Flecha />
+            </a>
+          )}
+        </div>
       )}
       {/* Curiosidades aprobadas, según lo que más se consulta (etapa 4) */}
       {curiosidades.length > 0 && (
@@ -97,5 +102,16 @@ export default function Panel({ cuenta = null, curiosidades = [], avisos = null 
         ))}
       </ul>
     </main>
+  );
+}
+
+/* La flecha redonda en relieve de las tarjetas de arriba */
+function Flecha() {
+  return (
+    <span className="panel__acceso-flecha" aria-hidden="true">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M5 12h14M13 6l6 6-6 6" />
+      </svg>
+    </span>
   );
 }
