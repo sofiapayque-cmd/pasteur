@@ -33,7 +33,7 @@ const POR_DIA = 120;
 const SIN_PERMISO = { mensaje: 'No tenés permiso para hacer eso.' };
 const actividadDe = (f: FormData) => {
   const a = leer(f, 'actividad');
-  return /^a[1-4]$/.test(a) ? a : null;
+  return /^a[1-3]$/.test(a) ? a : null;
 };
 
 /** De a dos a la vez: no saturar OpenAlex ni Europe PMC. */

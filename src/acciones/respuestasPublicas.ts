@@ -21,7 +21,7 @@ export type RespuestaPublica = { fichaId: string; pregunta: string; texto: strin
 
 
 export async function respuestasDeActividad(actividad: string): Promise<RespuestaPublica[]> {
-  if (!equipoReal || !/^a[1-4]$/.test(actividad)) return [];
+  if (!equipoReal || !/^a[1-3]$/.test(actividad)) return [];
   if (!(await puede('actividad'))) return [];
   const admin = crearClienteAdmin();
   if (!admin) return [];

@@ -20,7 +20,7 @@ import { leer } from '@/lib/formularios';
 */
 export type EstadoNota = { mensaje: string; ok?: boolean };
 
-const ACTIVIDAD = /^a[1-4]$/;
+const ACTIVIDAD = /^a[1-3]$/;
 
 // ---------------------------------------------------------------------
 // El chico

@@ -53,7 +53,7 @@ export async function crearTema(_previo: EstadoCuriosidades, datos: FormData): P
   if (nombre.length < 3) return { mensaje: 'Escribí el nombre del tema.' };
   if (descripcion.length < 10) return { mensaje: 'Escribí una descripción: con ella se reconoce qué preguntas son de este tema.' };
   const db = (await crearClienteServidor())!;
-  const { error } = await db.from('temas').insert({ slug: slugDe(nombre).slice(0, 60) || 'tema', nombre, descripcion, actividad: /^a[1-4]$/.test(act) ? act : null });
+  const { error } = await db.from('temas').insert({ slug: slugDe(nombre).slice(0, 60) || 'tema', nombre, descripcion, actividad: /^a[1-3]$/.test(act) ? act : null });
   if (error) return { mensaje: /duplicate/i.test(error.message) ? 'Ya hay un tema con ese nombre.' : `No se pudo crear: ${error.message}` };
   const admin = crearClienteAdmin();
   if (admin) await indexarTemas(admin);

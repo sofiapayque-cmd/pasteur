@@ -26,7 +26,7 @@ import { desbloqueosDeClase, type SesionFila } from '@/lib/aulas/clase';
 */
 type Props = {
   sesion: SesionFila;
-  tarea: { id: string; actividad: 'a1' | 'a2' | 'a3' | 'a4'; opciones: Record<string, string[]>; desbloqueos: Record<string, boolean>; abierta: boolean };
+  tarea: { id: string; actividad: 'a1' | 'a2' | 'a3'; opciones: Record<string, string[]>; desbloqueos: Record<string, boolean>; abierta: boolean };
   inicial: { etapa: string; datos: Record<string, unknown> };
   alumno: { apodo: string | null; numero: number; color: string | null };
   /** "¿Sabías que…?" para la espera (las elige el servidor; puede venir vacío). */

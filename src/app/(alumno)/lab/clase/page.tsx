@@ -31,7 +31,7 @@ export default async function Page() {
         sesion={clase.sesion}
         tarea={{
           id: tarea.id,
-          actividad: tarea.actividad as 'a1' | 'a2' | 'a3' | 'a4',
+          actividad: tarea.actividad as 'a1' | 'a2' | 'a3',
           opciones: tarea.opciones ?? {},
           desbloqueos: tarea.desbloqueos ?? {},
           abierta: tarea.estado === 'activa',

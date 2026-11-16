@@ -22,7 +22,6 @@ export const DESCRIPCION_ACTIVIDAD: Record<string, string> = {
   a1: 'Genómica microbiana: bacterias y otros microbios del suelo de la Antártida y del campo, cultivos en placa, antibióticos y resistencia.',
   a2: 'Simulaciones biomoleculares: la forma de las proteínas de virus como el dengue y el zika, y qué les pasa con el calor y la acidez.',
   a3: 'Bioimagenología: microscopios, células y sus partes, fluorescencia, cómo se ven por dentro los seres vivos.',
-  a4: 'Evolución de virus: cómo los virus se copian, se equivocan (mutaciones) y forman variantes.',
 };
 
 const palabras = (t: string) => (t.trim() ? t.trim().split(/\s+/).length : 0);

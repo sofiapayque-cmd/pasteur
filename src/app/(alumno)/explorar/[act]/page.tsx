@@ -13,7 +13,7 @@ import { curiosidadesPara } from '@/datos/curiosidades';
 */
 export default async function Page({ params }: { params: Promise<{ act: string }> }) {
   const { act } = await params;
-  if (!(await puede('actividad'))) return <FichaActividad act={act} curiosidades={/^a[1-4]$/.test(act) ? await curiosidadesPara({ actividad: act, cuantas: 1 }) : []} />;
+  if (!(await puede('actividad'))) return <FichaActividad act={act} curiosidades={/^a[1-3]$/.test(act) ? await curiosidadesPara({ actividad: act, cuantas: 1 }) : []} />;
   // key: al pasar de una actividad a otra la pantalla se monta de nuevo (arreglo de la etapa 2)
   // Solo en el navegador: actividad con Canvas y avance guardado en esta pestaña.
   return (

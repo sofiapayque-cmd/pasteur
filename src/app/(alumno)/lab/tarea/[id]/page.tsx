@@ -48,7 +48,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
     <SoloNavegador>
       <TareaAlumno
         tareaId={tarea.id}
-        actividad={tarea.actividad as 'a1' | 'a2' | 'a3' | 'a4'}
+        actividad={tarea.actividad as 'a1' | 'a2' | 'a3'}
         inicial={{ etapa: avance.etapa, datos: avance.datos ?? {} }}
         opciones={tarea.opciones ?? {}}
         desbloqueos={tarea.desbloqueos ?? {}}

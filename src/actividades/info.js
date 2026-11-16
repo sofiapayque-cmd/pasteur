@@ -12,6 +12,5 @@
 import * as a1 from './a1/etapas';
 import * as a2 from './a2/etapas';
 import * as a3 from './a3/etapas';
-import * as a4 from './a4/etapas';
 
-export const INFO_ACTIVIDADES = { a1, a2, a3, a4 };
+export const INFO_ACTIVIDADES = { a1, a2, a3 };
