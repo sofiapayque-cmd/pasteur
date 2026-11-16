@@ -58,10 +58,11 @@ const CELULAS_ROL: Celula[] = [
 ];
 
 /*
-  Imagen de respaldo de Moli (render del mismo archivo, con Cycles): se ve
-  mientras carga el 3D y queda si el navegador no tiene WebGL. Es un
-  cuadrado de 6,4 unidades de Blender (454,4 de la escena); el asiento cae
-  en (50 %, 62,26 %). Su lugar lo da rol.css.
+  Imagen de respaldo de Moli: se ve mientras carga el 3D y queda si el
+  navegador no tiene WebGL. Desde el 16/11 es una foto del mismo 3D (con la
+  luz de Moli3d.tsx y las manitos a 104,5°), así el cambio al 3D no se nota.
+  Es un cuadrado de 6,4 unidades de Blender (454,4 de la escena); el asiento
+  cae en (50 %, 62,26 %). Su lugar lo da rol.css.
 */
 const RESPALDO = '/illustrations/rol/moli-sentada.webp';
 
