@@ -159,6 +159,9 @@ async function ponerTemas(admin: SupabaseClient, informe: Informe): Promise<void
 
 export async function actualizarCuriosidades(admin: SupabaseClient): Promise<Informe> {
   const informe: Informe = { temasNuevos: [], respuestasMiradas: 0, curiosidadesNuevas: 0, conTema: 0, errores: [] };
+  // Primero el índice de los temas que todavía no lo tienen (por ejemplo, los 6 de la migración 24):
+  // sin él no se puede saber a qué tema se parece cada pregunta o curiosidad
+  await indexarTemas(admin, 40).catch(() => 0);
   for (const [nombre, paso] of [
     ['temas nuevos', temasNuevos],
     ['curiosidades', sacarCuriosidades],
