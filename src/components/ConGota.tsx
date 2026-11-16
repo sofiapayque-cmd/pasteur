@@ -10,10 +10,11 @@ import { useEffect, useRef, type ReactNode } from 'react';
   el borde que va adelante sale primero y el de atrás lo sigue, así la gota
   se alarga un poco, se afina, y se vuelve a juntar al llegar. Mientras viaja
   queda medio transparente.
-  · Nunca se estira más que ESTIRA_MAX píxeles de más (aunque salte de una
-    punta a la otra del menú) ni se sale del menú: los dos bordes van siempre
-    entre la opción vieja y la nueva, con una curva que no se pasa de largo.
-  · Si se cambia DURACION, ajustar el retraso de las letras blancas en
+  · La gota es una sola pastilla. Sus dos bordes (left y right) se mueven con
+    transiciones de CSS, con la curva de Bius que ya trae el navegador.
+  · El borde de atrás sale apenas después que el de adelante: lo justo para
+    que la gota se estire unos ESTIRA píxeles, salte poco o mucho.
+  · Si se cambia MUEVE, ajustar el retraso de las letras blancas en
     equipo.css ([data-gota-aca]).
 
   · Lo elegido lo dicen los propios hijos, con aria-current (los links del
@@ -28,31 +29,15 @@ type Props = { children: ReactNode; className?: string; etiqueta: string; como?:
 type Caja = { x: number; y: number; w: number; h: number };
 
 const ELEGIDO = '[aria-current]:not([aria-current="false"])';
-// Cuánto tarda la gota en pasar de una opción a otra (milisegundos)
-const DURACION = 640;
-// Cuánto se puede alargar como máximo, además del ancho de la opción (px)
-const ESTIRA_MAX = 48;
+// La curva de los diseños de Bius: sale decidida y frena suave, sin pasarse
+const CURVA = 'cubic-bezier(0.2, 0.7, 0.2, 1)';
+// Cuánto tarda cada borde en llegar (milisegundos)
+const MUEVE = 500;
+// Cuánto se alarga más o menos, además del ancho de la opción (px)
+const ESTIRA = 48;
 // Qué tan transparente se pone mientras viaja (1 = opaca)
 const EN_VIAJE = 0.66;
-// Curva de los diseños de Bius: sale decidida y frena suave, sin pasarse
-const BIUS = curva(0.2, 0.7, 0.2, 1);
 
-/* Una curva cubic-bezier(x1, y1, x2, y2) como función: tiempo (0–1) → avance (0–1). */
-function curva(x1: number, y1: number, x2: number, y2: number) {
-  const bez = (t: number, p1: number, p2: number) => 3 * (1 - t) * (1 - t) * t * p1 + 3 * (1 - t) * t * t * p2 + t * t * t;
-  return (x: number) => {
-    if (x <= 0) return 0;
-    if (x >= 1) return 1;
-    let bajo = 0;
-    let alto = 1;
-    for (let i = 0; i < 24; i++) {
-      const medio = (bajo + alto) / 2;
-      if (bez(medio, x1, x2) < x) bajo = medio;
-      else alto = medio;
-    }
-    return bez((bajo + alto) / 2, y1, y2);
-  };
-}
 const medir = (el: HTMLElement): Caja => ({ x: el.offsetLeft, y: el.offsetTop, w: el.offsetWidth, h: el.offsetHeight });
 const iguales = (a: Caja | null, b: Caja) => Boolean(a) && a!.x === b.x && a!.y === b.y && a!.w === b.w && a!.h === b.h;
 const quieto = () => {
@@ -72,26 +57,7 @@ export default function ConGota({ children, className = '', etiqueta, como = 'na
     const nav = caja.current;
     const g = gota.current;
     const fondo = g?.parentElement;
-    const [pIzq, pDer, pMedio] = Array.from(g?.children ?? []) as HTMLElement[];
-    if (!nav || !g || !fondo || !pIzq || !pMedio || !pDer) return undefined;
-    const piezas = [pIzq, pMedio, pDer];
-
-    // Dónde va cada pieza para una gota entre izq y der (afina: 1 = alto normal)
-    const formas = (izq: number, der: number, y: number, h: number, afina = 1) => {
-      const medio = Math.max(0, der - izq - h) / 100;
-      const sy = afina.toFixed(3);
-      return [
-        `translate(${izq}px, ${y}px) scaleY(${sy})`,
-        `translate(${izq + h / 2}px, ${y}px) scale(${medio.toFixed(4)}, ${sy})`,
-        `translate(${der - h}px, ${y}px) scaleY(${sy})`,
-      ];
-    };
-
-    const poner = (b: Caja) => {
-      for (const p of [pIzq, pDer]) p.style.width = p.style.height = `${b.h}px`;
-      pMedio.style.height = `${b.h}px`;
-      formas(b.x, b.x + b.w, b.y, b.h).forEach((t, i) => (piezas[i].style.transform = t));
-    };
+    if (!nav || !g || !fondo) return undefined;
 
     // En el celular el menú se desliza de costado: que lo elegido quede a la vista
     const centrar = (destino: HTMLElement, suave: boolean) => {
@@ -120,56 +86,32 @@ export default function ConGota({ children, className = '', etiqueta, como = 'na
       const b = medir(destino);
       const a = actual.current;
       if (iguales(a, b)) return;
-      piezas.forEach((p) => p.getAnimations().forEach((x) => x.cancel()));
-      fondo.getAnimations().forEach((x) => x.cancel());
-      poner(b);
-      g.style.opacity = '1';
       actual.current = b;
       nav.classList.add('lista');
-      if (!animar || !a || quieto()) return;
+      const mover = animar && a && !quieto();
 
-      if (a.y !== b.y) {
+      if (mover && a.y === b.y) {
+        // El de atrás sale un poquito después. Cuanto más lejos va, menos espera:
+        // la curva arranca 3,5 veces más rápido que un movimiento parejo. Entre
+        // opciones de distinto ancho se estira un poco más, para pasar a la más ancha.
+        const estira = ESTIRA + Math.abs(b.w - a.w) / 2;
+        const atras = Math.min(130, (MUEVE * estira) / (3.5 * Math.abs(b.x - a.x)));
+        const [esperaIzq, esperaDer] = b.x > a.x ? [atras, 0] : [0, atras];
+        g.style.transition = `left ${MUEVE}ms ${CURVA} ${esperaIzq}ms, right ${MUEVE}ms ${CURVA} ${esperaDer}ms`;
+        // Mientras viaja se afina un poco y queda medio transparente
+        const quieta = { opacity: 1, transform: 'none' };
+        const viaje = { opacity: EN_VIAJE, transform: 'scaleY(0.9)' };
+        g.animate([quieta, { ...viaje, offset: 0.22 }, { ...viaje, offset: 0.55 }, quieta], { duration: MUEVE + atras, easing: 'ease-in-out' });
+      } else {
+        g.style.transition = 'none';
         // Otra fila (menú partido en dos renglones): aparece en su lugar
-        fondo.animate([{ opacity: 0 }, { opacity: 1 }], { duration: DURACION * 0.5, easing: 'ease-out' });
-        return;
+        if (mover) g.animate([{ opacity: 0 }, { opacity: 1 }], { duration: MUEVE / 2, easing: 'ease-out' });
       }
-
-      // Mientras viaja queda medio transparente
-      fondo.animate(
-        [
-          { opacity: 1 },
-          { opacity: EN_VIAJE, offset: 0.22 },
-          { opacity: EN_VIAJE, offset: 0.55 },
-          { opacity: 1 },
-        ],
-        { duration: DURACION, easing: 'ease-in-out' },
-      );
-
-      // Los dos bordes: el de adelante sale primero, el de atrás lo sigue
-      const derecha = b.x > a.x;
-      const adelante = (t: number) => BIUS(Math.min(1, t / 0.78));
-      const atras = (t: number) => BIUS(Math.max(0, (t - 0.2) / 0.8));
-      const maximo = Math.max(a.w, b.w) + ESTIRA_MAX;
-      const pasos = 30;
-      const cuadros: Keyframe[][] = [[], [], []];
-      for (let i = 0; i <= pasos; i++) {
-        const t = i / pasos;
-        const pIzq = derecha ? atras(t) : adelante(t);
-        const pDer = derecha ? adelante(t) : atras(t);
-        let izq = a.x + (b.x - a.x) * pIzq;
-        let der = a.x + a.w + (b.x + b.w - (a.x + a.w)) * pDer;
-        // Que no se alargue de más: el borde de atrás se acerca
-        if (der - izq > maximo) {
-          if (derecha) izq = der - maximo;
-          else der = izq + maximo;
-        }
-        const ancho = der - izq;
-        const normal = a.w + (b.w - a.w) * BIUS(t);
-        // Cuanto más se alarga, más se afina (sin pasar nunca su alto)
-        const afina = 1 - 0.1 * Math.min(1, Math.max(0, ancho - normal) / ESTIRA_MAX);
-        formas(izq, der, b.y, b.h, afina).forEach((t, k) => cuadros[k].push({ transform: t }));
-      }
-      piezas.forEach((p, k) => p.animate(cuadros[k], { duration: DURACION }));
+      g.style.top = `${b.y}px`;
+      g.style.height = `${b.h}px`;
+      g.style.left = `${b.x}px`;
+      g.style.right = `${fondo.clientWidth - b.x - b.w}px`;
+      g.style.opacity = '1';
     };
 
     // Al cargar: en su lugar, sin animación
@@ -203,12 +145,7 @@ export default function ConGota({ children, className = '', etiqueta, como = 'na
 
   const capa = (
     <span className="gota-capa" aria-hidden="true">
-      <span ref={gota} className="gota">
-        <span className="gota__punta" />
-        <span className="gota__punta" />
-        {/* el medio va arriba de las puntas: tapa sus mitades de adentro */}
-        <span className="gota__medio" />
-      </span>
+      <span ref={gota} className="gota" />
     </span>
   );
 
