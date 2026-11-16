@@ -22,11 +22,12 @@ import ConGota from '@/components/ConGota';
   cada día se sacan de las respuestas aprobadas (una oración tal cual) y se
   muestran según lo que más se pregunta; las preguntas sin tema se agrupan
   solas en temas nuevos. Ver src/datos/curiosidadesAutomaticas.ts.
-  1. Cómo funcionan, y "Actualizar ahora" (admin).
-  2. Lo más consultado: temas de los últimos 30 días y sus curiosidades.
-  3. Las curiosidades: automáticas (se pueden ocultar) y las escritas a mano.
-  4. Preguntas que no se parecían a ningún tema: ubicarlas o descartarlas.
-  5. Temas (los armados solos están marcados).
+  1. Lo más consultado: temas de los últimos 30 días y sus curiosidades.
+  2. Las curiosidades: automáticas (se pueden ocultar; "Actualizar ahora" para
+     la admin) y las escritas a mano.
+  3. Preguntas que no se parecían a ningún tema: ubicarlas o descartarlas.
+  4. Temas (los armados solos están marcados).
+  Sin explicaciones largas en pantalla (pedido de Sofia del 15/11).
   Los chicos solo ven texto aprobado por una validadora.
 */
 type Props = {
@@ -190,28 +191,6 @@ export default function PanelCuriosidades({ rol, temas, tendencia, curiosidades,
 
   return (
     <>
-      <section className="eq-caja eq-form" aria-labelledby="cur-como">
-        <div>
-          <h2 id="cur-como">Se arman solas</h2>
-          <p className="eq-bajada">
-            Cada día, sin que nadie tenga que aprobar nada nuevo: de cada respuesta aprobada por la validadora se eligen hasta dos oraciones que sirven solas como
-            &quot;¿Sabías que…?&quot;, tal cual están en la respuesta. Se muestran sobre todo las de los temas que más preguntan los chicos. Las preguntas que no
-            se parecen a ningún tema se agrupan solas en temas nuevos.
-          </p>
-        </div>
-        {estadoAutomaticas.disponible ? (
-          <p className="eq-meta">
-            {estadoAutomaticas.total} {estadoAutomaticas.total === 1 ? 'curiosidad' : 'curiosidades'} de {estadoAutomaticas.respuestasMiradas} de{' '}
-            {estadoAutomaticas.aprobadas} respuestas aprobadas
-            {estadoAutomaticas.respuestasMiradas < estadoAutomaticas.aprobadas ? ` (faltan mirar ${estadoAutomaticas.aprobadas - estadoAutomaticas.respuestasMiradas})` : ''}
-            {estadoAutomaticas.ultima ? ` · última actualización ${new Date(estadoAutomaticas.ultima).toLocaleString('es-UY', { timeZone: 'America/Montevideo', dateStyle: 'short', timeStyle: 'short' })}` : ''}.
-          </p>
-        ) : (
-          <p className="eq-meta">Falta la actualización de la base (migración 23) para que empiecen a armarse.</p>
-        )}
-        {rol === 'admin' && estadoAutomaticas.disponible && <Actualizar />}
-      </section>
-
       <section className="eq-caja eq-form" aria-labelledby="cur-tendencia">
         <div>
           <h2 id="cur-tendencia">Lo más consultado (últimos 30 días)</h2>
@@ -274,9 +253,12 @@ export default function PanelCuriosidades({ rol, temas, tendencia, curiosidades,
       <section className="eq-caja eq-form" aria-labelledby="cur-lista">
         <div className="eq-fila" style={{ justifyContent: 'space-between', alignItems: 'baseline' }}>
           <h2 id="cur-lista">Curiosidades</h2>
-          <Link className="btn btn--chico" href="/equipo/fichas/nueva?formato=dato">
-            Escribir una curiosidad
-          </Link>
+          <span className="eq-fila" style={{ gap: 8, alignItems: 'center' }}>
+            {rol === 'admin' && estadoAutomaticas.disponible && <Actualizar />}
+            <Link className="btn btn--chico" href="/equipo/fichas/nueva?formato=dato">
+              Escribir una curiosidad
+            </Link>
+          </span>
         </div>
         <ConGota className="eq-pestanas" etiqueta="Estado">
           <button type="button" aria-current={ver === 'automatica' ? 'true' : undefined} onClick={() => setVer('automatica')}>
