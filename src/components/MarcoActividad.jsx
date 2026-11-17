@@ -1,10 +1,10 @@
 'use client';
 
-import { useDesde, useNavigate } from '@/navegacion';
+import { useDesde, useNavigate } from '@/lib/navegacion';
 import VolverMaestra from './VolverMaestra';
 import Moli from './Moli';
 import FondoVivo from './FondoVivo';
-import { ACTIVIDADES } from '../data/contenido';
+import { ACTIVIDADES } from '@/lib/contenido';
 import { INFO_ACTIVIDADES } from '../actividades/info';
 import PreguntasDelPasteur from './PreguntasDelPasteur';
 import Ventana from './Ventana';

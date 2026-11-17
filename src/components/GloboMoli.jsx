@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Moli from './Moli';
-import { useMediaQuery } from '../hooks/navegador';
+import { useMediaQuery } from '@/lib/navegador';
 
 /*
   Moli abajo a la derecha con un globo de diálogo (máximo dos líneas).
@@ -11,7 +11,7 @@ import { useMediaQuery } from '../hooks/navegador';
   1024×600, o una compu con el navegador abierto) el globo
   tapaba botones de las actividades: "Mirar por el ocular" en A3, la barra
   del pH en A2, un disco de antibiótico en A1 (revisión del 7/11, ver
-  docs/REVISION-EXPERIENCIAS.md). Ahí:
+  docs/historial/REVISION-EXPERIENCIAS.md). Ahí:
   · Moli es un poco más chico;
   · el globo aparece cada vez que Moli dice algo nuevo y a los pocos segundos
     se guarda;

@@ -1,10 +1,10 @@
 'use client';
 
-import { conDesde, useNavigate } from '@/navegacion';
+import { conDesde, useNavigate } from '@/lib/navegacion';
 import Cabecera from '../../components/Cabecera';
 import Moli from '../../components/Moli';
 import FondoVivo from '../../components/FondoVivo';
-import { ACTIVIDADES } from '../../data/contenido';
+import { ACTIVIDADES } from '@/lib/contenido';
 import CuentaDocente from '../../components/CuentaDocente';
 import { aulasReales } from '@/lib/supabase/config';
 import Curiosidades from '../../components/Curiosidades';

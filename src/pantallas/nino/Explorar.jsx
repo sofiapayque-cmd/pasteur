@@ -1,10 +1,10 @@
 'use client';
 
-import { useNavigate } from '@/navegacion';
+import { useNavigate } from '@/lib/navegacion';
 import Cabecera from '../../components/Cabecera';
 import FondoVivo from '../../components/FondoVivo';
 import Moli from '../../components/Moli';
-import { ACTIVIDADES } from '../../data/contenido';
+import { ACTIVIDADES } from '@/lib/contenido';
 import PieInstitucional from '../../components/PieInstitucional';
 
 /*

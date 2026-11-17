@@ -5,7 +5,7 @@ import gsap from 'gsap';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
-import { useNavigate } from '@/navegacion';
+import { useNavigate } from '@/lib/navegacion';
 import { animarCelulas } from '../hero/animarCelulas';
 import type { Celula } from '../hero/escena';
 import FloatingCells from '../hero/FloatingCells';

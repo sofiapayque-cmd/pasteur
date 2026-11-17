@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Navigate, useNavigate } from '@/navegacion';
-import { COLORES_ALUMNO } from '../../data/contenido';
+import { Navigate, useNavigate } from '@/lib/navegacion';
+import { COLORES_ALUMNO } from '@/lib/contenido';
 import FondoVivo from '../../components/FondoVivo';
 import { useSala, apodosLibres, unirme } from '../../sala/sala';
 import VolverMaestra from '../../components/VolverMaestra';

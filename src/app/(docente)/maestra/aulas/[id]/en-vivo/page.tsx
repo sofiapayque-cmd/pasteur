@@ -6,7 +6,7 @@ import { listarTareas } from '@/datos/tareas';
 import { claseAbiertaDeAula, instantaneaMaestra } from '@/datos/claseEnVivo';
 import { abrirClase, abrirClaseConTarea } from '@/acciones/claseEnVivo';
 import { actividad as datosActividad } from '@/lib/aulas/tareas';
-import SoloNavegador from '@/navegacion/SoloNavegador';
+import SoloNavegador from '@/components/SoloNavegador';
 import MandarActividad from '@/pantallas/maestra/aulas/MandarActividad';
 import TareasParaClase from '@/pantallas/maestra/aulas/TareasParaClase';
 import ClaseEnVivo from '@/pantallas/maestra/aulas/ClaseEnVivo';

@@ -1,10 +1,10 @@
 'use client';
 
 import { Suspense, useCallback, useState } from 'react';
-import { Navigate, useNavigate } from '@/navegacion';
+import { Navigate, useNavigate } from '@/lib/navegacion';
 import FondoVivo from '../../components/FondoVivo';
 import Cargando from '../../components/Cargando';
-import { ACTIVIDADES } from '../../data/contenido';
+import { ACTIVIDADES } from '@/lib/contenido';
 import { INFO_ACTIVIDADES } from '../../actividades/info';
 import { PUESTAS } from '../../actividades/componentes';
 import { useClase } from '../../sala/contexto';

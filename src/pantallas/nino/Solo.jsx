@@ -1,12 +1,12 @@
 'use client';
 
 import { Suspense } from 'react';
-import { Navigate, useParams } from '@/navegacion';
+import { Navigate, useParams } from '@/lib/navegacion';
 import MarcoActividad from '../../components/MarcoActividad';
 import Cargando from '../../components/Cargando';
 import { EXPERIENCIAS } from '../../actividades/componentes';
 import { useProgreso } from '../../sala/progreso';
-import { ACTIVIDADES } from '../../data/contenido';
+import { ACTIVIDADES } from '@/lib/contenido';
 
 /* MODO INDIVIDUAL: cualquier actividad, sin sala (también sirve para que la maestra la pruebe). */
 export default function Solo() {

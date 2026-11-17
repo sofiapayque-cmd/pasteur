@@ -1,7 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { useHidratado } from '@/hooks/navegador';
+import { useHidratado } from '@/lib/navegador';
 
 /*
   Envuelve las pantallas que dependen de lo guardado en ESTE navegador

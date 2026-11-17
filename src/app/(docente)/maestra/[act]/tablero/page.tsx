@@ -1,7 +1,7 @@
-import SoloNavegador from '@/navegacion/SoloNavegador';
+import SoloNavegador from '@/components/SoloNavegador';
 import Tablero from '@/pantallas/maestra/Tablero';
 import { redirect } from 'next/navigation';
-import { IDS_ACTIVIDAD } from '@/tipos/actividad';
+import { IDS_ACTIVIDAD } from '@/lib/actividad';
 import { aulasReales } from '@/lib/supabase/config';
 
 /* /maestra/[act]/tablero · Tablero en vivo */

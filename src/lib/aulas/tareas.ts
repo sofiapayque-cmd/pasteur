@@ -3,7 +3,7 @@
   Sirve en el servidor (validar lo que manda la maestra o el alumno) y en el
   navegador (dibujar opciones y etapas). Sale de actividades/aN/etapas.js.
 */
-import { ACTIVIDADES } from '@/data/contenido';
+import { ACTIVIDADES } from '@/lib/contenido';
 import { INFO_ACTIVIDADES } from '@/actividades/info';
 
 export type IdActividad = 'a1' | 'a2' | 'a3';

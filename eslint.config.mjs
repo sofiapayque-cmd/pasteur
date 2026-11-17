@@ -18,7 +18,7 @@ const eslintConfig = defineConfig([
       // pero que conviene cambiar para que el compilador pueda optimizar: refs leídas al dibujar,
       // setState dentro de efectos, Date.now() al dibujar, etc. Casi todos están en las
       // simulaciones (A2, A3, A4), que no se reescriben durante la migración.
-      // Quedan como avisos (visibles) en vez de errores; ver docs/MIGRACION.md.
+      // Quedan como avisos (visibles) en vez de errores; ver docs/historial/MIGRACION.md.
       'react-hooks/refs': 'warn',
       'react-hooks/set-state-in-effect': 'warn',
       'react-hooks/purity': 'warn',

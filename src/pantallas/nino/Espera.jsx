@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { Navigate, useNavigate } from '@/navegacion';
+import { Navigate, useNavigate } from '@/lib/navegacion';
 import Moli from '../../components/Moli';
 import FondoVivo from '../../components/FondoVivo';
 import { useSala, yo } from '../../sala/sala';

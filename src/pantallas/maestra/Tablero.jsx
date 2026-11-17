@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Navigate, useNavigate } from '@/navegacion';
-import { ACTIVIDADES } from '../../data/contenido';
+import { Navigate, useNavigate } from '@/lib/navegacion';
+import { ACTIVIDADES } from '@/lib/contenido';
 import { INFO_ACTIVIDADES } from '../../actividades/info';
 import { AMBIENTES } from '../../actividades/a1/datos';
 import { useClase } from '../../sala/contexto';
