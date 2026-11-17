@@ -152,18 +152,26 @@ select t19.ok('ficha sin tema y nada bastante parecido: no suma', (select val fr
   and (select veces from consultas_tema where tema_id = t19.val('frio') and origen = 'actividad') = 2);
 
 -- =====================================================================
--- Preguntas sin tema
+-- Preguntas sin tema (tabla preguntas_pendientes, migración 26)
 -- =====================================================================
 set role service_role;
 select public.anotar_consulta_sin_tema('¿Los volcanes tienen bacterias?', 'los volcanes tienen bacterias', 'a1');
 select public.anotar_consulta_sin_tema('¿los volcanes tienen bacterias', 'los volcanes tienen bacterias', 'a9');
 select public.anotar_consulta_sin_tema('¿Por qué brillan las luciérnagas?', 'por que brillan las luciernagas', 'zz');
+-- Una que tampoco tuvo respuesta: le faltan las dos cosas
+select public.anotar_consulta_sin_tema('¿Las hormigas tienen bacterias?', 'las hormigas tienen bacterias', 'a1');
+select public.anotar_pregunta_sin_respuesta('¿Las hormigas tienen bacterias?', 'las hormigas tienen bacterias', 'a1');
 reset role;
-insert into t19.v select 'volcan', id::text from consultas_sin_tema where normalizada = 'los volcanes tienen bacterias';
-insert into t19.v select 'luz', id::text from consultas_sin_tema where normalizada = 'por que brillan las luciernagas';
-select t19.ok('sin tema: la misma pregunta suma veces', (select veces from consultas_sin_tema where id = t19.val('volcan')) = 2);
-select t19.ok('sin tema: una actividad rara queda vacía', (select actividad from consultas_sin_tema where id = t19.val('luz')) is null
-  and (select actividad from consultas_sin_tema where id = t19.val('volcan')) = 'a1');
+insert into t19.v select 'volcan', id::text from preguntas_pendientes where normalizada = 'los volcanes tienen bacterias';
+insert into t19.v select 'luz', id::text from preguntas_pendientes where normalizada = 'por que brillan las luciernagas';
+insert into t19.v select 'hormiga', id::text from preguntas_pendientes where normalizada = 'las hormigas tienen bacterias';
+select t19.ok('sin tema: la misma pregunta suma veces', (select veces_sin_tema from preguntas_pendientes where id = t19.val('volcan')) = 2);
+select t19.ok('sin tema: una actividad rara queda vacía', (select actividad from preguntas_pendientes where id = t19.val('luz')) is null
+  and (select actividad from preguntas_pendientes where id = t19.val('volcan')) = 'a1');
+select t19.ok('sin tema: si tuvo respuesta, no tiene estado de respuesta', (select respuesta is null and veces_sin_respuesta = 0 from preguntas_pendientes where id = t19.val('volcan')));
+select t19.ok('sin tema y sin respuesta: una sola fila con los dos estados',
+  (select count(*) from preguntas_pendientes where normalizada = 'las hormigas tienen bacterias') = 1
+  and (select respuesta = 'pendiente' and veces_sin_respuesta = 1 and veces_sin_tema = 1 from preguntas_pendientes where id = t19.val('hormiga')));
 
 set role service_role;
 insert into t19.v select 'ub_viejo', public.ubicar_consulta_sin_tema(t19.val('luz'), t19.val('viejo'))::text;
@@ -171,11 +179,21 @@ insert into t19.v select 'ub_frio', public.ubicar_consulta_sin_tema(t19.val('vol
 insert into t19.v select 'ub_otra', public.ubicar_consulta_sin_tema(t19.val('volcan'), t19.val('frio'))::text;
 reset role;
 select t19.ok('ubicar: en un tema apagado no se puede y la pregunta queda', (select val from t19.v where k = 'ub_viejo') = 'false'
-  and exists (select 1 from consultas_sin_tema where id = t19.val('luz')));
+  and exists (select 1 from preguntas_pendientes where id = t19.val('luz') and veces_sin_tema > 0));
 select t19.ok('ubicar: sus veces pasan al tema y la pregunta se va', (select val from t19.v where k = 'ub_frio') = 'true'
-  and not exists (select 1 from consultas_sin_tema where id = t19.val('volcan'))
+  and not exists (select 1 from preguntas_pendientes where id = t19.val('volcan'))
   and (select veces from consultas_tema where tema_id = t19.val('frio') and origen = 'asistente') = 4);
 select t19.ok('ubicar: dos veces la misma no suma de nuevo', (select val from t19.v where k = 'ub_otra') = 'false');
+
+set role service_role;
+insert into t19.v select 'ub_hormiga', public.ubicar_consulta_sin_tema(t19.val('hormiga'), t19.val('frio'))::text;
+insert into t19.v select 'desc_hormiga', public.descartar_sin_tema(t19.val('hormiga'))::text;
+reset role;
+select t19.ok('ubicar: si le falta respuesta, sigue en esa lista (ya sin el tema)', (select val from t19.v where k = 'ub_hormiga') = 'true'
+  and (select respuesta = 'pendiente' and veces_sin_tema = 0 from preguntas_pendientes where id = t19.val('hormiga'))
+  and (select veces from consultas_tema where tema_id = t19.val('frio') and origen = 'asistente') = 5);
+select t19.ok('descartar el tema: si ya no le falta, no hace nada', (select val from t19.v where k = 'desc_hormiga') = 'false'
+  and exists (select 1 from preguntas_pendientes where id = t19.val('hormiga')));
 
 -- =====================================================================
 -- Quién ve y quién cambia
@@ -184,28 +202,35 @@ set role authenticated; select set_config('request.jwt.claim.sub', :ARED, false)
 select t19.ok('equipo: ve los conteos por tema', (select count(*) from consultas_tema) >= 3);
 select t19.ok('equipo: no los cambia ni agrega', t19.afecta($$update consultas_tema set veces = 999$$) <= 0
   and t19.falla($$insert into consultas_tema (tema_id, origen, veces) values ('$$ || t19.val('anti') || $$', 'asistente', 50)$$));
-select t19.ok('equipo: ve las preguntas sin tema', (select count(*) from consultas_sin_tema) = 1);
-select t19.ok('equipo: no las cambia ni agrega', t19.afecta($$update consultas_sin_tema set veces = 999$$) <= 0
-  and t19.falla($$insert into consultas_sin_tema (texto, normalizada) values ('hola hola', 'hola hola')$$));
-select t19.ok('equipo: puede descartar una pregunta sin tema', t19.afecta($$delete from consultas_sin_tema where id = '$$ || t19.val('luz') || $$'$$) = 1);
+select t19.ok('equipo: ve las preguntas sin tema', exists (select 1 from preguntas_pendientes where id = t19.val('luz')));
+select t19.ok('equipo: no las cambia ni agrega', t19.afecta($$update preguntas_pendientes set veces_sin_tema = 999$$) <= 0
+  and t19.falla($$insert into preguntas_pendientes (texto, normalizada, veces_sin_tema) values ('hola hola', 'hola hola', 1)$$));
+select t19.ok('equipo: no borra (el tema lo descarta el servidor)', t19.falla($$delete from preguntas_pendientes where id = '$$ || t19.val('luz') || $$'$$));
+select t19.ok('equipo: no llama a descartar_sin_tema', t19.falla($$select public.descartar_sin_tema('$$ || t19.val('luz') || $$')$$));
 select t19.ok('equipo: no ve qué curiosidad vio cada aula', t19.falla($$select count(*) from curiosidades_vistas$$));
 reset role;
+set role service_role;
+insert into t19.v select 'desc_luz', public.descartar_sin_tema(t19.val('luz'))::text;
+reset role;
+select t19.ok('descartar el tema: si no le falta nada más, la pregunta se va', (select val from t19.v where k = 'desc_luz') = 'true'
+  and not exists (select 1 from preguntas_pendientes where id = t19.val('luz')));
 
 set role authenticated; select set_config('request.jwt.claim.sub', :AMAE, false);
-select t19.ok('maestra: no ve los conteos ni las preguntas sin tema', (select count(*) from consultas_tema) = 0 and (select count(*) from consultas_sin_tema) = 0);
+select t19.ok('maestra: no ve los conteos ni las preguntas sin tema', (select count(*) from consultas_tema) = 0 and (select count(*) from preguntas_pendientes) = 0);
 select t19.ok('maestra: no ve qué curiosidades vio su aula', t19.falla($$select count(*) from curiosidades_vistas$$));
 select t19.ok('maestra: la tendencia no le muestra nada', (select count(*) from public.tendencia_temas()) = 0);
 reset role;
 set role anon;
-select t19.ok('visitante: no ve nada', t19.falla($$select count(*) from consultas_tema$$) and t19.falla($$select count(*) from consultas_sin_tema$$)
+select t19.ok('visitante: no ve nada', t19.falla($$select count(*) from consultas_tema$$) and t19.falla($$select count(*) from preguntas_pendientes$$)
   and t19.falla($$select count(*) from curiosidades_vistas$$) and t19.falla($$select * from public.tendencia_temas()$$));
 reset role;
 
 select t19.ok('sin datos de quién preguntó: los conteos no tienen maestra, aula, alumno ni hora',
   not exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'consultas_tema'
               and column_name not in ('tema_id', 'dia', 'origen', 'veces'))
-  and not exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'consultas_sin_tema'
-              and column_name not in ('id', 'texto', 'normalizada', 'actividad', 'veces', 'primera_vez', 'ultima_vez')));
+  and not exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'preguntas_pendientes'
+              and column_name not in ('id', 'texto', 'normalizada', 'actividad', 'primera_vez', 'ultima_vez',
+                                      'respuesta', 'ficha_id', 'veces_sin_respuesta', 'veces_sin_tema')));
 
 -- =====================================================================
 -- Tendencia: lo reciente pesa más que lo viejo
@@ -230,12 +255,15 @@ select t19.ok('tendencia: los temas apagados no aparecen', not exists (select 1 
 -- =====================================================================
 set role service_role;
 insert into curiosidades_vistas (aula_id, ficha_id, dia) values (t19.val('aula'), t19.val('dato'), current_date), (t19.val('aula'), t19.val('dato'), current_date - 31);
-insert into consultas_sin_tema (texto, normalizada, ultima_vez, primera_vez) values ('pregunta vieja', 'pregunta vieja', current_date - 91, current_date - 91);
+insert into preguntas_pendientes (texto, normalizada, veces_sin_tema, ultima_vez, primera_vez) values ('pregunta vieja', 'pregunta vieja', 1, current_date - 91, current_date - 91);
+insert into preguntas_pendientes (texto, normalizada, respuesta, veces_sin_respuesta, veces_sin_tema, ultima_vez, primera_vez)
+  values ('pregunta vieja ya pedida', 'pregunta vieja ya pedida', 'pedida', 2, 3, current_date - 91, current_date - 91);
 select public.limpiar_curiosidades();
 reset role;
 select t19.ok('limpiar: borra los conteos de más de 90 días y deja los recientes',
   not exists (select 1 from consultas_tema where dia < current_date - 90) and exists (select 1 from consultas_tema where dia = current_date - 20));
-select t19.ok('limpiar: borra las preguntas sin tema de más de 90 días', not exists (select 1 from consultas_sin_tema where normalizada = 'pregunta vieja'));
+select t19.ok('limpiar: borra las preguntas sin tema de más de 90 días', not exists (select 1 from preguntas_pendientes where normalizada = 'pregunta vieja'));
+select t19.ok('limpiar: una ya pedida se queda, sin el tema', (select respuesta = 'pedida' and veces_sin_tema = 0 from preguntas_pendientes where normalizada = 'pregunta vieja ya pedida'));
 select t19.ok('limpiar: borra lo que vio un aula hace más de 30 días y deja lo de hoy',
   (select count(*) from curiosidades_vistas where aula_id = t19.val('aula')) = 1);
 

@@ -107,7 +107,7 @@ select t11.ok('buscar: el límite se respeta', (select count(*) from public.busc
 reset role;
 update fragmentos set activo = false where tipo = 'variante' and ficha_id = (select val from t11.v where k = 'fic')::uuid;
 set local role service_role;
-select t11.ok('buscar: un fragmento apagado no aparece', not exists (select 1 from public.buscar_fragmentos(t11.vec(2), 20) where tipo = 'variante'));
+select t11.ok('buscar: un fragmento apagado no aparece', not exists (select 1 from public.buscar_fragmentos(t11.vec(2), 20) where tipo = 'variante' and ficha_id = (select val from t11.v where k = 'fic')::uuid));
 reset role;
 set local role authenticated; select set_config('request.jwt.claim.sub', 'd1177777-0000-0000-0000-000000000001', false);
 select t11.ok('maestra: no puede buscar directo', t11.falla($$select * from public.buscar_fragmentos(t11.vec(1), 5)$$));
@@ -133,7 +133,7 @@ select t11.ok('maestra: no se suma cupo', t11.falla($$update public.cupos_asiste
 reset role;
 
 -- =====================================================================
--- Preguntas sin respuesta
+-- Preguntas sin respuesta (tabla preguntas_pendientes, migración 26)
 -- =====================================================================
 set local role service_role;
 select public.anotar_pregunta_sin_respuesta('¿Por qué brillan las medusas?', 'por que brillan las medusas', 'a3');
@@ -141,48 +141,61 @@ select public.anotar_pregunta_sin_respuesta('¿por que brillan las medusas', 'po
 select public.anotar_pregunta_sin_respuesta('¿Qué come una bacteria?', 'que come una bacteria', null);
 select public.anotar_pregunta_sin_respuesta('¿Cuánto vive un virus?', 'cuanto vive un virus', 'zz');
 reset role;
-select t11.ok('anotar: la misma pregunta suma veces', (select veces from preguntas_sin_respuesta where normalizada = 'por que brillan las medusas') = 2);
-select t11.ok('anotar: se queda con el primer texto y la primera actividad', (select texto = '¿Por qué brillan las medusas?' and actividad = 'a3' from preguntas_sin_respuesta where normalizada = 'por que brillan las medusas'));
-select t11.ok('anotar: una actividad que no existe queda vacía', (select actividad is null from preguntas_sin_respuesta where normalizada = 'cuanto vive un virus'));
-select t11.ok('anotar: no guarda maestra, aula ni hora', not exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'preguntas_sin_respuesta'
+select t11.ok('anotar: la misma pregunta suma veces', (select veces_sin_respuesta from preguntas_pendientes where normalizada = 'por que brillan las medusas') = 2);
+select t11.ok('anotar: se queda con el primer texto y la primera actividad', (select texto = '¿Por qué brillan las medusas?' and actividad = 'a3' from preguntas_pendientes where normalizada = 'por que brillan las medusas'));
+select t11.ok('anotar: una actividad que no existe queda vacía', (select actividad is null from preguntas_pendientes where normalizada = 'cuanto vive un virus'));
+select t11.ok('anotar: no guarda maestra, aula ni hora', not exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'preguntas_pendientes'
   and (column_name like '%docente%' or column_name like '%aula%' or column_name like '%alumno%' or data_type like 'timestamp%')));
 
 -- El equipo la ve y la marca; las maestras y los alumnos no
 set local role authenticated; select set_config('request.jwt.claim.sub', 'd1100000-0000-0000-0000-000000000001', false);
-select t11.ok('equipo: ve la lista', (select count(*) from public.preguntas_sin_respuesta) = 3);
-select t11.ok('equipo: puede descartar', t11.afecta($$update public.preguntas_sin_respuesta set estado = 'descartada' where normalizada = 'cuanto vive un virus'$$) = 1);
-select t11.ok('equipo: no cambia el texto', t11.falla($$update public.preguntas_sin_respuesta set texto = 'otra cosa'$$));
-select t11.ok('equipo: no agrega a mano', t11.falla($$insert into public.preguntas_sin_respuesta (texto, normalizada) values ('hola hola', 'hola hola')$$));
-select t11.ok('equipo: no borra', t11.falla($$delete from public.preguntas_sin_respuesta$$));
+select t11.ok('equipo: ve la lista', (select count(*) from public.preguntas_pendientes
+  where normalizada in ('por que brillan las medusas', 'que come una bacteria', 'cuanto vive un virus')) = 3);
+select t11.ok('equipo: puede descartar', t11.afecta($$update public.preguntas_pendientes set respuesta = 'descartada' where normalizada = 'cuanto vive un virus'$$) = 1);
+select t11.ok('equipo: no cambia el texto', t11.falla($$update public.preguntas_pendientes set texto = 'otra cosa'$$));
+select t11.ok('equipo: no agrega a mano', t11.falla($$insert into public.preguntas_pendientes (texto, normalizada) values ('hola hola', 'hola hola')$$));
+select t11.ok('equipo: no borra', t11.falla($$delete from public.preguntas_pendientes$$));
+select t11.ok('equipo: no le saca el estado', t11.falla($$update public.preguntas_pendientes set respuesta = null where normalizada = 'que come una bacteria'$$));
+select t11.ok('equipo: no toca el tema', t11.falla($$update public.preguntas_pendientes set veces_sin_tema = 5$$));
 reset role;
 set local role authenticated; select set_config('request.jwt.claim.sub', 'd1177777-0000-0000-0000-000000000001', false);
-select t11.ok('maestra: no ve la lista', (select count(*) from public.preguntas_sin_respuesta) = 0);
-select t11.ok('maestra: no la marca', t11.afecta($$update public.preguntas_sin_respuesta set estado = 'pedida'$$) = 0);
+select t11.ok('maestra: no ve la lista', (select count(*) from public.preguntas_pendientes) = 0);
+select t11.ok('maestra: no la marca', t11.afecta($$update public.preguntas_pendientes set respuesta = 'pedida'$$) = 0);
 reset role;
 set local role anon;
-select t11.ok('visitante: nada', t11.falla($$select count(*) from public.preguntas_sin_respuesta$$));
+select t11.ok('visitante: nada', t11.falla($$select count(*) from public.preguntas_pendientes$$));
 reset role;
 
 set local role service_role;
 select public.anotar_pregunta_sin_respuesta('¿Cuánto vive un virus?', 'cuanto vive un virus', null);
 reset role;
-select t11.ok('anotar: una descartada que vuelve a aparecer, vuelve a la lista', (select estado = 'pendiente' and veces = 2 from preguntas_sin_respuesta where normalizada = 'cuanto vive un virus'));
+select t11.ok('anotar: una descartada que vuelve a aparecer, vuelve a la lista', (select respuesta = 'pendiente' and veces_sin_respuesta = 2 from preguntas_pendientes where normalizada = 'cuanto vive un virus'));
 
 -- 90 días
-update preguntas_sin_respuesta set ultima_vez = current_date - 91 where normalizada in ('que come una bacteria', 'por que brillan las medusas');
-update preguntas_sin_respuesta set estado = 'pedida' where normalizada = 'por que brillan las medusas';
+update preguntas_pendientes set ultima_vez = current_date - 91 where normalizada in ('que come una bacteria', 'por que brillan las medusas');
+update preguntas_pendientes set respuesta = 'pedida' where normalizada = 'por que brillan las medusas';
 set local role service_role;
 select public.anotar_pregunta_sin_respuesta('¿Qué es una célula?', 'que es una celula', 'a3');
 reset role;
-select t11.ok('90 días sin que nadie la pregunte: se borra', not exists (select 1 from preguntas_sin_respuesta where normalizada = 'que come una bacteria'));
-select t11.ok('90 días: una ya pedida se queda', exists (select 1 from preguntas_sin_respuesta where normalizada = 'por que brillan las medusas'));
+select t11.ok('90 días sin que nadie la pregunte: se borra', not exists (select 1 from preguntas_pendientes where normalizada = 'que come una bacteria'));
+select t11.ok('90 días: una ya pedida se queda', exists (select 1 from preguntas_pendientes where normalizada = 'por que brillan las medusas'));
+
+-- La respuesta pedida ya está publicada: le llega a la maestra que la hizo (migración 25)
+update preguntas_pendientes set ficha_id = (select val from t11.v where k = 'fic')::uuid where normalizada = 'por que brillan las medusas';
+insert into preguntas_maestras (docente_id, texto, normalizada, resultado)
+  values ('d1177777-0000-0000-0000-000000000001', '¿Por qué brillan las medusas?', 'por que brillan las medusas', 'sin_respuesta');
+set local role service_role;
+select t11.ok('respondida: el servidor encuentra la pregunta de la maestra', public.marcar_preguntas_respondidas('d1177777-0000-0000-0000-000000000001') = 1);
+reset role;
+select t11.ok('respondida: la pregunta de la maestra queda con su respuesta',
+  (select ficha_id = (select val from t11.v where k = 'fic')::uuid and respondida_en is not null from preguntas_maestras where normalizada = 'por que brillan las medusas'));
 
 -- Retirar la ficha la saca de la búsqueda (trigger de la migración 9)
 set local role authenticated; select set_config('request.jwt.claim.sub', 'd1100000-0000-0000-0000-000000000002', false);
 update fichas set estado = 'retirada', motivo_retiro = 'Prueba de retiro' where id = (select val from t11.v where k = 'fic')::uuid;
 reset role;
 set local role service_role;
-select t11.ok('ficha retirada: no aparece más', not exists (select 1 from public.buscar_fragmentos(t11.vec(1), 20)));
+select t11.ok('ficha retirada: no aparece más', not exists (select 1 from public.buscar_fragmentos(t11.vec(1), 20) where ficha_id = (select val from t11.v where k = 'fic')::uuid));
 reset role;
 
 select t11.ok('la API no publica funciones security definer que un usuario pueda llamar',

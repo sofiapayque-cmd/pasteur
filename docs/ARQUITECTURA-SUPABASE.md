@@ -31,7 +31,7 @@ El borrador modelaba **salas efímeras**: código de 4 letras por clase, niños 
 | Seguir desde otra computadora | La sesión anónima vive en un solo navegador | **Cuentas de alumno** con usuario y clave (`K7RM-07` + clave) |
 | Ingreso sin nombre ni mail, del lado del servidor | Sesión anónima creada en el navegador; límite de 30 por hora por IP (una clase entera no entra) | El **servidor** crea las cuentas y hace el ingreso |
 | Tareas, no solo clases en vivo | La sala mezclaba actividad y clase en vivo | **`asignaciones`** (qué actividad) + **`sesiones`** (la clase en vivo) |
-| Guardar el avance y los resultados científicos | Solo `datos` dentro del alumno de la sala | **`progreso`** (para retomar) + **`resultados`** (registro que no se modifica) |
+| Guardar el avance y los resultados científicos | Solo `datos` dentro del alumno de la sala | **`progreso`**: para retomar, y con lo que hizo cada chico en sus `datos` |
 
 ## 3. Esquema propuesto
 
@@ -39,8 +39,7 @@ El borrador modelaba **salas efímeras**: código de 4 letras por clase, niños 
 auth.users ──┬── docentes ── aulas ──┬── alumnos (cuentas anónimas: K7RM-01 … K7RM-30)
              │                       ├── asignaciones (a1…a4 + opciones de la maestra)
              └── alumnos             │       ├── sesiones (clase en vivo: esperando / en curso / pausa / puesta)
-                                     │       ├── progreso (1 por alumno y asignación: etapa + datos)
-                                     │       └── resultados (registro científico, solo se agrega)
+                                     │       └── progreso (1 por alumno y asignación: etapa + datos)
                                      └── intentos_ingreso (bloqueo contra adivinar claves; solo servidor)
 ```
 
@@ -52,10 +51,11 @@ auth.users ──┬── docentes ── aulas ──┬── alumnos (cuenta
 | `asignaciones` | Actividad dada a un aula, con sus opciones (lo que hoy elige en "Preparar la clase") | Ninguno |
 | `sesiones` | La clase en vivo (lo que hoy es la sala). Una sola abierta por aula | Ninguno |
 | `progreso` | Etapa y `datos` de cada niño en cada asignación: **lo que permite retomar** | Respuestas de la actividad |
-| `resultados` | Cada placa incubada, corrida o captura, con fecha. No se modifica ni se borra | Respuestas de la actividad |
 | `intentos_ingreso` | Fallos de clave por usuario, para bloquear temporalmente | Ninguno |
 
-Reglas de integridad: claves foráneas compuestas impiden mezclar aulas o actividades (un progreso de A1 no puede colgarse de una asignación de A3 ni de otra aula); `datos` hasta 64 KB y `resultados` hasta 16 KB; códigos y usuarios con formato fijo. **Nada se borra desde la web**: las aulas se archivan, los alumnos se desactivan, las asignaciones se cierran.
+Reglas de integridad: claves foráneas compuestas impiden mezclar aulas o actividades (un progreso de A1 no puede colgarse de una asignación de A3 ni de otra aula); `datos` hasta 64 KB; códigos y usuarios con formato fijo. **Nada se borra desde la web**: las aulas se archivan, los alumnos se desactivan, las asignaciones se cierran.
+
+El diseño original tenía también una tabla `resultados` (cada placa o captura, sin modificar). Ningún código la usó, porque todo quedó en `progreso`, y se borró en la **migración 26** (17/11).
 
 Migraciones: `supabase/migrations/` (1. tablas, 2. seguridad, 3. tiempo real, 4. funciones de ayuda en el esquema `privado`, 5. reglas de aulas que dejan recibir el aula recién creada, 6. año lectivo y cierre de sesiones de alumnos, 7. una cuenta de alumno nunca es maestra).
 

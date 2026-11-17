@@ -130,6 +130,7 @@ select t.ok('alumno no ve borradores', t.filas('select 1 from public.asignacione
 select t.ok('alumno no crea aulas', t.falla($$insert into public.aulas (nombre) values ('mía')$$));
 select t.ok('alumno no se hace docente', t.falla($$insert into public.docentes (id) values ('cccccccc-0000-0000-0000-000000000001')$$));
 select t.ok('alumno no ve docentes', t.filas('select 1 from public.docentes') = 0);
+select t.ok('alumno no mezcla actividad y asignación', t.falla($$insert into public.progreso (asignacion_id, aula_id, actividad, etapa) values ((select asig_a1 from t.ids), (select aula_a from t.ids), 'a3', 'x')$$));
 insert into public.progreso (asignacion_id, aula_id, actividad, etapa, datos)
   values ((select asig_a1 from t.ids), (select aula_a from t.ids), 'a1', 'paisaje', '{"ambiente":"antartida-suelo"}');
 select t.ok('alumno guarda su progreso', t.filas('select 1 from public.progreso') = 1);
@@ -140,15 +141,9 @@ set local role authenticated; select t.como('cccccccc-0000-0000-0000-00000000000
 select t.ok('alumno avanza de etapa', t.afecta($$update public.progreso set etapa = 'muestra', datos = datos || '{"muestra":1}'$$) = 1);
 select t.ok('etapa_desde se actualiza sola', (select etapa_desde from public.progreso) > now() - interval '1 minute');
 select t.ok('alumno no guarda a nombre de otro', t.falla($$insert into public.progreso (alumno_id, asignacion_id, aula_id, actividad, etapa) values ('cccccccc-0000-0000-0000-000000000002', (select asig_a1 from t.ids), (select aula_a from t.ids), 'a1', 'x')$$));
-select t.ok('alumno no mezcla actividad y asignación', t.falla($$insert into public.resultados (asignacion_id, aula_id, actividad, tipo, valor) values ((select asig_a1 from t.ids), (select aula_a from t.ids), 'a3', 'x', '{}')$$));
 select t.ok('alumno no trabaja en un borrador', t.falla($$insert into public.progreso (asignacion_id, aula_id, actividad, etapa) values ((select asig_a2 from t.ids), (select aula_a from t.ids), 'a2', 'x')$$));
 select t.ok('alumno no cambia de aula su progreso', t.falla($$update public.progreso set aula_id = (select aula_b from t.ids)$$));
 select t.ok('datos de más de 64 KB se rechazan', t.falla($$update public.progreso set datos = jsonb_build_object('x', repeat('a', 70000))$$));
-insert into public.resultados (asignacion_id, aula_id, actividad, tipo, valor)
-  values ((select asig_a1 from t.ids), (select aula_a from t.ids), 'a1', 'placa', '{"temperatura":37,"colonias":12}');
-select t.ok('alumno registra un resultado', t.filas('select 1 from public.resultados') = 1);
-select t.ok('alumno no modifica resultados', t.falla($$update public.resultados set valor = '{}'$$));
-select t.ok('alumno no borra resultados', t.falla('delete from public.resultados'));
 select t.ok('alumno elige apodo', t.afecta($$update public.alumnos set apodo = 'Coco curioso', color = '#EF6F5E'$$) = 1);
 select t.ok('alumno no cambia su número', t.falla('update public.alumnos set numero = 5'));
 select t.ok('alumno no cambia su usuario', t.falla($$update public.alumnos set usuario = 'ZZZZ-09'$$));
@@ -158,7 +153,6 @@ select t.ok('alumno no lee intentos de ingreso', t.filas('select 1 from public.i
 -- ---------- Alumno 2 (misma aula) y alumno 3 (otra aula) ----------
 select t.como('cccccccc-0000-0000-0000-000000000002');
 select t.ok('compañero no ve el progreso de otro', t.filas('select 1 from public.progreso') = 0);
-select t.ok('compañero no ve resultados de otro', t.filas('select 1 from public.resultados') = 0);
 select t.ok('compañero no ve la fila de otro', t.filas($$select 1 from public.alumnos where id = 'cccccccc-0000-0000-0000-000000000001'$$) = 0);
 select t.como('cccccccc-0000-0000-0000-000000000003');
 select t.ok('alumno de otra aula no ve la asignación', t.filas('select 1 from public.asignaciones') = 0);
@@ -205,7 +199,6 @@ insert into public.sesiones (asignacion_id, aula_id) values ((select asig_a1 fro
 select t.ok('una sola sesión abierta por aula', t.falla($$insert into public.sesiones (asignacion_id, aula_id) values ((select asig_a1 from t.ids), (select aula_a from t.ids))$$));
 select t.ok('sesión: no se mezcla asignación de otra aula', t.falla($$insert into public.sesiones (asignacion_id, aula_id) values ((select asig_a1 from t.ids), (select aula_b from t.ids))$$));
 select t.ok('maestra ve progreso de su aula', t.filas('select 1 from public.progreso') = 1);
-select t.ok('maestra ve resultados de su aula', t.filas('select 1 from public.resultados') = 1);
 select t.ok('maestra no modifica el progreso del alumno', t.afecta($$update public.progreso set etapa = 'x'$$) = 0);
 select t.ok('maestra pausa la sesión', t.afecta('update public.sesiones set pausada = true, estado = $$en-curso$$') = 1);
 select t.como('cccccccc-0000-0000-0000-000000000001');
@@ -235,7 +228,6 @@ select t.ok('nadie borra aulas', t.falla('delete from public.aulas'));
 select t.como('aaaaaaaa-0000-0000-0000-000000000001');
 select t.ok('la maestra tampoco borra aulas', t.falla('delete from public.aulas'));
 select t.ok('la maestra no borra alumnos', t.falla('delete from public.alumnos'));
-select t.ok('la maestra no borra resultados', t.falla('delete from public.resultados'));
 
 -- ---------- Maestra suspendida / pendiente ----------
 reset role;
@@ -284,7 +276,6 @@ set local role anon; select t.como(null);
 select t.ok('extra · sin sesión: no lee docentes', t.filas('select 1 from public.docentes') = -1);
 select t.ok('extra · sin sesión: no lee asignaciones', t.filas('select 1 from public.asignaciones') = -1);
 select t.ok('extra · sin sesión: no lee sesiones', t.filas('select 1 from public.sesiones') = -1);
-select t.ok('extra · sin sesión: no lee resultados', t.filas('select 1 from public.resultados') = -1);
 select t.ok('extra · sin sesión: no lee intentos de ingreso', t.filas('select 1 from public.intentos_ingreso') = -1);
 select t.ok('extra · sin sesión: no llama a es_docente()', t.falla('select privado.es_docente()'));
 select t.ok('extra · sin sesión: no llama a mi_aula()', t.falla('select privado.mi_aula()'));

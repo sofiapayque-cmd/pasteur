@@ -166,10 +166,10 @@ export type PreguntaSinRespuesta = { id: string; texto: string; actividad: strin
 export async function listarPreguntasSinRespuesta(): Promise<PreguntaSinRespuesta[]> {
   const db = (await crearClienteServidor())!;
   const { data } = await db
-    .from('preguntas_sin_respuesta')
-    .select('id, texto, actividad, veces, ultima_vez')
-    .eq('estado', 'pendiente')
-    .order('veces', { ascending: false })
+    .from('preguntas_pendientes')
+    .select('id, texto, actividad, veces:veces_sin_respuesta, ultima_vez')
+    .eq('respuesta', 'pendiente')
+    .order('veces_sin_respuesta', { ascending: false })
     .order('ultima_vez', { ascending: false })
     .limit(50);
   return (data ?? []) as PreguntaSinRespuesta[];
