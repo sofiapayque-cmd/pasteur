@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import SoloNavegador from '@/navegacion/SoloNavegador';
+import SoloNavegador from '@/components/SoloNavegador';
 import { aulasReales } from '@/lib/supabase/config';
 import EnClase from '@/pantallas/nino/EnClase';
 

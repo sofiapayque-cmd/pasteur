@@ -1,4 +1,4 @@
-import { Navigate } from '@/navegacion';
+import { Navigate } from '@/lib/navegacion';
 
 /*
   Cualquier dirección que no existe vuelve al inicio, como en la versión anterior

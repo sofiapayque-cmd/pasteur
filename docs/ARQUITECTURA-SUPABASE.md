@@ -21,7 +21,7 @@ Etapas 1 a 4 hechas y etapa 5 parte 1 (tareas) hecha, verificadas con cuentas re
 - Realtime: 200 conexiones simultáneas (≈ 6 clases de 30 niños a la vez).
 - Auth limita **por IP**: ingreso 150 cada 5 min (ráfagas de 30). En una escuela todos los niños salen por la misma IP. Si el ingreso pasa por el servidor de Vercel, Supabase vería la IP de Vercel para todas las escuelas: hay que reenviar la IP real del niño (`Sb-Forwarded-For`, solo con clave secreta).
 
-## 2. Revisión del borrador anterior (`supabase/borrador/`)
+## 2. Revisión del borrador anterior (ya borrado del repositorio; queda en la historia de Git)
 
 El borrador modelaba **salas efímeras**: código de 4 letras por clase, niños con sesión anónima y apodo. Sirve para una clase suelta, pero no para lo que pedís ahora:
 
@@ -305,7 +305,7 @@ Sin migraciones: `sesiones` y `progreso` y sus reglas RLS están desde la etapa 
 - pantallas con datos de ejemplo (sala de espera, tablero, puesta, fin; espera, pausa y fin del chico) en compu, Ceibal y celular, sin desbordes;
 - la publicación de tiempo real en dev.
 
-**Falta la prueba real en el preview:** una maestra y 2 o 3 chicos en navegadores distintos (ver `docs/PLAN-ENTREGA.md`, bloque 2).
+**Falta la prueba real en el preview:** una maestra y 2 o 3 chicos en navegadores distintos (ver `docs/historial/PLAN-ENTREGA.md`, bloque 2).
 
 ## 17. Bloque 3 · Cuaderno de investigación y lo que encontró la clase (7/11/2026)
 

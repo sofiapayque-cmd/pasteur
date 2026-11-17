@@ -9,7 +9,7 @@ import { cerrarSesion, iniciarSesionAlumno } from '@/datos/sesion';
 import { obtenerAlumno } from '@/datos/alumno';
 import { mailInterno } from '@/datos/claves';
 import { leerIngreso } from '@/lib/aulas/ingreso';
-import { APODOS, COLORES_ALUMNO } from '@/data/contenido';
+import { APODOS, COLORES_ALUMNO } from '@/lib/contenido';
 
 /*
   ACCIONES DEL ALUMNO (etapa 4). Ingreso del lado del servidor:

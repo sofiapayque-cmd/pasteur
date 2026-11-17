@@ -5,7 +5,7 @@ import Curiosidades from '@/components/Curiosidades';
 import type { CuriosidadVisible } from '@/datos/curiosidades';
 import FondoVivo from '@/components/FondoVivo';
 import PieInstitucional from '@/components/PieInstitucional';
-import { ACTIVIDADES } from '@/data/contenido';
+import { ACTIVIDADES } from '@/lib/contenido';
 import { INFO_ACTIVIDADES } from '@/actividades/info';
 
 /*

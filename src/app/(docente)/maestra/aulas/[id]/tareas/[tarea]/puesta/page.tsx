@@ -4,7 +4,7 @@ import { exigirDocenteActiva } from '@/datos/docente';
 import { listarAlumnos, obtenerAula } from '@/datos/aulas';
 import { obtenerTareaDeMaestra } from '@/datos/tareas';
 import { salaDeTarea } from '@/lib/aulas/clase';
-import SoloNavegador from '@/navegacion/SoloNavegador';
+import SoloNavegador from '@/components/SoloNavegador';
 import PuestaDeTarea from '@/pantallas/maestra/aulas/PuestaDeTarea';
 import { iaConfigurada } from '@/lib/ia/openai';
 import { claveSecretaConfigurada } from '@/lib/supabase/admin';

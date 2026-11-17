@@ -1,12 +1,12 @@
 'use client';
 
-import { Navigate, useNavigate } from '@/navegacion';
+import { Navigate, useNavigate } from '@/lib/navegacion';
 import GloboMoli from '../../components/GloboMoli';
 import FondoVivo from '../../components/FondoVivo';
-import { ACTIVIDADES } from '../../data/contenido';
+import { ACTIVIDADES } from '@/lib/contenido';
 import { useClase } from '../../sala/contexto';
 import RelojClase from './RelojClase';
-import { useOrigen } from '@/hooks/navegador';
+import { useOrigen } from '@/lib/navegador';
 import { aulasReales } from '@/lib/supabase/config';
 
 /*

@@ -4,7 +4,7 @@ import { exigirAlumno } from '@/datos/alumno';
 import { claseDelAlumno } from '@/datos/claseEnVivo';
 import { abrirTareaDelAlumno } from '@/datos/tareas';
 import { esActividadDisponible } from '@/lib/aulas/tareas';
-import SoloNavegador from '@/navegacion/SoloNavegador';
+import SoloNavegador from '@/components/SoloNavegador';
 import ClaseAlumno from '@/pantallas/nino/ClaseAlumno';
 import { curiosidadesPara } from '@/datos/curiosidades';
 import '@/pantallas/nino/cuenta.css';

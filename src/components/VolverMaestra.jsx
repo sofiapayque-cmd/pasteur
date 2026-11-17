@@ -1,6 +1,6 @@
 'use client';
 
-import { useNavigate } from '@/navegacion';
+import { useNavigate } from '@/lib/navegacion';
 import { aulasReales } from '@/lib/supabase/config';
 import { useSala } from '../sala/sala';
 

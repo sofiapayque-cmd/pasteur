@@ -1,6 +1,6 @@
 'use client';
 
-import { useVolver } from '@/navegacion';
+import { useVolver } from '@/lib/navegacion';
 
 /*
   Barra de arriba: botón Volver, miga de pan y, a la derecha, lo que pase cada pantalla (por ejemplo la cuenta de la maestra). Sin logo del instituto (pedido de Sofia, 11/11).

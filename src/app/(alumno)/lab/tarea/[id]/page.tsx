@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import { exigirAlumno } from '@/datos/alumno';
 import { abrirTareaDelAlumno } from '@/datos/tareas';
 import { actividad as datosActividad, esActividadDisponible } from '@/lib/aulas/tareas';
-import SoloNavegador from '@/navegacion/SoloNavegador';
+import SoloNavegador from '@/components/SoloNavegador';
 import TareaAlumno from '@/pantallas/nino/TareaAlumno';
 import Moli from '@/components/Moli';
 import '@/pantallas/nino/cuenta.css';

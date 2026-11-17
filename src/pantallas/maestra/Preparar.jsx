@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Navigate, useNavigate, useParams, conDesde } from '@/navegacion';
+import { Navigate, useNavigate, useParams, conDesde } from '@/lib/navegacion';
 import Cabecera from '../../components/Cabecera';
 import FondoVivo from '../../components/FondoVivo';
-import { ACTIVIDADES } from '../../data/contenido';
+import { ACTIVIDADES } from '@/lib/contenido';
 import { INFO_ACTIVIDADES } from '../../actividades/info';
 import { abrirSala } from '../../sala/sala';
 

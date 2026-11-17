@@ -11,7 +11,7 @@ import { esUuid } from '@/lib/formularios';
   Las respuestas aprobadas por una investigadora para cada actividad, para
   que los chicos las lean mientras investigan. Los chicos NO escriben: solo
   eligen de la lista (así nada de lo que escriben va a OpenAI; ver
-  docs/PLAN-ENTREGA.md, privacidad). Son contenido aprobado y público: se
+  docs/historial/PLAN-ENTREGA.md, privacidad). Son contenido aprobado y público: se
   leen con la clave secreta solo para eso (la vista del sello es del equipo).
   Cada vez que alguien abre una, se suma una vista anónima (migración 20).
   Desde el 8/11 las actividades no son públicas: estas acciones piden la

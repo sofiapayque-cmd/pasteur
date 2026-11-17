@@ -2,7 +2,7 @@
 
 import { startTransition, useActionState, useState, type FormEvent } from 'react';
 import { elegirApodo, type EstadoApodo } from '@/acciones/alumno';
-import { APODOS, COLORES_ALUMNO } from '@/data/contenido';
+import { APODOS, COLORES_ALUMNO } from '@/lib/contenido';
 
 /*
   Apodo científico y color del alumno. Se eligen (no se escriben): así nadie

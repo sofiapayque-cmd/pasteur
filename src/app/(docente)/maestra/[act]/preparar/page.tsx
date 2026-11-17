@@ -1,6 +1,6 @@
 import Preparar from '@/pantallas/maestra/Preparar';
 import { redirect } from 'next/navigation';
-import { IDS_ACTIVIDAD } from '@/tipos/actividad';
+import { IDS_ACTIVIDAD } from '@/lib/actividad';
 import { aulasReales } from '@/lib/supabase/config';
 
 /* /maestra/[act]/preparar · Preparar la clase */

@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react';
-import { APODOS } from '../data/contenido';
+import { APODOS } from '@/lib/contenido';
 import { INFO_ACTIVIDADES } from '../actividades/info';
 
 /*
