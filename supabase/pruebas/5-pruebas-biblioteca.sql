@@ -413,16 +413,9 @@ insert into temas (slug, nombre) values ('b-virus', 'Virus');
 reset role;
 set role authenticated; select set_config('request.jwt.claim.sub', :BRED, false);
 select t5.ok('temas: el equipo le pone un tema a una publicación', t5.afecta(format($$insert into publicacion_temas (publicacion_id, tema_id) select %L, id from temas where slug = 'b-virus'$$, :'p1')) = 1);
-select t5.ok('búsquedas: la redactora guarda una', t5.afecta($$insert into busquedas_guardadas (nombre, consulta) values ('Dengue B', '{"search": "dengue envelope"}')$$) = 1);
-reset role;
-set role authenticated; select set_config('request.jwt.claim.sub', :BVAL, false);
-select t5.ok('búsquedas: otra persona no la edita', t5.afecta($$update busquedas_guardadas set activa = false where nombre = 'Dengue B'$$) <= 0);
-reset role;
-set role authenticated; select set_config('request.jwt.claim.sub', :BADM, false);
-select t5.ok('búsquedas: la admin sí', t5.afecta($$update busquedas_guardadas set activa = false where nombre = 'Dengue B'$$) = 1);
 reset role;
 set role authenticated; select set_config('request.jwt.claim.sub', :BMAE, false);
-select t5.ok('maestra: no ve temas de publicaciones ni búsquedas', t5.filas('select 1 from publicacion_temas') = 0 and t5.filas('select 1 from busquedas_guardadas') = 0);
+select t5.ok('maestra: no ve temas de publicaciones', t5.filas('select 1 from publicacion_temas') = 0);
 reset role;
 
 -- =====================================================================
@@ -430,7 +423,7 @@ reset role;
 -- =====================================================================
 select t5.ok('RLS prendido en todas las tablas nuevas', not exists (
   select 1 from pg_class c where c.relnamespace = 'public'::regnamespace and c.relkind = 'r' and not c.relrowsecurity
-    and c.relname in ('proveedores_cientificos', 'tipos_identificador', 'busquedas_guardadas', 'ejecuciones_busqueda',
+    and c.relname in ('proveedores_cientificos', 'tipos_identificador', 'ejecuciones_busqueda',
                       'registros_crudos', 'publicaciones', 'publicacion_identificadores', 'publicacion_procedencias',
                       'publicacion_relaciones', 'publicacion_temas', 'publicacion_accesos', 'licencias', 'verificaciones_licencia')));
 select t5.ok('alta y licencias: solo las llama el servidor',

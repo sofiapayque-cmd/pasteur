@@ -38,7 +38,13 @@ export async function panelCuriosidades() {
       .eq('formato', 'dato')
       .order('creada_en', { ascending: false })
       .limit(300),
-    db.from('consultas_sin_tema').select('id, texto, actividad, veces, ultima_vez').order('ultima_vez', { ascending: false }).order('veces', { ascending: false }).limit(60),
+    db
+      .from('preguntas_pendientes')
+      .select('id, texto, actividad, veces:veces_sin_tema, ultima_vez')
+      .gt('veces_sin_tema', 0)
+      .order('ultima_vez', { ascending: false })
+      .order('veces_sin_tema', { ascending: false })
+      .limit(60),
   ]);
 
   const temas: TemaPanel[] = (

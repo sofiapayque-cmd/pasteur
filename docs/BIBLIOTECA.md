@@ -9,7 +9,7 @@ Rama: `ia/asistente`. Complementa `docs/ASISTENTE-IA.md`.
 
 | Migración | Qué crea |
 | --- | --- |
-| `20261106130000_biblioteca_publicaciones.sql` (13) | `proveedores_cientificos`, `tipos_identificador`, `busquedas_guardadas`, `ejecuciones_busqueda`, `registros_crudos`, `publicaciones`, `publicacion_identificadores`, `publicacion_procedencias`, `publicacion_relaciones`, `publicacion_temas`, `publicacion_accesos`; la función del servidor `guardar_registro()`; la revisión de publicaciones; la clave foránea de `version_fuentes.publicacion_id`. Extensión `pg_trgm` (en `extensions`). |
+| `20261106130000_biblioteca_publicaciones.sql` (13) | `proveedores_cientificos`, `tipos_identificador`, `busquedas_guardadas` (se borró en la migración 26: nunca se usó), `ejecuciones_busqueda`, `registros_crudos`, `publicaciones`, `publicacion_identificadores`, `publicacion_procedencias`, `publicacion_relaciones`, `publicacion_temas`, `publicacion_accesos`; la función del servidor `guardar_registro()`; la revisión de publicaciones; la clave foránea de `version_fuentes.publicacion_id`. Extensión `pg_trgm` (en `extensions`). |
 | `20261106130100_biblioteca_licencias.sql` (14) | `licencias` (política de pasajes), `verificaciones_licencia`, la función del servidor `registrar_licencia()`, el control de pasajes textuales y la vista `pasajes_a_revisar`. |
 
 Reglas que impone la base:

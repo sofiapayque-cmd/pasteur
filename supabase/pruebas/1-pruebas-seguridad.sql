@@ -103,6 +103,7 @@ select t.ok('alumno no ve borradores', t.filas('select 1 from asignaciones') = 1
 select t.ok('alumno no crea aulas', t.falla($$insert into aulas (nombre) values ('mía')$$));
 select t.ok('alumno no se hace docente', t.falla($$insert into docentes (id) values ('cccccccc-0000-0000-0000-000000000001')$$));
 select t.ok('alumno no ve docentes', t.filas('select 1 from docentes') = 0);
+select t.ok('alumno no mezcla actividad y asignación', t.falla($$insert into progreso (asignacion_id, aula_id, actividad, etapa) values ((select asig_a1 from ids), (select aula_a from ids), 'a3', 'x')$$));
 insert into progreso (asignacion_id, aula_id, actividad, etapa, datos)
   values ((select asig_a1 from ids), (select aula_a from ids), 'a1', 'paisaje', '{"ambiente":"antartida-suelo"}');
 select t.ok('alumno guarda su progreso', t.filas('select 1 from progreso') = 1);
@@ -111,15 +112,9 @@ select pg_sleep(0.05);
 select t.ok('alumno avanza de etapa', t.afecta($$update progreso set etapa = 'muestra', datos = datos || '{"muestra":1}'$$) = 1);
 select t.ok('etapa_desde se actualiza sola', (select etapa_desde from progreso) > :'antes'::timestamptz);
 select t.ok('alumno no guarda a nombre de otro', t.falla($$insert into progreso (alumno_id, asignacion_id, aula_id, actividad, etapa) values ('cccccccc-0000-0000-0000-000000000002', (select asig_a1 from ids), (select aula_a from ids), 'a1', 'x')$$));
-select t.ok('alumno no mezcla actividad y asignación', t.falla($$insert into resultados (asignacion_id, aula_id, actividad, tipo, valor) values ((select asig_a1 from ids), (select aula_a from ids), 'a3', 'x', '{}')$$));
 select t.ok('alumno no trabaja en un borrador', t.falla($$insert into progreso (asignacion_id, aula_id, actividad, etapa) values ((select asig_a2 from ids), (select aula_a from ids), 'a2', 'x')$$));
 select t.ok('alumno no cambia de aula su progreso', t.falla($$update progreso set aula_id = (select aula_b from ids)$$));
 select t.ok('datos de más de 64 KB se rechazan', t.falla($$update progreso set datos = jsonb_build_object('x', repeat('a', 70000))$$));
-insert into resultados (asignacion_id, aula_id, actividad, tipo, valor)
-  values ((select asig_a1 from ids), (select aula_a from ids), 'a1', 'placa', '{"temperatura":37,"colonias":12}');
-select t.ok('alumno registra un resultado', t.filas('select 1 from resultados') = 1);
-select t.ok('alumno no modifica resultados', t.falla($$update resultados set valor = '{}'$$));
-select t.ok('alumno no borra resultados', t.falla('delete from resultados'));
 select t.ok('alumno elige apodo', t.afecta($$update alumnos set apodo = 'Coco curioso', color = '#EF6F5E'$$) = 1);
 select t.ok('alumno no cambia su número', t.falla('update alumnos set numero = 5'));
 select t.ok('alumno no cambia su usuario', t.falla($$update alumnos set usuario = 'ZZZZ-09'$$));
@@ -129,7 +124,6 @@ select t.ok('alumno no lee intentos de ingreso', t.filas('select 1 from intentos
 -- ---------- Alumno 2 (misma aula) y alumno 3 (otra aula) ----------
 select set_config('request.jwt.claim.sub', :C2, false);
 select t.ok('compañero no ve el progreso de otro', t.filas('select 1 from progreso') = 0);
-select t.ok('compañero no ve resultados de otro', t.filas('select 1 from resultados') = 0);
 select t.ok('compañero no ve la fila de otro', t.filas($$select 1 from alumnos where id = 'cccccccc-0000-0000-0000-000000000001'$$) = 0);
 select set_config('request.jwt.claim.sub', :C3, false);
 select t.ok('alumno de otra aula no ve la asignación', t.filas('select 1 from asignaciones') = 0);
@@ -176,7 +170,6 @@ insert into sesiones (asignacion_id, aula_id) values ((select asig_a1 from ids),
 select t.ok('una sola sesión abierta por aula', t.falla($$insert into sesiones (asignacion_id, aula_id) values ((select asig_a1 from ids), (select aula_a from ids))$$));
 select t.ok('sesión: no se mezcla asignación de otra aula', t.falla($$insert into sesiones (asignacion_id, aula_id) values ((select asig_a1 from ids), (select aula_b from ids))$$));
 select t.ok('maestra ve progreso de su aula', t.filas('select 1 from progreso') = 1);
-select t.ok('maestra ve resultados de su aula', t.filas('select 1 from resultados') = 1);
 select t.ok('maestra no modifica el progreso del alumno', t.afecta($$update progreso set etapa = 'x'$$) = 0);
 select t.ok('maestra pausa la sesión', t.afecta('update sesiones set pausada = true, estado = $$en-curso$$') = 1);
 select set_config('request.jwt.claim.sub', :C1, false);
@@ -206,7 +199,6 @@ select t.ok('nadie borra aulas', t.falla('delete from aulas'));
 select set_config('request.jwt.claim.sub', :A, false);
 select t.ok('la maestra tampoco borra aulas', t.falla('delete from aulas'));
 select t.ok('la maestra no borra alumnos', t.falla('delete from alumnos'));
-select t.ok('la maestra no borra resultados', t.falla('delete from resultados'));
 
 -- ---------- Maestra suspendida / pendiente ----------
 reset role;

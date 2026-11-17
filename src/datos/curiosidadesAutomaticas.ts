@@ -38,7 +38,7 @@ const MAX_RESPUESTAS_POR_VEZ = 80;
 
 /** 1. Temas nuevos con las preguntas sin tema que se parecen entre sí. */
 async function temasNuevos(admin: SupabaseClient, informe: Informe): Promise<void> {
-  const { data } = await admin.from('consultas_sin_tema').select('id, texto, actividad, veces').order('veces', { ascending: false }).limit(300);
+  const { data } = await admin.from('preguntas_pendientes').select('id, texto, actividad, veces:veces_sin_tema').gt('veces_sin_tema', 0).order('veces_sin_tema', { ascending: false }).limit(300);
   const filas = (data ?? []) as { id: string; texto: string; actividad: string | null; veces: number }[];
   if (filas.length < 2) return;
   const vectores = await embeber(filas.map((f) => f.texto));

@@ -106,14 +106,14 @@ export async function redactarPendientes(_previo: EstadoPedido, datos: FormData)
   if (hoy + ids.length > POR_DIA) return { mensaje: `Ya pediste ${hoy} respuestas en las últimas 24 horas (el máximo es ${POR_DIA}). Probá mañana.` };
 
   const db = (await crearClienteServidor())!;
-  const { data: filas } = await db.from('preguntas_sin_respuesta').select('id, texto, actividad').in('id', ids).eq('estado', 'pendiente');
+  const { data: filas } = await db.from('preguntas_pendientes').select('id, texto, actividad').in('id', ids).eq('respuesta', 'pendiente');
   if (!filas?.length) return { mensaje: 'Esas preguntas ya no están pendientes.' };
   console.info(`[ia] ${yo.id} pidió ${filas.length} respuesta(s) de preguntas de clases`);
   type Fila = { id: string; texto: string; actividad: string | null };
   const resultados = await deADos<Fila, Resultado>(filas as Fila[], async (f) => {
     try {
       const r = await responderPregunta({ db, admin, actorId: yo.id, actividad: f.actividad }, f.texto);
-      if (r.fichaId) await db.from('preguntas_sin_respuesta').update({ estado: 'pedida', ficha_id: r.fichaId }).eq('id', f.id);
+      if (r.fichaId) await db.from('preguntas_pendientes').update({ respuesta: 'pedida', ficha_id: r.fichaId }).eq('id', f.id);
       return r;
     } catch (e) {
       console.error('[ia] error inesperado:', e instanceof Error ? e.message : e);
@@ -133,7 +133,7 @@ export async function descartarPregunta(id: string): Promise<void> {
   const yo = await miembroCon();
   if (!yo || !esUuid(id)) return;
   const db = (await crearClienteServidor())!;
-  await db.from('preguntas_sin_respuesta').update({ estado: 'descartada' }).eq('id', id);
+  await db.from('preguntas_pendientes').update({ respuesta: 'descartada' }).eq('id', id);
   refresh();
 }
 

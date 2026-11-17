@@ -67,7 +67,7 @@ export async function ubicarConsulta(id: string, temaId: string): Promise<Estado
   if (!esUuid(id) || !esUuid(temaId)) return { mensaje: 'Elegí un tema.' };
   // Primero con la sesión del miembro: si no la puede ver, no es suya para mover
   const db = (await crearClienteServidor())!;
-  const { data: fila } = await db.from('consultas_sin_tema').select('id').eq('id', id).maybeSingle();
+  const { data: fila } = await db.from('preguntas_pendientes').select('id').eq('id', id).gt('veces_sin_tema', 0).maybeSingle();
   if (!fila) return { mensaje: 'Esa pregunta ya no está.' };
   const admin = crearClienteAdmin();
   if (!admin) return { mensaje: 'Falta la clave secreta de Supabase en el servidor.' };
@@ -81,9 +81,15 @@ export async function descartarConsulta(id: string): Promise<EstadoCuriosidades>
   const yo = await miembroCon();
   if (!yo) return SIN_PERMISO;
   if (!esUuid(id)) return { mensaje: 'Esa pregunta ya no está.' };
+  // Igual que ubicar: primero con la sesión del miembro, después el servidor.
+  // Si a la pregunta todavía le falta respuesta, sigue en esa lista.
   const db = (await crearClienteServidor())!;
-  const { error } = await db.from('consultas_sin_tema').delete().eq('id', id);
-  if (error) return { mensaje: 'No se pudo descartar.' };
+  const { data: fila } = await db.from('preguntas_pendientes').select('id').eq('id', id).gt('veces_sin_tema', 0).maybeSingle();
+  if (!fila) return { mensaje: 'Esa pregunta ya no está.' };
+  const admin = crearClienteAdmin();
+  if (!admin) return { mensaje: 'Falta la clave secreta de Supabase en el servidor.' };
+  const { data: ok, error } = await admin.rpc('descartar_sin_tema', { p_id: id });
+  if (error || !ok) return { mensaje: 'No se pudo descartar.' };
   refresh();
   return { ok: true, mensaje: 'Descartada.' };
 }
