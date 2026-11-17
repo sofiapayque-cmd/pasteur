@@ -21,13 +21,11 @@ export function useProgresoTarea({
   tareaId,
   inicial,
   opciones,
-  desbloqueos,
   apodo,
 }: {
   tareaId: string;
   inicial: Valor;
   opciones: Record<string, string[]>;
-  desbloqueos: Record<string, boolean>;
   apodo: string | null;
 }) {
   const [valor, setValor] = useState<Valor>(inicial);
@@ -117,7 +115,6 @@ export function useProgresoTarea({
     guardado,
     alumno: { apodo },
     opciones,
-    desbloqueado: (clave: string) => desbloqueos?.[clave] !== false,
     pausada: false,
     sala: null,
   };

@@ -3,15 +3,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { crearClienteNavegador } from '@/lib/supabase/cliente';
 import { aplicarProgreso, aplicarSesion, fusionar, salaDesde, ultimoCambio, type Instantanea, type Paso, type SesionFila } from '@/lib/aulas/clase';
-import { estadoClaseAlumno, estadoClaseMaestra, habilitarEnClase, horaDelServidor, moverClase, moverTiempo, pausarClase } from '@/acciones/claseEnVivo';
+import { estadoClaseAlumno, estadoClaseMaestra, horaDelServidor, moverClase, moverTiempo, pausarClase } from '@/acciones/claseEnVivo';
 import { calcularDesfase, type AccionTiempo } from '@/lib/aulas/tiempo';
 
 /*
   CLASE EN VIVO EN EL NAVEGADOR (etapa 5, parte 2).
 
   Tiempo real con Supabase Realtime: la maestra escucha su sesión y el avance
-  de cada chico; cada chico escucha solo la sesión de su aula (pausa, lo que
-  se habilita, puesta en común, cierre). Las reglas RLS de la base deciden qué
+  de cada chico; cada chico escucha solo la sesión de su aula (pausa, puesta
+  en común, cierre). Las reglas RLS de la base deciden qué
   llega a cada uno: el canal no puede mostrar nada que la persona no pueda ver.
 
   Respaldo: si el tiempo real no conecta (algunas redes de escuela cortan
@@ -211,8 +211,6 @@ export function useClaseMaestra(inicial: Instantanea) {
         return hacer({ estado: a[paso], pausada: false }, () => moverClase(sesionId, paso));
       },
       alternarPausa: () => hacer({ pausada: !actual.current.sesion.pausada }, () => pausarClase(sesionId, !actual.current.sesion.pausada)),
-      desbloquear: (clave: string) =>
-        hacer({ desbloqueos: { ...(actual.current.sesion.desbloqueos ?? {}), [clave]: true } }, () => habilitarEnClase(sesionId, clave)),
     }),
     [hacer, sesionId],
   );

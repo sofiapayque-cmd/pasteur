@@ -12,7 +12,7 @@ import { EXPERIENCIAS } from '@/actividades/componentes';
 import { useProgresoTarea } from '@/sala/progresoTarea';
 import { useClaseAlumno, useDesfase } from '@/sala/claseEnVivo';
 import RelojAlumno from './RelojAlumno';
-import { desbloqueosDeClase, type SesionFila } from '@/lib/aulas/clase';
+import type { SesionFila } from '@/lib/aulas/clase';
 
 /*
   NIÑO · LA CLASE EN VIVO (etapa 5, parte 2).
@@ -20,13 +20,13 @@ import { desbloqueosDeClase, type SesionFila } from '@/lib/aulas/clase';
     actividad se abre sola.
   · En curso: la actividad de siempre, con el avance guardado en la base
     (como en las tareas). Si la maestra pausa o va a la puesta en común,
-    aparece "Mirá el pizarrón"; lo que habilita llega en el momento.
+    aparece "Mirá el pizarrón".
   · Cerrada: se lo dice, y si la actividad sigue abierta, puede seguir en su laboratorio.
   Todo llega en tiempo real (y, si la red no lo deja, preguntando cada pocos segundos).
 */
 type Props = {
   sesion: SesionFila;
-  tarea: { id: string; actividad: 'a1' | 'a2' | 'a3'; opciones: Record<string, string[]>; desbloqueos: Record<string, boolean>; abierta: boolean };
+  tarea: { id: string; actividad: 'a1' | 'a2' | 'a3'; opciones: Record<string, string[]>; abierta: boolean };
   inicial: { etapa: string; datos: Record<string, unknown> };
   alumno: { apodo: string | null; numero: number; color: string | null };
   /** "¿Sabías que…?" para la espera (las elige el servidor; puede venir vacío). */
@@ -36,16 +36,14 @@ type Props = {
 export default function ClaseAlumno({ sesion: inicialSesion, tarea, inicial, alumno, curiosidades = [] }: Props) {
   const { sesion } = useClaseAlumno(inicialSesion);
   const { desfase } = useDesfase();
-  const desbloqueos = desbloqueosDeClase(tarea.desbloqueos, sesion.desbloqueos);
   const nombre = alumno.apodo ?? `número ${alumno.numero}`;
   // Siempre se llama (aunque todavía esté esperando): las reglas de los hooks de React
-  const base = useProgresoTarea({ tareaId: tarea.id, inicial, opciones: tarea.opciones, desbloqueos, apodo: alumno.apodo });
+  const base = useProgresoTarea({ tareaId: tarea.id, inicial, opciones: tarea.opciones, apodo: alumno.apodo });
   const progreso = {
     ...base,
     enClase: true,
     pausada: sesion.pausada || sesion.estado === 'puesta',
     sala: { estado: sesion.estado },
-    desbloqueado: (clave: string) => desbloqueos[clave] !== false,
   };
   const Experiencia = EXPERIENCIAS[tarea.actividad];
 

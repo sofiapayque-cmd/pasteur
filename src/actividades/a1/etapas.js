@@ -29,8 +29,6 @@ export const OPCIONES = [
   },
 ];
 
-/* Los antibióticos están disponibles siempre (pedido de Sofia, 16/11): la maestra ya no los habilita durante la clase. */
-
 export const PREGUNTAS = [
   '¿Por qué no crecieron las mismas colonias en todos los ambientes?',
   '¿Todo lo que había en la muestra apareció en la placa?',

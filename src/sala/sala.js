@@ -23,7 +23,6 @@ import { INFO_ACTIVIDADES } from '../actividades/info';
     estado: 'esperando' | 'en-curso' | 'puesta' | 'cerrada',
     pausada: false,
     opciones: { ... },          // lo que eligió la maestra al preparar (ej. ambientes de A1)
-    desbloqueos: { ... },       // etapas que la maestra habilita en vivo (ej. antibioticos en A1)
     alumnos: [{ id, apodo, color, etapa, datos, desde }]
   }
 */
@@ -37,7 +36,6 @@ const SALA_VACIA = {
   estado: 'cerrada',
   pausada: false,
   opciones: {},
-  desbloqueos: {},
   alumnos: [],
 };
 
@@ -107,13 +105,12 @@ function nuevoCodigo() {
 
 /* ---------- Acciones de la maestra ---------- */
 
-export function abrirSala({ actividad, opciones = {}, desbloqueos = {} }) {
-  guardar({ ...SALA_VACIA, codigo: nuevoCodigo(), actividad, estado: 'esperando', opciones, desbloqueos });
+export function abrirSala({ actividad, opciones = {} }) {
+  guardar({ ...SALA_VACIA, codigo: nuevoCodigo(), actividad, estado: 'esperando', opciones });
 }
 
 export const empezar = () => guardar({ estado: 'en-curso', pausada: false });
 export const alternarPausa = () => guardar((s) => ({ ...s, pausada: !s.pausada }));
-export const desbloquear = (clave) => guardar((s) => ({ ...s, desbloqueos: { ...s.desbloqueos, [clave]: true } }));
 export const irAPuesta = () => guardar({ estado: 'puesta', pausada: false });
 export const cerrarSala = () => guardar(SALA_VACIA);
 

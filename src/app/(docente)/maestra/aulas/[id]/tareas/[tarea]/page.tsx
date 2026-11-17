@@ -3,8 +3,7 @@ import { aulasReales } from '@/lib/supabase/config';
 import { exigirDocenteActiva } from '@/datos/docente';
 import { listarAlumnos, obtenerAula } from '@/datos/aulas';
 import { obtenerTareaDeMaestra } from '@/datos/tareas';
-import { cambiarDesbloqueo, cambiarEstadoTarea } from '@/acciones/tareas';
-import { desbloqueosDe } from '@/lib/aulas/tareas';
+import { cambiarEstadoTarea } from '@/acciones/tareas';
 import ComoVaTarea from '@/pantallas/maestra/aulas/ComoVaTarea';
 import { cuadernoDe } from '@/actividades/cuaderno';
 
@@ -41,13 +40,6 @@ export default async function Page({ params }: { params: Promise<{ id: string; t
       cuenta={docente.nombre || docente.email || 'Maestra'}
       cerrar={cambiarEstadoTarea.bind(null, tarea.id, 'cerrada')}
       reabrir={cambiarEstadoTarea.bind(null, tarea.id, 'activa')}
-      desbloqueos={desbloqueosDe(tarea.actividad).map((d) => ({
-        clave: d.clave,
-        etiqueta: d.etiqueta,
-        habilitado: tarea.desbloqueos?.[d.clave] !== false,
-        habilitar: cambiarDesbloqueo.bind(null, tarea.id, d.clave, true),
-        cerrar: cambiarDesbloqueo.bind(null, tarea.id, d.clave, false),
-      }))}
     />
   );
 }

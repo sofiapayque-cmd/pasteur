@@ -25,7 +25,5 @@ export interface Sala {
   pausada: boolean;
   /** Lo que eligió la maestra al preparar (ej. { ambientes: ['antartida-suelo', …] }). */
   opciones: Record<string, string[]>;
-  /** Etapas habilitadas en vivo (ej. { antibioticos: true }). */
-  desbloqueos: Record<string, boolean>;
   alumnos: AlumnoEnSala[];
 }

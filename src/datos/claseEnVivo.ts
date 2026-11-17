@@ -9,7 +9,7 @@ import type { AlumnoClase, AsignacionClase, Instantanea, ProgresoClase, SesionFi
   las reglas RLS dejan a la maestra ver las clases, alumnos y avances de SUS
   aulas, y al alumno solo la clase de SU aula (migración 2).
 */
-export const COLUMNAS_SESION = 'id, asignacion_id, aula_id, estado, pausada, desbloqueos, iniciada_en, cerrada_en';
+export const COLUMNAS_SESION = 'id, asignacion_id, aula_id, estado, pausada, iniciada_en, cerrada_en';
 // El timer (migración 21, 8/11)
 const COLUMNAS_TIEMPO = 'tiempo_estado, tiempo_duracion, tiempo_fin, tiempo_restante, tiempo_terminado_en, cierre';
 
@@ -52,7 +52,7 @@ export async function instantaneaMaestra(sesionId: string, desde?: string): Prom
   let consultaProgreso = supabase.from('progreso').select(COLUMNAS_PROGRESO).eq('asignacion_id', s.asignacion_id);
   if (desde && !Number.isNaN(Date.parse(desde))) consultaProgreso = consultaProgreso.gt('actualizado_en', desde);
   const [{ data: asignacion }, { data: aula }, { data: alumnos }, { data: progresos }] = await Promise.all([
-    supabase.from('asignaciones').select('id, actividad, opciones, desbloqueos, estado').eq('id', s.asignacion_id).maybeSingle(),
+    supabase.from('asignaciones').select('id, actividad, opciones, estado').eq('id', s.asignacion_id).maybeSingle(),
     supabase.from('aulas').select('id, nombre, codigo').eq('id', s.aula_id).maybeSingle(),
     supabase.from('alumnos').select('id, numero, apodo, color, activo').eq('aula_id', s.aula_id).order('numero'),
     consultaProgreso,
@@ -76,6 +76,6 @@ export async function claseDelAlumno(): Promise<{ sesion: SesionFila; asignacion
     supabase.from('sesiones').select(c).neq('estado', 'cerrada').order('iniciada_en', { ascending: false }).limit(1).maybeSingle(),
   );
   if (!s) return null;
-  const { data: asignacion } = await supabase.from('asignaciones').select('id, actividad, opciones, desbloqueos, estado').eq('id', s.asignacion_id).maybeSingle();
+  const { data: asignacion } = await supabase.from('asignaciones').select('id, actividad, opciones, estado').eq('id', s.asignacion_id).maybeSingle();
   return asignacion ? { sesion: s, asignacion: asignacion as AsignacionClase } : null;
 }

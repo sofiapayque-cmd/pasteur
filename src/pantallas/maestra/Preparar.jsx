@@ -10,7 +10,7 @@ import { abrirSala } from '../../sala/sala';
 
 /*
   PREPARAR LA CLASE (cualquier actividad)
-  Las opciones salen de OPCIONES y DESBLOQUEOS en actividades/aN/etapas.js.
+  Las opciones salen de OPCIONES en actividades/aN/etapas.js.
 */
 export default function Preparar() {
   const { act } = useParams();
@@ -18,11 +18,8 @@ export default function Preparar() {
   const actividad = ACTIVIDADES.find((a) => a.id === act);
   const info = INFO_ACTIVIDADES[act] || {};
   const opcionesDef = info.OPCIONES || [];
-  const desbloqueosDef = info.DESBLOQUEOS || [];
 
   const [opciones, setOpciones] = useState(() => Object.fromEntries(opcionesDef.map((o) => [o.clave, o.items.map((i) => i.id)])));
-  // true = disponible desde el inicio; false = la maestra lo habilita en vivo
-  const [desdeInicio, setDesdeInicio] = useState(() => Object.fromEntries(desbloqueosDef.map((d) => [d.clave, false])));
 
   if (!actividad || !actividad.disponible) return <Navigate to="/maestra" replace />;
 
@@ -36,7 +33,7 @@ export default function Preparar() {
   }
 
   function abrir() {
-    abrirSala({ actividad: act, opciones, desbloqueos: desdeInicio });
+    abrirSala({ actividad: act, opciones });
     navegar(`/maestra/${act}/sala`);
   }
 
@@ -95,27 +92,7 @@ export default function Preparar() {
             </fieldset>
           ))}
 
-          {desbloqueosDef.map((d) => (
-            <fieldset key={d.clave}>
-              <legend className="etiqueta">{d.etiqueta}</legend>
-              <label className={`opcion ${!desdeInicio[d.clave] ? 'opcion--activa' : ''}`}>
-                <input type="radio" name={d.clave} checked={!desdeInicio[d.clave]} onChange={() => setDesdeInicio((x) => ({ ...x, [d.clave]: false }))} />
-                <span>
-                  <b>{d.recomendado}</b>
-                  <br />
-                  <span className="texto-suave">{d.explicacion}</span>
-                </span>
-              </label>
-              <label className={`opcion ${desdeInicio[d.clave] ? 'opcion--activa' : ''}`}>
-                <input type="radio" name={d.clave} checked={desdeInicio[d.clave]} onChange={() => setDesdeInicio((x) => ({ ...x, [d.clave]: true }))} />
-                <span>
-                  <b>Disponible desde el inicio</b>
-                </span>
-              </label>
-            </fieldset>
-          ))}
-
-          {opcionesDef.length === 0 && desbloqueosDef.length === 0 && (
+          {opcionesDef.length === 0 && (
             <p className="tarjeta">Esta actividad no necesita ajustes: abrí la sala cuando la clase esté lista.</p>
           )}
 
