@@ -4,7 +4,7 @@ import { exigirAlumno } from '@/datos/alumno';
 import { tareasDelAlumno } from '@/datos/tareas';
 import { claseDelAlumno } from '@/datos/claseEnVivo';
 import { esReciente } from '@/lib/aulas/clase';
-import Laboratorio from '@/pantallas/nino/Laboratorio';
+import Laboratorio from '@/pantallas/nino/cuenta/Laboratorio';
 
 /*
   /lab · El laboratorio del alumno (sistema de aulas, etapa 4).

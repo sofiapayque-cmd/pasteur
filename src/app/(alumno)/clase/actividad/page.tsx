@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import SoloNavegador from '@/components/SoloNavegador';
 import { aulasReales } from '@/lib/supabase/config';
-import EnClase from '@/pantallas/nino/EnClase';
+import EnClase from '@/pantallas/nino/EnClase/EnClase';
 
 /* /clase/actividad · Niño · La actividad de la clase */
 

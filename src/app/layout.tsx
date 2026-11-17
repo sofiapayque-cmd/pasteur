@@ -11,7 +11,30 @@ import '@fontsource-variable/bricolage-grotesque'; // titulares
 // Estilos globales del sistema visual (mismo orden que tenía main.jsx)
 import '@/styles/tokens.css';
 import '@/styles/base.css';
-import '@/styles/pantallas.css';
+// Estilos de cada pantalla. Cada archivo vive en la carpeta de su pantalla,
+// pero se cargan todos acá y en este orden: si se cambia el orden, algunas
+// reglas se pisan distinto y la web se ve diferente.
+import '@/styles/compartido.css';
+import '@/pantallas/Inicio/inicio.css';
+import '@/pantallas/maestra/Panel/panel.css';
+import '@/pantallas/maestra/Preparar/preparar.css';
+import '@/pantallas/maestra/SalaEspera/sala-espera.css';
+import '@/pantallas/maestra/Tablero/tablero.css';
+import '@/pantallas/maestra/Puesta/puesta.css';
+import '@/pantallas/nino/Entrar/entrar.css';
+import '@/pantallas/nino/Apodo/apodo.css';
+import '@/pantallas/nino/Espera/espera.css';
+import '@/pantallas/nino/EnClase/en-clase.css';
+import '@/styles/pantallas-angostas.css';
+import '@/styles/base-actividades.css';
+import '@/components/VolverMaestra.css';
+import '@/pantallas/maestra/acceso/acceso.css';
+import '@/components/MarcoActividad.css';
+import '@/pantallas/maestra/aulas/clase-en-vivo.css';
+import '@/components/PreguntasDelPasteur.css';
+import '@/pantallas/nino/Explorar/ficha.css';
+import '@/components/PieInstitucional.css';
+import '@/components/Curiosidades.css';
 import '@/styles/relieve.css'; // profundidad y esquinas redondeadas (14/11)
 
 export const metadata: Metadata = {

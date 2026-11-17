@@ -1,5 +1,5 @@
 import SoloNavegador from '@/components/SoloNavegador';
-import SalaEspera from '@/pantallas/maestra/SalaEspera';
+import SalaEspera from '@/pantallas/maestra/SalaEspera/SalaEspera';
 import { redirect } from 'next/navigation';
 import { IDS_ACTIVIDAD } from '@/lib/actividad';
 import { aulasReales } from '@/lib/supabase/config';

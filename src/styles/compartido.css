@@ -1,0 +1,162 @@
+/* Estilos de cada pantalla. Ordenados como el recorrido. */
+
+/* ---------- Piezas compartidas ---------- */
+.cabecera {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5) 0;
+  flex-wrap: wrap;
+}
+.cabecera__izq {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.cabecera__volver {
+  min-height: 48px;
+  padding: 0 20px 0 14px;
+  font-size: 16px;
+  box-shadow: var(--halo-cerca);
+}
+.cabecera__miga,
+.etiqueta--oscura {
+  color: var(--tinta);
+}
+.pendiente {
+  padding: var(--space-4);
+  border-radius: var(--radius-sm);
+  border: 1.5px dashed rgba(34, 35, 42, 0.4);
+  background: repeating-linear-gradient(135deg, rgba(34, 35, 42, 0.05) 0 8px, transparent 8px 16px);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  text-align: center;
+}
+.texto-suave {
+  color: var(--tinta-suave);
+}
+.aviso {
+  font-size: 16px;
+  color: var(--tinta);
+}
+.enlace {
+  background: none;
+  border: 0;
+  padding: 8px 0;
+  color: var(--nucleo);
+  font-size: 16px;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+  align-self: flex-start;
+}
+/* Botones que existen solo para probar el prototipo */
+.prototipo {
+  background: none;
+  border: 1.5px dashed var(--filamento);
+  border-radius: var(--radius-pill);
+  padding: 10px 16px;
+  font-size: 14px;
+  color: var(--tinta);
+  cursor: pointer;
+}
+
+.chips {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px 8px 8px;
+  border-radius: var(--radius-pill);
+  background: #fff;
+  font-size: 16px;
+}
+.chip i {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+}
+
+.globo-moli {
+  position: fixed;
+  right: 32px;
+  bottom: 24px;
+  z-index: 10;
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  pointer-events: none;
+}
+.globo-moli__texto {
+  max-width: 280px;
+  margin-bottom: 70px;
+  padding: 14px 18px;
+  border-radius: 20px 20px 4px 20px;
+  background: var(--membrana);
+  font-size: 17px;
+  line-height: 1.4;
+}
+/* Pantallas chicas (Ceibal): Moli más chico y el globo se guarda solo (ver GloboMoli.jsx) */
+.globo-moli__boton {
+  position: relative;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  pointer-events: auto;
+  border-radius: 50%;
+}
+.globo-moli__boton:focus-visible {
+  outline: 3px solid var(--nucleo);
+  outline-offset: 4px;
+}
+.globo-moli--guardado .globo-moli__boton::after {
+  content: '…';
+  position: absolute;
+  top: 0;
+  right: -4px;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--membrana);
+  color: var(--nucleo);
+  font: 700 15px/1 var(--font-sans);
+}
+@media (max-width: 1100px), (max-height: 740px) {
+  .globo-moli {
+    right: 14px;
+    bottom: 10px;
+    gap: 6px;
+  }
+  .globo-moli__texto {
+    max-width: 230px;
+    margin-bottom: 52px;
+    padding: 10px 14px;
+    font-size: 15px;
+    transition:
+      opacity 0.35s,
+      transform 0.35s;
+  }
+  .globo-moli--guardado .globo-moli__texto {
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .globo-moli__texto {
+    transition: none;
+  }
+}

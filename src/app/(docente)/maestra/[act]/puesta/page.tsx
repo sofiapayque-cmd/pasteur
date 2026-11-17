@@ -1,5 +1,5 @@
 import SoloNavegador from '@/components/SoloNavegador';
-import Puesta from '@/pantallas/maestra/Puesta';
+import Puesta from '@/pantallas/maestra/Puesta/Puesta';
 import { redirect } from 'next/navigation';
 import { IDS_ACTIVIDAD } from '@/lib/actividad';
 import { aulasReales } from '@/lib/supabase/config';

@@ -1,0 +1,65 @@
+/* ---------- Niño: actividad A1 ---------- */
+.actividad__progreso {
+  list-style: none;
+  margin: var(--space-4) var(--space-5) 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+.actividad__progreso li {
+  flex: 1;
+  height: 4px;
+  background: rgba(114, 114, 238, 0.3);
+  position: relative;
+}
+.actividad__progreso li::after {
+  content: '';
+  position: absolute;
+  right: -8px;
+  top: -6px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--filamento);
+  background: var(--fondo-actividad, var(--agar));
+}
+.actividad__progreso li.hecha {
+  background: var(--filamento);
+}
+.actividad__progreso li.hecha::after {
+  background: var(--filamento);
+}
+.actividad__progreso li.actual::after {
+  width: 22px;
+  height: 22px;
+  top: -9px;
+  right: -11px;
+  border: 0;
+  background: var(--nucleo);
+}
+
+/* Pausa: tapa la actividad hasta que la maestra reanuda */
+.pausa {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(34, 35, 42, 0.45);
+  backdrop-filter: blur(6px);
+  animation: entrar 0.4s var(--ease-pantalla) both;
+}
+.pausa__tarjeta {
+  width: min(820px, 92vw);
+  background: var(--agar);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+  padding: var(--space-5);
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+}
+.pausa__tarjeta h2 {
+  font-size: 56px;
+  margin: 10px 0 12px;
+}

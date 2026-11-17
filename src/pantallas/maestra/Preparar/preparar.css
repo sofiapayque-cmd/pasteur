@@ -1,0 +1,88 @@
+/* ---------- Preparar ---------- */
+.preparar__grilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  gap: var(--space-6);
+  padding: var(--space-5) var(--space-6);
+}
+.preparar__guia {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.preparar__guia h1 {
+  font-size: 48px;
+}
+.preparar__guia-tarjeta {
+  margin-top: 12px;
+  background: var(--membrana);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-start;
+}
+.preparar__guia-tarjeta h2 {
+  font-size: 26px;
+}
+.preparar__guia-tarjeta ul {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 16px;
+  line-height: 1.6;
+}
+.preparar__opciones {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.preparar__opciones fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.preparar__opciones legend {
+  margin-bottom: 12px;
+}
+.preparar__ambientes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.opcion {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: #fff;
+  border: 2px solid var(--membrana);
+  font-size: 16px;
+  line-height: 1.35;
+  cursor: pointer;
+}
+.opcion--activa {
+  border-color: var(--nucleo);
+}
+.opcion input {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  accent-color: var(--nucleo);
+}
+.opcion__muestra {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  flex: none;
+}
+.preparar__accion {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--space-3);
+}

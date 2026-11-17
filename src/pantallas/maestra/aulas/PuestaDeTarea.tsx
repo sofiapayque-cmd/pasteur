@@ -1,6 +1,6 @@
 'use client';
 
-import Puesta from '@/pantallas/maestra/Puesta';
+import Puesta from '@/pantallas/maestra/Puesta/Puesta';
 import { ProveedorClase, type Clase } from '@/sala/contexto';
 import type { SalaReal } from '@/lib/aulas/clase';
 

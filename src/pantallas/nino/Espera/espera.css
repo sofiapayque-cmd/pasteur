@@ -1,0 +1,60 @@
+/* ---------- Niño: espera ---------- */
+.espera {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  padding: var(--space-6);
+}
+.espera__sala {
+  position: absolute;
+  left: var(--space-6);
+  top: var(--space-5);
+}
+.espera__texto {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.espera__texto h1 {
+  font-size: clamp(40px, 4.5vw, 56px);
+}
+.puntos-espera {
+  display: flex;
+  gap: 10px;
+}
+.puntos-espera i {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--plasma);
+  animation: punto 1.4s ease-in-out infinite;
+}
+.puntos-espera i:nth-child(2) { animation-delay: 0.2s; }
+.puntos-espera i:nth-child(3) { animation-delay: 0.4s; }
+@keyframes punto {
+  0%, 100% { transform: scale(0.6); opacity: 0.4; }
+  50% { transform: scale(1); opacity: 1; }
+}
+.espera__moli {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 480px;
+}
+.espera__fondo {
+  position: absolute;
+  width: 480px;
+  height: 480px;
+  border-radius: 50%;
+  background: var(--membrana);
+}
+.espera__moli .moli {
+  position: relative;
+}
+.espera__chip {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  box-shadow: var(--halo-cerca);
+}

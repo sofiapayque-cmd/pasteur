@@ -1,5 +1,5 @@
 import SoloNavegador from '@/components/SoloNavegador';
-import Tablero from '@/pantallas/maestra/Tablero';
+import Tablero from '@/pantallas/maestra/Tablero/Tablero';
 import { redirect } from 'next/navigation';
 import { IDS_ACTIVIDAD } from '@/lib/actividad';
 import { aulasReales } from '@/lib/supabase/config';

@@ -1,6 +1,6 @@
 import SoloNavegador from '@/components/SoloNavegador';
-import Solo from '@/pantallas/nino/Solo';
-import FichaActividad from '@/pantallas/nino/FichaActividad';
+import Solo from '@/pantallas/nino/Explorar/Solo';
+import FichaActividad from '@/pantallas/nino/Explorar/FichaActividad';
 import { puede } from '@/datos/acceso';
 import { curiosidadesPara } from '@/datos/curiosidades';
 

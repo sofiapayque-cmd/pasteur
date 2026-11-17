@@ -5,9 +5,9 @@ import { exigirAlumno } from '@/datos/alumno';
 import { abrirTareaDelAlumno } from '@/datos/tareas';
 import { actividad as datosActividad, esActividadDisponible } from '@/lib/aulas/tareas';
 import SoloNavegador from '@/components/SoloNavegador';
-import TareaAlumno from '@/pantallas/nino/TareaAlumno';
+import TareaAlumno from '@/pantallas/nino/cuenta/TareaAlumno';
 import Moli from '@/components/Moli';
-import '@/pantallas/nino/cuenta.css';
+import '@/pantallas/nino/cuenta/cuenta.css';
 
 /*
   /lab/tarea/[id] · El alumno hace una tarea de su maestra, con el avance

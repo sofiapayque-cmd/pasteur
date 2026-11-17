@@ -1,4 +1,4 @@
-import Inicio from '@/pantallas/Inicio';
+import Inicio from '@/pantallas/Inicio/Inicio';
 
 /* / · 01 Inicio (el círculo) */
 
