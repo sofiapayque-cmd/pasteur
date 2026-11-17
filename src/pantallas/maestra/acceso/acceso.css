@@ -1,0 +1,127 @@
+/* ---------- Maestra: acceso (ingresar, recuperar, elegir contraseña) ---------- */
+.acceso {
+  display: flex;
+  flex-direction: column;
+}
+.acceso__cuerpo {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-5);
+  padding: var(--space-5);
+}
+.acceso__tarjeta {
+  width: min(480px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  background: #fff;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--halo);
+}
+.acceso__tarjeta h1 {
+  font-size: clamp(32px, 3.6vw, 44px);
+  color: var(--nucleo);
+}
+.acceso__bajada {
+  color: var(--tinta-suave);
+}
+.acceso__form {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+.acceso__mensaje {
+  min-height: 24px;
+  font-weight: 600;
+}
+.acceso__listo {
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--clorofila);
+  font-weight: 600;
+}
+.campo {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.campo__nombre {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--tinta-suave);
+}
+.campo__entrada {
+  height: 56px;
+  padding: 0 var(--space-3);
+  border: 2px solid var(--plasma);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  font-size: 18px;
+  color: var(--tinta);
+}
+.campo__entrada:focus {
+  border-color: var(--nucleo);
+}
+.cuenta-docente {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--space-2);
+}
+@media (max-width: 760px) {
+  .acceso__moli {
+    display: none;
+  }
+}
+
+/* Pedir acceso */
+.pedir .campo__entrada[aria-invalid='true'] {
+  border-color: var(--coral);
+  box-shadow: 0 0 0 2px rgba(239, 111, 94, 0.25);
+}
+.pedir__grupo {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.pedir__fila {
+  display: flex;
+  gap: 18px;
+}
+.pedir__opcion {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+}
+.pedir textarea.campo__entrada {
+  height: auto;
+  padding: 10px 14px;
+  font-family: var(--font-sans);
+  resize: vertical;
+}
+.pedir select.campo__entrada {
+  font-family: var(--font-sans);
+}
+.pedir__trampa {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+.acceso__aviso {
+  margin: 0;
+  font-size: 14px;
+  color: var(--tinta-suave);
+}

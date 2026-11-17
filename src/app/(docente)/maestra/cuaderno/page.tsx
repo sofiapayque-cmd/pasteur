@@ -8,9 +8,9 @@ import { cuadernoDeLaMaestra } from '@/datos/cuadernos';
 import Cabecera from '@/components/Cabecera';
 import FondoVivo from '@/components/FondoVivo';
 import CuentaDocente from '@/components/CuentaDocente';
-import { PreguntaDelCuaderno } from '@/pantallas/maestra/CuadernoClase';
+import { PreguntaDelCuaderno } from '@/pantallas/maestra/CuadernoClase/CuadernoClase';
 import '@/pantallas/maestra/aulas/aulas.css';
-import '@/pantallas/cuadernos.css';
+import '@/styles/cuadernos.css';
 
 /*
   /maestra/cuaderno · "Mi cuaderno" de la maestra (migración 25): las

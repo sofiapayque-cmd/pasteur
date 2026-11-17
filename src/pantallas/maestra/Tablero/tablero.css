@@ -1,0 +1,168 @@
+/* ---------- Tablero ---------- */
+.tablero {
+  display: grid;
+  grid-template-columns: 1fr 1fr 320px;
+  grid-template-rows: auto auto 1fr;
+  gap: var(--space-4);
+  padding-bottom: var(--space-5);
+}
+.tablero > .cabecera {
+  grid-column: 1 / -1;
+}
+.tablero__titulo {
+  font-size: 30px;
+}
+.tablero__vivo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.tablero__vivo i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--coral);
+  animation: titila 1.6s ease-in-out infinite;
+}
+@keyframes titila {
+  50% { opacity: 0.35; }
+}
+.tablero__pausa {
+  grid-column: 1 / -1;
+  margin: 0 var(--space-5);
+  padding: 12px 18px;
+  border-radius: var(--radius-sm);
+  background: var(--clorofila);
+  font-weight: 600;
+}
+.tablero__etapas {
+  grid-column: 1 / 3;
+  margin-left: var(--space-5);
+  background: #fff;
+  border-radius: var(--radius-md);
+  padding: 20px;
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 8px;
+  min-height: 300px;
+}
+.tablero__columna {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 4px;
+}
+.tablero__columna .etiqueta {
+  font-size: 11px;
+  letter-spacing: 0.03em;
+}
+.tablero__cuenta {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 30px;
+  line-height: 1;
+}
+.tablero__puntos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.tablero__puntos li {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+}
+.tablero__muestras {
+  margin-left: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.barra {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 15px;
+}
+.barra__linea {
+  height: 14px;
+  min-width: 4px;
+  border-radius: var(--radius-pill);
+  transition: width 0.4s var(--ease-organico);
+}
+.tablero__ayuda {
+  background: var(--rosa-fondo);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 16px;
+}
+.tablero__ayuda ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.tablero__ayuda li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tablero__ayuda i {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+}
+.tablero__acciones {
+  grid-column: 3;
+  grid-row: 2 / 4;
+  margin-right: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.accion {
+  min-height: 96px;
+  border-radius: var(--radius-md);
+  border: 0;
+  padding: 0 22px;
+  font-size: 18px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.4s var(--ease-organico);
+}
+.accion:hover:not(:disabled) {
+  transform: scale(1.03);
+}
+.accion:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+.accion--pausa {
+  background: var(--membrana);
+  color: var(--tinta);
+}
+.accion--pausa[aria-pressed='true'] {
+  background: var(--clorofila);
+}
+.accion--puesta {
+  background: var(--nucleo);
+  color: var(--sobre-nucleo);
+}
+
+/* Tablero en vivo: el timer de la clase, debajo de la cabecera (8/11) */
+.tablero__reloj {
+  padding: 0 var(--space-5);
+  margin-bottom: var(--space-3);
+}
+@media (max-width: 900px) {
+  .tablero__reloj {
+    padding: 0 var(--space-3);
+  }
+}

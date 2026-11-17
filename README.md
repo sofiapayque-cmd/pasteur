@@ -44,10 +44,21 @@ src/                        el código de la web
                             (docente) maestra/ · (alumno) clase/, lab/ y explorar/
                             (equipo) equipo/ · auth/ abre los links de los mails · api/ tareas automáticas
                             layout.tsx: fuentes, estilos y metadatos
-  pantallas/                lo que se ve en cada dirección: inicio, rol, maestra/, nino/, equipo/
-                            (no se llama pages/: Next.js reserva ese nombre)
-  components/               piezas que se repiten: Moli, Ventana, Aviso, MarcoActividad, FondoVivo…
+  pantallas/                lo que se ve en cada dirección: una carpeta por pantalla, con su
+                            .tsx o .jsx (el HTML y el JavaScript) y su .css (no se llama pages/:
+                            Next.js reserva ese nombre)
+    Inicio/  Rol/
+    maestra/                Panel/ Preparar/ SalaEspera/ Tablero/ Puesta/ Asistente/ CuadernoClase/
+                            acceso/ entrar, recuperar y pedir acceso (comparten acceso.css)
+                            aulas/ Mis aulas, cada aula, tareas y clase en vivo (comparten aulas.css)
+    nino/                   Entrar/ Apodo/ Espera/ EnClase/: la clase de prueba en el navegador
+                            Explorar/ las fichas de las actividades
+                            cuenta/ el laboratorio del alumno con su tarjeta (comparten cuenta.css)
+    equipo/                 el panel del equipo del Pasteur (comparten equipo.css)
+  components/               piezas que se repiten, cada una con su .css: Moli, Ventana, Aviso,
+                            MarcoActividad, PieInstitucional, Curiosidades, PreguntasDelPasteur…
                             hero/ la portada · rol/ Moli 3D y la pantalla de roles · escenas/ paisajes de A1
+                            reloj/ el timer de la clase (maestra y alumno)
   actividades/              las 3 actividades, una carpeta cada una: a1/ a2/ a3/
                             (index.jsx es la experiencia del niño; etapas.js, sus etapas y preguntas)
                             info.js las reúne · componentes.js carga cada una recién cuando se usa
@@ -60,7 +71,9 @@ src/                        el código de la web
                             navegacion.tsx: moverse entre pantallas · navegador.ts: leer el navegador
                             supabase/ conexión con la base · ia/ la redactora y el asistente
                             ciencia/ PubMed, Europe PMC y OpenAlex · aulas/ curiosidades/ acceso/ equipo/
-  styles/                   tokens.css (colores, tipografías y espacios), relieve.css, base.css, pantallas.css
+  styles/                   lo que usan todas las pantallas: tokens.css (colores, tipografías y espacios),
+                            base.css, compartido.css, base-actividades.css, pantallas-angostas.css,
+                            cuadernos.css y relieve.css (la profundidad, va última)
   proxy.ts                  renueva la sesión antes de cada página (Next.js lo busca con ese nombre)
   instrumentation-client.ts arregla los links viejos con # (Next.js lo busca con ese nombre)
 public/                     imágenes de Moli y de la portada, y el modelo 3D de Moli (models/moli.glb)
@@ -92,6 +105,7 @@ docs/                       cómo funciona cada parte (base, asistente, panel, p
 
 **Para cambiar un texto:** buscalo en `lib/contenido.js`, en el `etapas.js` de la actividad o en su `index.jsx`.
 **Para cambiar un color:** cambialo en `styles/tokens.css` y se actualiza en toda la web.
+**Para cambiar cómo se ve una pantalla:** abrí su carpeta en `pantallas/`; ahí está su `.css`. Los `.css` de las pantallas se cargan todos en `app/layout.tsx`, en un orden fijo: no lo cambies, porque algunas reglas se pisan entre sí.
 **Para sumar una actividad nueva:** copiá la estructura de una carpeta `aN/`, sumala en `actividades/info.js`, `actividades/componentes.js` y `lib/contenido.js`.
 
 ## Qué falta

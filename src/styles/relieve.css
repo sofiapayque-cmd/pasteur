@@ -1,8 +1,8 @@
 /*
   RELIEVE (14/11, pedido de Sofia): la estética del panel del equipo —
   profundidad y esquinas redondeadas, en la línea de su diseño para Bius —
-  llevada a toda la web. Es una capa que va después de base.css y
-  pantallas.css: cambia sombras, fondos, bordes y radios, pero no la
+  llevada a toda la web. Es una capa que va después de base.css y de los
+  estilos de cada pantalla: cambia sombras, fondos, bordes y radios, pero no la
   diagramación, ni las ilustraciones (portada, elegir rol), ni el interior de
   las actividades (escenas, visores, placas), ni las notas de cuaderno.
   Las pantallas con su propio archivo de estilos (aulas, laboratorio,

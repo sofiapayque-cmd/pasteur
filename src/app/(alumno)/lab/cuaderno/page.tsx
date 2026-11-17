@@ -2,9 +2,9 @@ import type { Metadata } from 'next';
 import { exigirAlumno } from '@/datos/alumno';
 import { cuadernoDelAlumno } from '@/datos/cuadernos';
 import FondoVivo from '@/components/FondoVivo';
-import CuadernoAlumno from '@/pantallas/nino/CuadernoAlumno';
-import { CabeceraLab, PestanasLab } from '@/pantallas/nino/PestanasLab';
-import '@/pantallas/nino/cuenta.css';
+import CuadernoAlumno from '@/pantallas/nino/cuenta/CuadernoAlumno';
+import { CabeceraLab, PestanasLab } from '@/pantallas/nino/cuenta/PestanasLab';
+import '@/pantallas/nino/cuenta/cuenta.css';
 
 /* /lab/cuaderno · "Mi cuaderno" del alumno (migración 25). Solo con una cuenta de alumno activa. */
 export const metadata: Metadata = { title: 'Mi cuaderno', robots: { index: false } };

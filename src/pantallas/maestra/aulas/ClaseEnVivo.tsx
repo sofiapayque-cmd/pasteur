@@ -3,9 +3,9 @@
 import Link from 'next/link';
 import FondoVivo from '@/components/FondoVivo';
 import Moli from '@/components/Moli';
-import SalaEspera from '@/pantallas/maestra/SalaEspera';
-import Tablero from '@/pantallas/maestra/Tablero';
-import Puesta from '@/pantallas/maestra/Puesta';
+import SalaEspera from '@/pantallas/maestra/SalaEspera/SalaEspera';
+import Tablero from '@/pantallas/maestra/Tablero/Tablero';
+import Puesta from '@/pantallas/maestra/Puesta/Puesta';
 import { ProveedorClase, type Clase } from '@/sala/contexto';
 import { useClaseMaestra } from '@/sala/claseEnVivo';
 import type { Instantanea } from '@/lib/aulas/clase';

@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import SoloNavegador from '@/components/SoloNavegador';
 import { aulasReales } from '@/lib/supabase/config';
-import Espera from '@/pantallas/nino/Espera';
+import Espera from '@/pantallas/nino/Espera/Espera';
 
 /* /clase/espera · Niño · Espera */
 

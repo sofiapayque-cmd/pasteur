@@ -1,4 +1,4 @@
-import Preparar from '@/pantallas/maestra/Preparar';
+import Preparar from '@/pantallas/maestra/Preparar/Preparar';
 import { redirect } from 'next/navigation';
 import { IDS_ACTIVIDAD } from '@/lib/actividad';
 import { aulasReales } from '@/lib/supabase/config';

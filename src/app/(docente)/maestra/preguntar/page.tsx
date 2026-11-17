@@ -5,7 +5,7 @@ import { exigirDocenteActiva } from '@/datos/docente';
 import { listarAulas } from '@/datos/aulas';
 import { iaConfigurada } from '@/lib/ia/openai';
 import { claveSecretaConfigurada } from '@/lib/supabase/admin';
-import Asistente from '@/pantallas/maestra/Asistente';
+import Asistente from '@/pantallas/maestra/Asistente/Asistente';
 
 /* /maestra/preguntar · "Preguntale al Pasteur": el asistente para la clase (solo maestras activas). */
 export const metadata: Metadata = { title: 'Preguntale al Pasteur', robots: { index: false } };

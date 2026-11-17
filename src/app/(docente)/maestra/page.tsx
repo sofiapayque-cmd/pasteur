@@ -1,4 +1,4 @@
-import PanelMaestra from '@/pantallas/maestra/Panel';
+import PanelMaestra from '@/pantallas/maestra/Panel/Panel';
 import { exigirDocenteActiva, obtenerDocente } from '@/datos/docente';
 import { aulasReales } from '@/lib/supabase/config';
 import { curiosidadesPara } from '@/datos/curiosidades';

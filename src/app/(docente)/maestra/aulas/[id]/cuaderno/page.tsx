@@ -9,7 +9,7 @@ import { diaUY } from '@/lib/cuadernos';
 import Cabecera from '@/components/Cabecera';
 import FondoVivo from '@/components/FondoVivo';
 import CuentaDocente from '@/components/CuentaDocente';
-import CuadernoClase from '@/pantallas/maestra/CuadernoClase';
+import CuadernoClase from '@/pantallas/maestra/CuadernoClase/CuadernoClase';
 import '@/pantallas/maestra/aulas/aulas.css';
 
 /*

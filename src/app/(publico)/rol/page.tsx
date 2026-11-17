@@ -1,4 +1,4 @@
-import Rol from '@/pantallas/Rol';
+import Rol from '@/pantallas/Rol/Rol';
 
 /* /rol · 02 ¿Quién explora? */
 

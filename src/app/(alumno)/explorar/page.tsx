@@ -1,4 +1,4 @@
-import Explorar from '@/pantallas/nino/Explorar';
+import Explorar from '@/pantallas/nino/Explorar/Explorar';
 import { puede } from '@/datos/acceso';
 
 /*

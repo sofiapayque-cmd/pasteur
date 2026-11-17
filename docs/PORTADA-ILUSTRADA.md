@@ -167,4 +167,4 @@ En `public/illustrations/hero/`:
 
 ## Al unir con `ia/asistente`
 
-`ia/asistente` suma el pie "Accesos institucionales" (`PieInstitucional`) al inicio. Al juntar las ramas hay que agregarlo en `src/pantallas/Inicio.jsx`, debajo de la portada. La escena deja libre la franja de abajo.
+`ia/asistente` suma el pie "Accesos institucionales" (`PieInstitucional`) al inicio. Al juntar las ramas hay que agregarlo en `src/pantallas/Inicio/Inicio.jsx`, debajo de la portada. La escena deja libre la franja de abajo.

@@ -1,0 +1,34 @@
+/* ---------- Pantallas angostas ---------- */
+@media (max-width: 900px) {
+  .sala,
+  .apodo,
+  .espera,
+  .puesta,
+  .tablero {
+    grid-template-columns: 1fr;
+  }
+  .tablero__etapas,
+  .tablero__acciones,
+  .puesta__lado {
+    grid-column: 1;
+    grid-row: auto;
+    margin: 0 var(--space-4);
+  }
+  .tablero__etapas {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .tablero__muestras {
+    margin: 0 var(--space-4);
+  }
+  .apodo__opciones {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media print {
+  .prototipo,
+  .globo-moli,
+  .puesta__lado button {
+    display: none;
+  }
+}

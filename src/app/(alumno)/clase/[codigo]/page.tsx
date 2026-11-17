@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
-import Entrar from '@/pantallas/nino/Entrar';
-import IngresoCuenta from '@/pantallas/nino/IngresoCuenta';
+import Entrar from '@/pantallas/nino/Entrar/Entrar';
+import IngresoCuenta from '@/pantallas/nino/cuenta/IngresoCuenta';
 import { aulasReales } from '@/lib/supabase/config';
 import { obtenerAlumno } from '@/datos/alumno';
 

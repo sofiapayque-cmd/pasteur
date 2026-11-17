@@ -117,7 +117,7 @@ try {
 
   // 3 · Pedido "por dentro" (formato RSC de Next.js), sin cookies: no trae la actividad
   // (Comprobado el 8/11: con las actividades abiertas, este mismo pedido nombra
-  //  "src/pantallas/nino/Solo.jsx"; cerradas, trae la ficha y no la nombra.)
+  //  "src/pantallas/nino/Explorar/Solo.jsx"; cerradas, trae la ficha y no la nombra.)
   for (const a of ACTIVIDADES) {
     const r = await fetch(`${url}/explorar/${a.id}`, { headers: { RSC: '1' } });
     const cuerpo = await r.text();

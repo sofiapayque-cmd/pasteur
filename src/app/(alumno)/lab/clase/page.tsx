@@ -5,9 +5,9 @@ import { claseDelAlumno } from '@/datos/claseEnVivo';
 import { abrirTareaDelAlumno } from '@/datos/tareas';
 import { esActividadDisponible } from '@/lib/aulas/tareas';
 import SoloNavegador from '@/components/SoloNavegador';
-import ClaseAlumno from '@/pantallas/nino/ClaseAlumno';
+import ClaseAlumno from '@/pantallas/nino/cuenta/ClaseAlumno';
 import { curiosidadesPara } from '@/datos/curiosidades';
-import '@/pantallas/nino/cuenta.css';
+import '@/pantallas/nino/cuenta/cuenta.css';
 
 /*
   /lab/clase · El alumno en la clase en vivo de su aula.

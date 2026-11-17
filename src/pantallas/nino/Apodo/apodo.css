@@ -1,0 +1,70 @@
+/* ---------- Niño: apodo ---------- */
+.apodo {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: var(--space-5);
+  padding: var(--space-6);
+  align-items: center;
+}
+.apodo__eleccion {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.apodo__eleccion h1 {
+  font-size: 48px;
+}
+.apodo__opciones {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+.apodo__opcion {
+  min-height: 64px;
+  border-radius: var(--radius-pill);
+  border: 2px solid var(--membrana);
+  background: #fff;
+  font-size: 17px;
+  color: var(--tinta);
+  cursor: pointer;
+}
+.apodo__opcion--elegida {
+  border: 3px solid var(--nucleo);
+  background: var(--membrana);
+  font-weight: 600;
+}
+.apodo__titulo-color {
+  margin-top: 16px;
+}
+.apodo__colores {
+  display: flex;
+  gap: 16px;
+}
+.apodo__color {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 0;
+  cursor: pointer;
+}
+.apodo__color--elegido {
+  outline: 3px solid var(--nucleo);
+  outline-offset: 4px;
+}
+.apodo__vista {
+  background: #fff;
+  border-radius: 32px;
+  box-shadow: var(--halo);
+  padding: var(--space-5) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+.apodo__nombre {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-variation-settings: 'SOFT' 100;
+  font-size: 30px;
+}
