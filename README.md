@@ -1,9 +1,9 @@
 # La ciencia sin límites · web
 
-Plataforma educativa del Institut Pasteur de Montevideo para niñas y niños de 7 a 11 años.
+Plataforma educativa del Institut Pasteur de Montevideo para niñas y niños de 10 a 12 años.
 Proyecto integrador · Licenciatura en Diseño Multimedia · Universidad ORT Uruguay.
 
-Esta versión tiene el recorrido de la maestra, la sala de clase y las cuatro actividades: Genómica Microbiana, Simulaciones Biomoleculares, Bioimagenología y Evolución de Virus.
+Esta versión tiene el recorrido de la maestra, la clase en vivo, las aulas con tareas, el panel del equipo del Institut Pasteur y tres actividades: Genómica Microbiana, Simulaciones Biomoleculares y Bioimagenología.
 
 ## Cómo abrirla en tu computadora
 
@@ -48,9 +48,9 @@ src/
   sala/sala.js            la sala de clase: todo lo que conecta maestra y niños
   sala/progreso.js        useProgreso: cómo cada actividad guarda el avance del niño
   actividades/
-    info.js               reúne los datos de las 4 actividades
+    info.js               reúne los datos de las 3 actividades
     componentes.js        carga cada actividad recién cuando se usa (más liviano)
-    a1/ a2/ a3/ a4/       una carpeta por actividad:
+    a1/ a2/ a3/          una carpeta por actividad:
       index.jsx           la experiencia del niño
       etapas.js           etapas, preguntas, guía docente, opciones de la maestra
   components/             piezas comunes: Moli, FondoVivo (organismos flotando),
@@ -89,6 +89,6 @@ docs/GUIA-ACTIVIDADES.md  reglas para crear o cambiar una actividad
 - **Next.js 16 (App Router) + TypeScript**: el marco de la web. `npm run dev` la levanta en tu computadora, `npm run build` la prepara y `npm start` la sirve como en producción (Vercel).
 - **React 19**: arma la interfaz en componentes (cada pantalla y cada pieza es un archivo).
 - **Direcciones**: sin # (`/maestra`, `/clase/K7RM`...), con el App Router de Next.js. Los links viejos con # siguen andando. Mapa completo en `docs/MIGRACION.md`.
-- **Supabase** (preparado, sin activar): inicio de sesión de la maestra y la base para que la sala funcione entre computadoras. Para probar con Supabase, copiá `.env.example` como `.env.local` y completalo. Borrador de la base en `supabase/borrador/`.
-- La versión anterior con Vite quedó guardada en la rama `version-vite` (y el tag `vite-v1`).
+- **Supabase**: la base de datos y las cuentas (maestras, alumnos y equipo del Pasteur), y el tiempo real de la clase en vivo. Para probar en tu computadora, copiá `.env.example` como `.env.local` y completalo. Los cambios de la base están en `supabase/migrations/`.
+- La versión anterior con Vite quedó guardada en la rama `version-vite`.
 - Las animaciones son CSS y Canvas, pensadas para que anden en las Ceibal.
