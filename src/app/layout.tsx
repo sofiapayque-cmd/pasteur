@@ -16,7 +16,7 @@ import '@/styles/relieve.css'; // profundidad y esquinas redondeadas (14/11)
 
 export const metadata: Metadata = {
   title: 'La ciencia sin límites · Institut Pasteur de Montevideo',
-  description: 'Ecosistema digital de ciencia para niños de 7 a 11 años, con experiencias de los laboratorios del Institut Pasteur de Montevideo.',
+  description: 'Ecosistema digital de ciencia para niñas y niños de 10 a 12 años, con experiencias de los laboratorios del Institut Pasteur de Montevideo.',
 };
 
 export const viewport: Viewport = {
