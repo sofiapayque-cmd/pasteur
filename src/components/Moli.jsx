@@ -76,7 +76,7 @@ export default function Moli({ animo = 'feliz', fase = 'liquido', tamano = 240 }
           </g>
         )}
         {a === 'duda' && enLiquido && (
-          <text x="158" y="80" fill="#2F4A85" fontFamily="'Bricolage Grotesque Variable', sans-serif" fontSize="34" fontWeight="800">
+          <text x="158" y="80" fill="#2F4A85" fontFamily="'Boldonse', sans-serif" fontSize="34" fontWeight="800">
             ?
           </text>
         )}
