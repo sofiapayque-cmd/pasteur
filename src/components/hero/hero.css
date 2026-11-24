@@ -163,7 +163,8 @@
 .hero-titulo__entrar {
   display: inline-block;
   margin-top: calc(30 * var(--u));
-  font-family: var(--font-display);
+  /* Lexend: Boldonse tiene un solo peso (muy gordo); este texto va liviano, debajo del título */
+  font-family: var(--font-sans);
   font-weight: 400;
   font-size: calc(42 * var(--u));
   line-height: 1.1;

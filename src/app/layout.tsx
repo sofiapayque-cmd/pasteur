@@ -6,7 +6,7 @@ import '@fontsource-variable/lexend'; // interfaz
 import '@fontsource/ibm-plex-mono/400.css'; // etiquetas
 import '@fontsource/ibm-plex-mono/500.css';
 import '@fontsource/the-girl-next-door/400.css'; // notas del cuaderno
-import '@fontsource-variable/bricolage-grotesque'; // titulares
+// Titulares: Boldonse, declarada en styles/tokens.css (archivos en public/fuentes)
 
 // Estilos globales del sistema visual (mismo orden que tenía main.jsx)
 import '@/styles/tokens.css';
